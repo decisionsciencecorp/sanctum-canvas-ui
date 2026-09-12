@@ -6,7 +6,7 @@ on:
     paths:
       - ".github/workflows/cli-template-package-managers.yml"
       - "packages/openui-cli/scripts/compare-template-installs.mjs"
-      - "packages/openui-cli/src/commands/create-app.ts"
+      - "packages/openui-cli/src/commands/create/run.ts"
       - "packages/openui-cli/src/lib/detect-package-manager.ts"
       - "templates/**"
   pull_request:
@@ -14,7 +14,7 @@ on:
     paths:
       - ".github/workflows/cli-template-package-managers.yml"
       - "packages/openui-cli/scripts/compare-template-installs.mjs"
-      - "packages/openui-cli/src/commands/create-app.ts"
+      - "packages/openui-cli/src/commands/create/run.ts"
       - "packages/openui-cli/src/lib/detect-package-manager.ts"
       - "templates/**"
 

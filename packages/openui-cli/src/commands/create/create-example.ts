@@ -1,22 +1,23 @@
 import * as path from "node:path";
 
-import { printLogTail, QUIET_COMMAND_CAPTURE_LIMIT } from "../lib/command-output";
-import { createFunnelProps } from "../lib/create-telemetry";
-import type { CreateAppOptions, EnvResult } from "../lib/create-types";
-import { resolveInstallPackageManager } from "../lib/detect-package-manager";
-import { upsertEnvVar } from "../lib/env";
-import type { ExampleProject } from "../lib/examples-catalog";
-import { runSkillInstall, shouldInstallSkill } from "../lib/install-skill";
+import { printLogTail, QUIET_COMMAND_CAPTURE_LIMIT } from "../../lib/command-output";
+import type { CliContext } from "../../lib/context";
+import { createFunnelProps } from "../../lib/create-telemetry";
+import type { CreateAppOptions, EnvResult } from "../../lib/create-types";
+import { resolveInstallPackageManager } from "../../lib/detect-package-manager";
+import { upsertEnvVar } from "../../lib/env";
+import type { ExampleProject } from "../../lib/examples-catalog";
+import { runSkillInstall, shouldInstallSkill } from "../../lib/install-skill";
 import {
   exampleDevCommand,
   exampleLayout,
   isNestedExample,
   scaffoldExample,
   type ExampleLayout,
-} from "../lib/scaffold-example";
-import { withSpinner } from "../lib/spinner";
-import { CliCancelledError, CreateError, telemetry } from "../lib/telemetry";
-import { cliErrorProperties, processErrorProperties } from "../lib/utils";
+} from "../../lib/scaffold-example";
+import { withSpinner } from "../../lib/spinner";
+import { CliCancelledError, CreateError } from "../../lib/telemetry";
+import { cliErrorProperties, processErrorProperties } from "../../lib/utils";
 
 export async function runCreateExample(params: {
   options: CreateAppOptions;
@@ -26,35 +27,36 @@ export async function runCreateExample(params: {
   name: string;
   targetDir: string;
   example: ExampleProject;
+  ctx: CliContext;
 }): Promise<void> {
-  const { options, interactive, packageManager, t0, name, targetDir, example } = params;
+  const { options, interactive, packageManager, t0, name, targetDir, example, ctx } = params;
 
-  telemetry.register({ example: example.name, project_category: "example" });
-  telemetry.capture("cli_example_selected", {
+  ctx.telemetry.register({ example: example.name, project_category: "example" });
+  ctx.telemetry.capture("cli_example_selected", {
     ...createFunnelProps("example_selected"),
     example: example.name,
     example_source: options.example ? "flag" : interactive ? "prompt" : "default",
   });
 
-  telemetry.capture("cli_env_resolution_started", {
+  ctx.telemetry.capture("cli_env_resolution_started", {
     ...createFunnelProps("env_resolution_started"),
     example: example.name,
   });
   const envResult = await resolveExampleEnv(example, interactive);
 
   const installSkill = await shouldInstallSkill(options.skill, false);
-  telemetry.capture("cli_skill_installed", {
+  ctx.telemetry.capture("cli_skill_installed", {
     ...createFunnelProps("skill_prompt_resolved"),
     skill_installed: installSkill,
   });
-  telemetry.capture("cli_immediate_selected", {
+  ctx.telemetry.capture("cli_immediate_selected", {
     immediate: false,
     dependency_install_requested: false,
     selection_source: "no_install",
   });
 
   console.info();
-  telemetry.capture("cli_scaffold_started", {
+  ctx.telemetry.capture("cli_scaffold_started", {
     ...createFunnelProps("scaffold_started"),
     example: example.name,
   });
@@ -79,7 +81,7 @@ export async function runCreateExample(params: {
       error_class: "filesystem",
       error_code: "SCAFFOLD_FAILED",
     });
-    telemetry.capture("cli_scaffold_failed", {
+    ctx.telemetry.capture("cli_scaffold_failed", {
       ...createFunnelProps("scaffold_failed"),
       example: example.name,
       ...properties,
@@ -91,7 +93,7 @@ export async function runCreateExample(params: {
       properties.error_code,
     );
   }
-  telemetry.capture("cli_scaffold_succeeded", {
+  ctx.telemetry.capture("cli_scaffold_succeeded", {
     ...createFunnelProps("scaffold_succeeded"),
     example: example.name,
   });
@@ -113,7 +115,7 @@ export async function runCreateExample(params: {
       properties.error_code,
     );
   }
-  telemetry.capture("cli_env_resolved", {
+  ctx.telemetry.capture("cli_env_resolved", {
     ...createFunnelProps("env_written"),
     example: example.name,
     env_written: envResult.envWritten,
@@ -121,16 +123,16 @@ export async function runCreateExample(params: {
 
   layout ??= exampleLayout(targetDir);
   const installCmd = packageManager.installCmd;
-  telemetry.capture("cli_dependency_install_skipped", {
+  ctx.telemetry.capture("cli_dependency_install_skipped", {
     skip_reason: "example_scaffold_only",
   });
-  telemetry.capture("cli_dev_command_skipped", {
+  ctx.telemetry.capture("cli_dev_command_skipped", {
     skip_reason: "not_immediate",
   });
 
-  const skillInstalled = await installExampleSkill(installSkill, options.verbose, targetDir);
+  const skillInstalled = await installExampleSkill(installSkill, options.verbose, targetDir, ctx);
 
-  telemetry.capture("cli_create_succeeded", {
+  ctx.telemetry.capture("cli_create_succeeded", {
     ...createFunnelProps("create_succeeded"),
     example: example.name,
     duration_ms: Date.now() - t0,
@@ -199,10 +201,11 @@ async function installExampleSkill(
   enabled: boolean,
   verbose: boolean | undefined,
   targetDir: string,
+  ctx: CliContext,
 ): Promise<boolean> {
   if (!enabled) return false;
 
-  telemetry.capture("cli_skill_install_started", {
+  ctx.telemetry.capture("cli_skill_install_started", {
     ...createFunnelProps("skill_install_started"),
     skill_installed: true,
   });
@@ -225,7 +228,7 @@ async function installExampleSkill(
     if (!verbose) {
       console.info("✓ OpenUI agent skill installed");
     }
-    telemetry.capture("cli_skill_install_finished", {
+    ctx.telemetry.capture("cli_skill_install_finished", {
       ...createFunnelProps("skill_install_finished"),
       skill_installed: true,
       duration_ms: skillResult.durationMs,
@@ -239,7 +242,7 @@ async function installExampleSkill(
     error_code: "SKILL_INSTALL_FAILED",
   });
   if (properties.error_class === "user_cancelled") {
-    telemetry.capture("cli_skill_install_cancelled", {
+    ctx.telemetry.capture("cli_skill_install_cancelled", {
       ...createFunnelProps("skill_install_cancelled"),
       skill_installed: false,
       ...properties,
@@ -250,7 +253,7 @@ async function installExampleSkill(
       properties,
     );
   }
-  telemetry.capture("cli_skill_install_failed", {
+  ctx.telemetry.capture("cli_skill_install_failed", {
     ...createFunnelProps("skill_install_failed"),
     skill_installed: false,
     ...properties,

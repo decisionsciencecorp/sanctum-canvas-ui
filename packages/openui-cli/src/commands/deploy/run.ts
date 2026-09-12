@@ -1,14 +1,15 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
+import type { CliContext } from "../../lib/context";
 import {
   assertOpenUiProject,
   DEFAULT_DEPLOY_TARGET,
   type DeployTargetOptions,
-} from "../lib/deploy";
-import { deployToTarget } from "../lib/deploy-targets";
-import { resolveInstallPackageManager } from "../lib/detect-package-manager";
-import { CreateError, telemetry } from "../lib/telemetry";
+} from "../../lib/deploy";
+import { deployToTarget } from "../../lib/deploy-targets";
+import { resolveInstallPackageManager } from "../../lib/detect-package-manager";
+import { CreateError } from "../../lib/telemetry";
 
 /** OpenUI-only flags. Everything else is forwarded for the target CLI to validate. */
 const OWN_FLAGS = new Set(["--skip-env", "--no-interactive", "--verbose"]);
@@ -28,9 +29,9 @@ type ResolvedDeploy = {
 };
 
 /** Resolve flags, validate the project dir, then hand off to the deploy target. */
-export async function runDeploy(options: DeployOptions): Promise<void> {
+export async function runDeploy(options: DeployOptions, ctx: CliContext): Promise<void> {
   const resolved = resolveDeployInvocation(options);
-  const projectDir = resolveProjectDir(resolved.projectDir);
+  const projectDir = resolveProjectDir(resolved.projectDir, ctx.cwd);
   const extraArgs = resolved.extraArgs.filter((arg) => arg !== "--verbose");
   const prod = extraArgs.includes("--prod");
   const yes =
@@ -51,8 +52,8 @@ export async function runDeploy(options: DeployOptions): Promise<void> {
     verbose,
   };
 
-  telemetry.register({ package_manager: resolveInstallPackageManager().name });
-  telemetry.capture("cli_deploy_started", {
+  ctx.telemetry.register({ package_manager: resolveInstallPackageManager().name });
+  ctx.telemetry.capture("cli_deploy_started", {
     target: DEFAULT_DEPLOY_TARGET,
     prod,
     yes,
@@ -93,8 +94,8 @@ function unsetIfFlag(value?: string): string | undefined {
 }
 
 /** Resolve and require a directory that contains package.json. */
-function resolveProjectDir(dir?: string): string {
-  const projectDir = path.resolve(process.cwd(), dir ?? ".");
+function resolveProjectDir(dir: string | undefined, cwd: string): string {
+  const projectDir = path.resolve(cwd, dir ?? ".");
   if (!fs.existsSync(projectDir)) {
     throw new CreateError(
       "args_resolution",

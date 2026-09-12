@@ -6,7 +6,7 @@
  *
  * argv: [entryPath, exportName?, "--json-schema"?, "--spec"?, "--prompt-options", name?]
  * stdout: one artifact for the mode flags; default emits BOTH the prompt and
- * the spec JSON, joined by SEPARATION_DELIMITER (generate.ts splits them).
+ * the spec JSON, joined by SEPARATION_DELIMITER (run.ts splits them).
  */
 
 import * as fs from "fs";
@@ -14,7 +14,7 @@ import * as os from "os";
 import * as path from "path";
 
 import * as esbuild from "esbuild";
-import { SEPARATION_DELIMITER } from "../lib/utils";
+import { SEPARATION_DELIMITER } from "../../lib/utils";
 
 // ── Main ──
 
