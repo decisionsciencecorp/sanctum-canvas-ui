@@ -1,15 +1,15 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
+import { adoptVercelEnvVars, loadAllowlistedProjectEnv } from "../../../../lib/env";
+import { mutedNpmEnv, runCommand } from "../../../../lib/process-runner";
+import { withSpinner } from "../../../../lib/spinner";
+import { CreateError } from "../../../../lib/telemetry";
+import { throwCommandFailure } from "../../../../lib/utils";
 import type { CliInvocation } from "../../cli-bin";
-import { readProjectPackageJson } from "../../deploy/project";
-import { canPromptInteractive } from "../../deploy/prompt";
-import type { DeployTargetOptions } from "../../deploy/types";
-import { adoptVercelEnvVars, loadAllowlistedProjectEnv } from "../../env";
-import { mutedNpmEnv, runCommand } from "../../process-runner";
-import { withSpinner } from "../../spinner";
-import { CreateError } from "../../telemetry";
-import { throwCommandFailure } from "../../utils";
+import { readProjectPackageJson } from "../../project";
+import { canPromptInteractive } from "../../prompt";
+import type { DeployTargetOptions } from "../../types";
 import { vercelLinkScopeArgs, vercelSpawnArgs } from "./args";
 
 /** Auth vars Vercel CLI reads. OpenUI apps keep these in `.env`; Vercel often writes `.env.local`. */

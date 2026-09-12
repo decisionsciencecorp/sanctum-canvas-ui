@@ -1,15 +1,11 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
+import { assertOpenUiProject, DEFAULT_DEPLOY_TARGET, type DeployTargetOptions } from ".";
 import type { CliContext } from "../../lib/context";
-import {
-  assertOpenUiProject,
-  DEFAULT_DEPLOY_TARGET,
-  type DeployTargetOptions,
-} from "../../lib/deploy";
-import { deployToTarget } from "../../lib/deploy-targets";
 import { resolveInstallPackageManager } from "../../lib/detect-package-manager";
 import { CreateError } from "../../lib/telemetry";
+import { deployToTarget } from "./targets";
 
 /** OpenUI-only flags. Everything else is forwarded for the target CLI to validate. */
 const OWN_FLAGS = new Set(["--skip-env", "--no-interactive", "--verbose"]);

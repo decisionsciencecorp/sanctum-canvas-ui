@@ -2,21 +2,13 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 
-import { resolveCloudApiKey, THESYS_KEYS_URL } from "../../auth/mint";
+import { resolveCloudApiKey, THESYS_KEYS_URL } from "../../lib/auth/mint";
 import { printLogTail, QUIET_COMMAND_CAPTURE_LIMIT } from "../../lib/command-output";
 import type { CliContext } from "../../lib/context";
-import { aiSetupFromTemplate, createFunnelProps } from "../../lib/create-telemetry";
-import type {
-  CreateAppOptions,
-  EnvResult,
-  OverlayName,
-  TemplateName,
-} from "../../lib/create-types";
 import {
   resolveInstallPackageManager,
   type PackageManagerName,
 } from "../../lib/detect-package-manager";
-import { runDevCommand } from "../../lib/dev-server";
 import {
   findExample,
   groupedExampleChoices,
@@ -24,7 +16,6 @@ import {
   rejectConflictingScaffoldSelectors,
   type ExampleProject,
 } from "../../lib/examples-catalog";
-import { runSkillInstall, shouldInstallSkill } from "../../lib/install-skill";
 import {
   applyOverlay,
   OVERLAYS_DIR,
@@ -36,7 +27,6 @@ import { mutedNpmEnv, runCommand } from "../../lib/process-runner";
 import { resolveArgs } from "../../lib/resolve-args";
 import { resolveTemplateSource } from "../../lib/scaffold-template";
 import { withSpinner } from "../../lib/spinner";
-import { resolveAvailableTarget } from "../../lib/target-dir";
 import { CliCancelledError, CreateError } from "../../lib/telemetry";
 import {
   DEFAULT_TEMPLATE_KEY,
@@ -47,6 +37,11 @@ import {
   type CatalogTemplate,
 } from "../../lib/templates-catalog";
 import { cliErrorProperties, processErrorProperties } from "../../lib/utils";
+import { aiSetupFromTemplate, createFunnelProps } from "./create-telemetry";
+import type { CreateAppOptions, EnvResult, OverlayName, TemplateName } from "./create-types";
+import { runDevCommand } from "./dev-server";
+import { runSkillInstall, shouldInstallSkill } from "./install-skill";
+import { resolveAvailableTarget } from "./target-dir";
 
 import { runCreateExample } from "./create-example";
 

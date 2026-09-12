@@ -1,7 +1,7 @@
+import { runCommand } from "../../../../lib/process-runner";
 import type { CliInvocation } from "../../cli-bin";
-import { SENSITIVE_DEPLOY_ENV_KEYS } from "../../deploy/project-env";
-import { canPromptInteractive, confirmOrDefault } from "../../deploy/prompt";
-import { runCommand } from "../../process-runner";
+import { SENSITIVE_DEPLOY_ENV_KEYS } from "../../project-env";
+import { canPromptInteractive, confirmOrDefault } from "../../prompt";
 import { vercelSpawnArgs } from "./args";
 import { isVercelLinked, vercelCliEnv } from "./connect";
 

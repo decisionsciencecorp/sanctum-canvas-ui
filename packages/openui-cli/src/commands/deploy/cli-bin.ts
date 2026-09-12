@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import { resolveDlxInvocation } from "./detect-package-manager";
+import { resolveDlxInvocation } from "../../lib/detect-package-manager";
 
 /** How a third-party CLI binary was resolved for spawn. */
 export type CliInvocation = {

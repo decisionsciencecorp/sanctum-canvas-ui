@@ -1,4 +1,4 @@
-import type { DeploySuccessSummary } from "../../deploy/quiet";
+import type { DeploySuccessSummary } from "../../quiet";
 
 /** Parse the stable alias, unique deployment URL, and inspect link from `vercel` output. */
 export function extractVercelDeploymentSummary(log: string): DeploySuccessSummary {

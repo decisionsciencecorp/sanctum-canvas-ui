@@ -1,5 +1,5 @@
-import { createFunnelProps } from "../lib/create-telemetry";
-import { CliCancelledError, CreateError, telemetry } from "../lib/telemetry";
+import { createFunnelProps } from "../../commands/create/create-telemetry";
+import { CliCancelledError, CreateError, telemetry } from "../telemetry";
 import { Authenticator } from "./authenticator";
 
 // Thesys console OAuth + key mint (same flow as create-c1-app). The OpenUI Cloud

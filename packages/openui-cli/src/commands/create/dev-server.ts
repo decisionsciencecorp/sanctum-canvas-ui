@@ -1,6 +1,6 @@
 import * as http from "node:http";
 
-import { runCommand, type CommandResult } from "./process-runner";
+import { runCommand, type CommandResult } from "../../lib/process-runner";
 
 function isServerReady(url: string): Promise<boolean> {
   return new Promise((resolve) => {

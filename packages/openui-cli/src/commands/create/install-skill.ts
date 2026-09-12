@@ -1,5 +1,5 @@
-import { runCommand, type CommandResult, type RunCommandOptions } from "./process-runner";
-import { CliCancelledError } from "./telemetry";
+import { runCommand, type CommandResult, type RunCommandOptions } from "../../lib/process-runner";
+import { CliCancelledError } from "../../lib/telemetry";
 
 const OPENUI_SKILL_SOURCE = "thesysdev/skills";
 

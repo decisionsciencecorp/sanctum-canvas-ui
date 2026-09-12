@@ -1,7 +1,6 @@
-import type { CloudAuthMethod } from "../auth/mint";
-import { createFunnelProps } from "./create-telemetry";
-import type { TemplateName } from "./create-types";
-import { OverlayName } from "./create-types";
+import { createFunnelProps } from "../commands/create/create-telemetry";
+import type { OverlayName, TemplateName } from "../commands/create/create-types";
+import type { CloudAuthMethod } from "./auth/mint";
 import type { CommandResult } from "./process-runner";
 import {
   CliCancelledError,
@@ -11,10 +10,6 @@ import {
   type CliErrorMetadata,
   type Telemetry,
 } from "./telemetry";
-
-/** ASCII Record Separator — Untypeable in prompt text and always
- *  escaped by JSON.stringify, so it can never collide with either artifact. */
-export const SEPARATION_DELIMITER = "\u001E";
 
 export type CliErrorProperties = CliErrorMetadata & {
   failure_stage: string;

@@ -1,8 +1,8 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import { resolveArgs } from "./resolve-args";
-import { CreateError, telemetry } from "./telemetry";
+import { resolveArgs } from "../../lib/resolve-args";
+import { CreateError, telemetry } from "../../lib/telemetry";
 
 /** How many times an interactive run may re-prompt before aborting. */
 const MAX_NAME_RETRIES = 5;

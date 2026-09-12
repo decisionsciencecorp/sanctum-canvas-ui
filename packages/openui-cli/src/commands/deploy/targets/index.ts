@@ -1,5 +1,5 @@
-import type { DeployTarget, DeployTargetOptions } from "../deploy";
-import { CreateError } from "../telemetry";
+import type { DeployTarget, DeployTargetOptions } from "..";
+import { CreateError } from "../../../lib/telemetry";
 import { deployToVercel } from "./vercel";
 
 /** Dispatch to a platform adapter (Vercel today). */

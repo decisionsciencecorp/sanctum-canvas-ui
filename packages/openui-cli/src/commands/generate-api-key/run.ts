@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import { assertValidApiKeyName, mintCloudApiKey } from "../../auth/mint";
+import { assertValidApiKeyName, mintCloudApiKey } from "../../lib/auth/mint";
 import type { CliContext } from "../../lib/context";
 import { assertValidEnvVarName, DEFAULT_ENV_FILE, upsertEnvVar } from "../../lib/env";
 

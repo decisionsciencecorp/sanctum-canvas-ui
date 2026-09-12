@@ -14,7 +14,7 @@ import * as os from "os";
 import * as path from "path";
 
 import * as esbuild from "esbuild";
-import { SEPARATION_DELIMITER } from "../../lib/utils";
+import { SEPARATION_DELIMITER } from "./delimiter";
 
 // ── Main ──
 

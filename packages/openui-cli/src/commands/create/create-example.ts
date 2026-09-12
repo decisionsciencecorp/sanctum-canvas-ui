@@ -2,12 +2,9 @@ import * as path from "node:path";
 
 import { printLogTail, QUIET_COMMAND_CAPTURE_LIMIT } from "../../lib/command-output";
 import type { CliContext } from "../../lib/context";
-import { createFunnelProps } from "../../lib/create-telemetry";
-import type { CreateAppOptions, EnvResult } from "../../lib/create-types";
 import { resolveInstallPackageManager } from "../../lib/detect-package-manager";
 import { upsertEnvVar } from "../../lib/env";
 import type { ExampleProject } from "../../lib/examples-catalog";
-import { runSkillInstall, shouldInstallSkill } from "../../lib/install-skill";
 import {
   exampleDevCommand,
   exampleLayout,
@@ -18,6 +15,9 @@ import {
 import { withSpinner } from "../../lib/spinner";
 import { CliCancelledError, CreateError } from "../../lib/telemetry";
 import { cliErrorProperties, processErrorProperties } from "../../lib/utils";
+import { createFunnelProps } from "./create-telemetry";
+import type { CreateAppOptions, EnvResult } from "./create-types";
+import { runSkillInstall, shouldInstallSkill } from "./install-skill";
 
 export async function runCreateExample(params: {
   options: CreateAppOptions;
