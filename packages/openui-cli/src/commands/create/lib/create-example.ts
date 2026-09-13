@@ -26,8 +26,10 @@ export async function runCreateExample(params: {
   targetDir: string;
   example: ExampleProject;
   tel: CreateTelemetryClient;
+  verbose: boolean;
 }): Promise<void> {
-  const { options, interactive, packageManager, t0, name, targetDir, example, tel } = params;
+  const { options, interactive, packageManager, t0, name, targetDir, example, tel, verbose } =
+    params;
 
   tel.registerContext({ example: example.name, project_category: "example" });
   tel.trackExampleSelected({
@@ -57,10 +59,8 @@ export async function runCreateExample(params: {
         name,
         packageManager: packageManager.name,
       });
-    layout = options.verbose
-      ? await runScaffold()
-      : await withSpinner("Scaffolding...", runScaffold);
-    if (!options.verbose) {
+    layout = verbose ? await runScaffold() : await withSpinner("Scaffolding...", runScaffold);
+    if (!verbose) {
       console.info("✓ Scaffolded");
     }
   } catch (err) {
@@ -115,7 +115,7 @@ export async function runCreateExample(params: {
 
   const skillInstalled = await installRequestedSkill({
     enabled: installSkill,
-    verbose: options.verbose,
+    verbose,
     targetDir,
     tel,
     printFailureLog: true,

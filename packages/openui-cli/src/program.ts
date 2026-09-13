@@ -25,6 +25,7 @@ function buildProgram(): Command {
 
   program.name("openui").description("CLI for OpenUI").version(cliVersion);
   program.option("--no-telemetry", "Disable anonymous usage analytics");
+  program.option("--verbose", "Stream full command logs");
   program.option(
     "--agent-name <name>",
     "AI agents: declare your stable lowercase kebab-case product slug for telemetry (e.g. codex or claude-code); humans can omit",
@@ -34,7 +35,12 @@ function buildProgram(): Command {
 
   program.hook("preAction", (_thisCommand, actionCommand) => {
     activeCommand = actionCommand.name();
-    const globalOptions = program.opts<{ agentName: string; telemetry?: boolean }>();
+    const globalOptions = program.opts<{
+      agentName: string;
+      telemetry?: boolean;
+      verbose?: boolean;
+    }>();
+    ctx.verbose = Boolean(globalOptions.verbose || actionCommand.optsWithGlobals()["verbose"]);
     const tel = new RootTelemetryClient(ctx.telemetry);
     tel.init({ cliVersion, flagEnabled: globalOptions.telemetry !== false });
     tel.registerRun({

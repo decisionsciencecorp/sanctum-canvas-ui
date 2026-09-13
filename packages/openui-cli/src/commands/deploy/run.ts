@@ -16,7 +16,6 @@ export type DeployOptions = {
   yes?: boolean;
   skipEnv?: boolean;
   noInteractive?: boolean;
-  verbose?: boolean;
   extraArgs?: string[];
 };
 
@@ -38,7 +37,7 @@ export async function runDeploy(options: DeployOptions, ctx: CliContext): Promis
     extraArgs.includes("--yes") ||
     extraArgs.includes("-y");
   const skipEnv = Boolean(options.skipEnv);
-  const verbose = Boolean(options.verbose) || (options.extraArgs ?? []).includes("--verbose");
+  const verbose = ctx.verbose || (options.extraArgs ?? []).includes("--verbose");
 
   const targetOpts: DeployTargetOptions = {
     projectDir,

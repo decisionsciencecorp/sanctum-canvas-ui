@@ -29,7 +29,6 @@ export const createCommand = new Command("create")
   .option("--no-install", "Scaffold without running the package install")
   .option("-i, --immediate", "Start the development server after installing dependencies")
   .option("--no-immediate", "Install dependencies without starting the development server")
-  .option("--verbose", "Stream full dependency install logs")
   .addHelpText(
     "after",
     `
@@ -68,7 +67,6 @@ OpenUI examples:
       interactive: boolean;
       install: boolean;
       immediate?: boolean;
-      verbose?: boolean;
     }) => {
       rejectConflictingImmediateFlags(context.argv.slice(2));
       rejectConflictingScaffoldSelectors({
@@ -89,7 +87,6 @@ OpenUI examples:
           noInteractive: !options.interactive,
           noInstall: !options.install,
           immediate: options.immediate,
-          verbose: options.verbose,
         },
         context,
       );

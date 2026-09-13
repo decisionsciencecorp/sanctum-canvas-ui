@@ -4,6 +4,7 @@ export type CliContext = {
   cwd: string;
   argv: string[];
   telemetry: Telemetry;
+  verbose: boolean;
 };
 
 export const context: CliContext = {
@@ -14,4 +15,5 @@ export const context: CliContext = {
     return process.argv;
   },
   telemetry,
+  verbose: false,
 };

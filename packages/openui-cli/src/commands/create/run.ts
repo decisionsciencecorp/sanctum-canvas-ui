@@ -72,6 +72,7 @@ export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): 
       targetDir,
       example: selected.example,
       tel,
+      verbose: ctx.verbose,
     });
     return;
   }
@@ -157,7 +158,7 @@ export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): 
   };
 
   console.info();
-  if (options.verbose) {
+  if (ctx.verbose) {
     console.info(`Scaffolding ${template} into "${name}"...\n`);
     await runScaffold();
   } else {
@@ -180,7 +181,7 @@ export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): 
   });
   const dependencyInstalled = await installProjectDependencies({
     tel,
-    verbose: options.verbose,
+    verbose: ctx.verbose,
     targetDir,
     template,
     aiSetup,
@@ -192,7 +193,7 @@ export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): 
 
   const skillInstalled = await installRequestedSkill({
     enabled: installSkill,
-    verbose: options.verbose,
+    verbose: ctx.verbose,
     targetDir,
     tel,
   });

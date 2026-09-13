@@ -11,7 +11,6 @@ export const deployCommand = new Command("deploy")
   .option("-y, --yes", "Skip confirmation prompts")
   .option("--skip-env", "Do not pass or save local .env values")
   .option("--no-interactive", "Skip prompts (implies --yes)")
-  .option("--verbose", "Stream full deployment build logs")
   .allowUnknownOption()
   .allowExcessArguments()
   .addHelpText(
@@ -36,7 +35,6 @@ Examples:
         yes?: boolean;
         skipEnv?: boolean;
         interactive: boolean;
-        verbose?: boolean;
       },
       command: Command,
     ) => {
@@ -46,7 +44,6 @@ Examples:
           yes: options.yes,
           skipEnv: options.skipEnv,
           noInteractive: !options.interactive,
-          verbose: options.verbose,
           extraArgs: command.args,
         },
         context,
