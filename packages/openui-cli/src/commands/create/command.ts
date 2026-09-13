@@ -1,10 +1,11 @@
 import { Command } from "commander";
 
+import { normalizeAuth } from "../../lib/auth/mint";
 import type { CliContext } from "../../lib/context";
 import { rejectConflictingScaffoldSelectors } from "../../lib/examples-catalog";
-import { rejectConflictingImmediateFlags } from "../../lib/resolve-args";
-import { normalizeAuth, normalizeBackendFramework, normalizeTemplate } from "../../lib/utils";
+import { normalizeBackendFramework, normalizeTemplate } from "../../lib/utils";
 import { wrapCommand } from "../../lib/wrap-command";
+import { rejectConflictingImmediateFlags } from "./lib/resolve";
 
 import { runCreateApp } from "./run";
 

@@ -1,4 +1,4 @@
-import { createFunnelProps } from "../../commands/create/create-telemetry";
+import { createFunnelProps } from "../../commands/create/lib/create-telemetry";
 import { CliCancelledError, CreateError, telemetry } from "../telemetry";
 import { Authenticator } from "./authenticator";
 
@@ -24,6 +24,18 @@ export function assertValidApiKeyName(name: string): void {
 }
 
 export type CloudAuthMethod = "oauth" | "manual" | "skip";
+
+export function normalizeAuth(a?: string): CloudAuthMethod | undefined {
+  if (!a) return undefined;
+  const v = a.toLowerCase();
+  if (v === "oauth" || v === "manual" || v === "skip") return v;
+  throw new CreateError(
+    "args_resolution",
+    `unknown --auth "${a}". Use: oauth | skip (manual is deprecated).`,
+    "invalid_input",
+    "INVALID_AUTH",
+  );
+}
 /** How the cloud key was obtained (for telemetry) — auth method + the `--api-key` flag case. */
 export type ResolvedAuthMethod = CloudAuthMethod | "apikey-flag";
 

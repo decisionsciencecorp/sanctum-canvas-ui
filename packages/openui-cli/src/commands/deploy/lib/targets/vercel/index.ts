@@ -5,11 +5,11 @@ import {
   warnMissingRequiredDeployEnv,
   type DeployTargetOptions,
 } from "../..";
-import { printLogTail } from "../../../../lib/command-output";
-import { adoptVercelEnvVars } from "../../../../lib/env";
-import { runCommand, runQuietCommand } from "../../../../lib/process-runner";
-import { telemetry } from "../../../../lib/telemetry";
-import { throwCommandFailure } from "../../../../lib/utils";
+import { printLogTail } from "../../../../../lib/command-output";
+import { adoptVercelEnvVars } from "../../../../../lib/env";
+import { runCommand, runQuietCommand } from "../../../../../lib/process-runner";
+import { telemetry } from "../../../../../lib/telemetry";
+import { throwCommandFailure } from "../../../../../lib/utils";
 import { formatCliCommand, resolveCliInvocation } from "../../cli-bin";
 import { buildVercelDeployArgs, publicVercelArgs, vercelSpawnArgs } from "./args";
 import {

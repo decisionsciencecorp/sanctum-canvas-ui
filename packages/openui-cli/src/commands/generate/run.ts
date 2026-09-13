@@ -4,7 +4,7 @@ import * as path from "path";
 
 import type { CliContext } from "../../lib/context";
 import { CreateError } from "../../lib/telemetry";
-import { SEPARATION_DELIMITER } from "./delimiter";
+import { SEPARATION_DELIMITER } from "./lib/delimiter";
 
 export interface GenerateOptions {
   out?: string;
@@ -32,7 +32,7 @@ export async function runGenerate(
     throw new CreateError("generate_entry_missing", `File not found: ${entryPath}`);
   }
 
-  const workerPath = path.join(__dirname, "worker.js");
+  const workerPath = path.join(__dirname, "lib", "worker.js");
 
   const workerArgs = [workerPath, entryPath];
   if (options.export) workerArgs.push(options.export);

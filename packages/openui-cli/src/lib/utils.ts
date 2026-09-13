@@ -1,6 +1,5 @@
-import { createFunnelProps } from "../commands/create/create-telemetry";
-import type { OverlayName, TemplateName } from "../commands/create/create-types";
-import type { CloudAuthMethod } from "./auth/mint";
+import { createFunnelProps } from "../commands/create/lib/create-telemetry";
+import type { OverlayName, TemplateName } from "../commands/create/lib/create-types";
 import type { CommandResult } from "./process-runner";
 import {
   CliCancelledError,
@@ -244,18 +243,6 @@ export function normalizeTemplate(t?: string): TemplateName | undefined {
   if (v === "self-hosted" || v === "openui-self-hosted") return "openui-self-hosted";
   if (v === "cloud" || v === "openui-cloud") return "openui-cloud";
   return v;
-}
-
-export function normalizeAuth(a?: string): CloudAuthMethod | undefined {
-  if (!a) return undefined;
-  const v = a.toLowerCase();
-  if (v === "oauth" || v === "manual" || v === "skip") return v;
-  throw new CreateError(
-    "args_resolution",
-    `unknown --auth "${a}". Use: oauth | skip (manual is deprecated).`,
-    "invalid_input",
-    "INVALID_AUTH",
-  );
 }
 
 export function normalizeBackendFramework(framework?: string): OverlayName | undefined {

@@ -1,23 +1,22 @@
 import * as path from "node:path";
 
-import { printLogTail, QUIET_COMMAND_CAPTURE_LIMIT } from "../../lib/command-output";
-import type { CliContext } from "../../lib/context";
-import { resolveInstallPackageManager } from "../../lib/detect-package-manager";
-import { upsertEnvVar } from "../../lib/env";
-import type { ExampleProject } from "../../lib/examples-catalog";
+import type { CliContext } from "../../../lib/context";
+import { resolveInstallPackageManager } from "../../../lib/detect-package-manager";
+import { upsertEnvVar } from "../../../lib/env";
+import type { ExampleProject } from "../../../lib/examples-catalog";
 import {
   exampleDevCommand,
   exampleLayout,
   isNestedExample,
   scaffoldExample,
   type ExampleLayout,
-} from "../../lib/scaffold-example";
-import { withSpinner } from "../../lib/spinner";
-import { CliCancelledError, CreateError } from "../../lib/telemetry";
-import { cliErrorProperties, processErrorProperties } from "../../lib/utils";
+} from "../../../lib/scaffold-example";
+import { withSpinner } from "../../../lib/spinner";
+import { CliCancelledError, CreateError } from "../../../lib/telemetry";
+import { cliErrorProperties } from "../../../lib/utils";
 import { createFunnelProps } from "./create-telemetry";
 import type { CreateAppOptions, EnvResult } from "./create-types";
-import { runSkillInstall, shouldInstallSkill } from "./install-skill";
+import { installRequestedSkill, shouldInstallSkill } from "./install-skill";
 
 export async function runCreateExample(params: {
   options: CreateAppOptions;
@@ -130,7 +129,13 @@ export async function runCreateExample(params: {
     skip_reason: "not_immediate",
   });
 
-  const skillInstalled = await installExampleSkill(installSkill, options.verbose, targetDir, ctx);
+  const skillInstalled = await installRequestedSkill({
+    enabled: installSkill,
+    verbose: options.verbose,
+    targetDir,
+    ctx,
+    printFailureLog: true,
+  });
 
   ctx.telemetry.capture("cli_create_succeeded", {
     ...createFunnelProps("create_succeeded"),
@@ -195,78 +200,6 @@ async function promptForProviderKey(envKey: string): Promise<string | null> {
     }
     throw error;
   }
-}
-
-async function installExampleSkill(
-  enabled: boolean,
-  verbose: boolean | undefined,
-  targetDir: string,
-  ctx: CliContext,
-): Promise<boolean> {
-  if (!enabled) return false;
-
-  ctx.telemetry.capture("cli_skill_install_started", {
-    ...createFunnelProps("skill_install_started"),
-    skill_installed: true,
-  });
-  const runSkill = () =>
-    verbose
-      ? runSkillInstall(targetDir)
-      : runSkillInstall(targetDir, {
-          echo: false,
-          stdin: "ignore",
-          captureLimit: QUIET_COMMAND_CAPTURE_LIMIT,
-        });
-  if (verbose) {
-    console.info("Installing OpenUI agent skill...\n");
-  }
-  const skillResult = verbose
-    ? await runSkill()
-    : await withSpinner("Installing OpenUI agent skill...", runSkill);
-  const skillInstalled = !skillResult.error && skillResult.status === 0;
-  if (skillInstalled) {
-    if (!verbose) {
-      console.info("✓ OpenUI agent skill installed");
-    }
-    ctx.telemetry.capture("cli_skill_install_finished", {
-      ...createFunnelProps("skill_install_finished"),
-      skill_installed: true,
-      duration_ms: skillResult.durationMs,
-      exit_code: skillResult.status,
-    });
-    return true;
-  }
-
-  const properties = processErrorProperties(skillResult, "skill_install", {
-    error_class: "dependency",
-    error_code: "SKILL_INSTALL_FAILED",
-  });
-  if (properties.error_class === "user_cancelled") {
-    ctx.telemetry.capture("cli_skill_install_cancelled", {
-      ...createFunnelProps("skill_install_cancelled"),
-      skill_installed: false,
-      ...properties,
-    });
-    throw new CliCancelledError(
-      "skill_install",
-      properties.cancellation_exit_code ?? 0,
-      properties,
-    );
-  }
-  ctx.telemetry.capture("cli_skill_install_failed", {
-    ...createFunnelProps("skill_install_failed"),
-    skill_installed: false,
-    ...properties,
-  });
-  if (!verbose) {
-    printLogTail(skillResult.diagnosticTail, "skill install log (tail)");
-  }
-  console.warn(
-    "\nCould not install the OpenUI agent skill automatically.\n" +
-      "You can install it manually later with:\n\n" +
-      "  npx skills add thesysdev/skills --skill openui\n",
-  );
-  return false;
 }
 
 function posixJoin(...parts: string[]): string {

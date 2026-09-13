@@ -1,4 +1,4 @@
-import { runCommand } from "../../../../lib/process-runner";
+import { runCommand } from "../../../../../lib/process-runner";
 import type { CliInvocation } from "../../cli-bin";
 import { SENSITIVE_DEPLOY_ENV_KEYS } from "../../project-env";
 import { canPromptInteractive, confirmOrDefault } from "../../prompt";

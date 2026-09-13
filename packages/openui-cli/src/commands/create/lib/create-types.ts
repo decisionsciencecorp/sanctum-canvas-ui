@@ -1,4 +1,4 @@
-import type { CloudAuthMethod, ResolvedAuthMethod } from "../../lib/auth/mint";
+import type { CloudAuthMethod, ResolvedAuthMethod } from "../../../lib/auth/mint";
 
 /** Template `key` from `templates/templates.json`. */
 export type TemplateName = string;

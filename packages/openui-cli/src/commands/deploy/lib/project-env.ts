@@ -1,4 +1,4 @@
-import { loadAllowlistedProjectEnv } from "../../lib/env";
+import { loadAllowlistedProjectEnv } from "../../../lib/env";
 import { readProjectDependencies } from "./project";
 
 /** Known OpenUI template env keys. Values must never be logged or sent to telemetry. */

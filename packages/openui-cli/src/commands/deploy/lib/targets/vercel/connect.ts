@@ -1,11 +1,11 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import { adoptVercelEnvVars, loadAllowlistedProjectEnv } from "../../../../lib/env";
-import { mutedNpmEnv, runCommand } from "../../../../lib/process-runner";
-import { withSpinner } from "../../../../lib/spinner";
-import { CreateError } from "../../../../lib/telemetry";
-import { throwCommandFailure } from "../../../../lib/utils";
+import { adoptVercelEnvVars, loadAllowlistedProjectEnv } from "../../../../../lib/env";
+import { mutedNpmEnv, runCommand } from "../../../../../lib/process-runner";
+import { withSpinner } from "../../../../../lib/spinner";
+import { CreateError } from "../../../../../lib/telemetry";
+import { throwCommandFailure } from "../../../../../lib/utils";
 import type { CliInvocation } from "../../cli-bin";
 import { readProjectPackageJson } from "../../project";
 import { canPromptInteractive } from "../../prompt";
