@@ -6,10 +6,10 @@ import {
   type DeployTargetOptions,
 } from "../..";
 import { printLogTail } from "../../../../../lib/command-output";
-import { adoptVercelEnvVars } from "../../../../../lib/env";
 import { runCommand, runQuietCommand } from "../../../../../lib/process-runner";
 import { throwCommandFailure } from "../../../../../lib/utils";
 import { formatCliCommand, resolveCliInvocation } from "../../cli-bin";
+import { adoptVercelEnvVars } from "../../vercel-env";
 import { buildVercelDeployArgs, publicVercelArgs, vercelSpawnArgs } from "./args";
 import {
   isVercelLinked,

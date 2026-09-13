@@ -6,7 +6,6 @@ import { CreateError } from "../../lib/errors";
 import type { TemplateOverlay } from "../../lib/overlays";
 import { applyScaffoldFiles, resolveTemplateSource } from "../../lib/scaffold";
 import { withSpinner } from "../../lib/spinner";
-import { findCatalogOverlay } from "../../lib/templates-catalog";
 import { cliErrorProperties, processErrorProperties } from "../../lib/utils";
 import { runCreateExample } from "./lib/create-example";
 import type { CreateAppOptions } from "./lib/create-types";
@@ -28,6 +27,7 @@ import {
   resolveProjectIdentity,
 } from "./lib/resolve";
 import { aiSetupFromTemplate, CreateTelemetryClient } from "./lib/telemetry";
+import { findCatalogOverlay } from "./lib/templates-catalog";
 
 export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): Promise<void> {
   const tel = new CreateTelemetryClient(ctx.telemetry);

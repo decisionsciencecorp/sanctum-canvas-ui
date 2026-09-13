@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import { adoptVercelEnvVars, loadAllowlistedProjectEnv } from "../../../../../lib/env";
+import { loadAllowlistedProjectEnv } from "../../../../../lib/env";
 import { CreateError } from "../../../../../lib/errors";
 import { mutedNpmEnv, runCommand } from "../../../../../lib/process-runner";
 import { withSpinner } from "../../../../../lib/spinner";
@@ -10,6 +10,7 @@ import type { CliInvocation } from "../../cli-bin";
 import { readProjectPackageJson } from "../../project";
 import { canPromptInteractive } from "../../prompt";
 import type { DeployTargetOptions } from "../../types";
+import { adoptVercelEnvVars } from "../../vercel-env";
 import { vercelLinkScopeArgs, vercelSpawnArgs } from "./args";
 
 /** Auth vars Vercel CLI reads. OpenUI apps keep these in `.env`; Vercel often writes `.env.local`. */

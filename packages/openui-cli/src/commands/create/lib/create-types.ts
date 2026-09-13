@@ -22,7 +22,9 @@ export type AiSetup = "openui_cloud" | "openai_compatible_provider";
 
 export type EnvResult = {
   envWritten: boolean;
-  envContent?: string;
+  envVars?: Record<string, string>;
+  /** Comment-only `.env` body when there are no assignments to upsert. */
+  envStub?: string;
   authMethod?: ResolvedAuthMethod;
   authSucceeded?: boolean;
 };

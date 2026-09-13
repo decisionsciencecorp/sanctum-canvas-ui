@@ -2,6 +2,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 import { resolveCloudApiKey, THESYS_KEYS_URL } from "../../../lib/auth/mint";
+import { DEFAULT_ENV_FILE, upsertEnvVar } from "../../../lib/env";
 import { CliCancelledError } from "../../../lib/errors";
 import { cliErrorProperties } from "../../../lib/utils";
 import type { CreateAppOptions, EnvResult, TemplateName } from "./create-types";
@@ -19,6 +20,10 @@ export function requiredApiKeyEnv(template: TemplateName): "THESYS_API_KEY" | "O
   return template === "openui-cloud" ? "THESYS_API_KEY" : "OPENAI_API_KEY";
 }
 
+export function writeEnvVar(filePath: string, name: string, value: string): void {
+  upsertEnvVar(filePath, name, value);
+}
+
 export async function writeEnv(
   targetDir: string,
   result: EnvResult,
@@ -28,9 +33,18 @@ export async function writeEnv(
   // it as `app_id`, so every conversation this app creates is bound to it and
   // apps sharing one org API key stay isolated from each other. It must stay
   // stable for the app's lifetime — regenerating it orphans existing threads.
-  const content = `${result.envContent ?? ""}${appId ? `APP_ID=${appId}\n` : ""}`;
-  if (!content) return;
-  await fs.promises.writeFile(path.join(targetDir, ".env"), content);
+  const dest = path.join(targetDir, DEFAULT_ENV_FILE);
+  const vars = { ...result.envVars };
+  if (appId) vars.APP_ID = appId;
+  const names = Object.keys(vars);
+  if (names.length === 0) {
+    if (!result.envStub) return;
+    await fs.promises.writeFile(dest, result.envStub);
+    return;
+  }
+  for (const name of names) {
+    writeEnvVar(dest, name, vars[name] ?? "");
+  }
 }
 
 async function promptForProviderKey(): Promise<string | null> {
@@ -57,21 +71,22 @@ export async function resolveChatEnv(interactive: boolean): Promise<EnvResult> {
   // Always write a file, so the scaffold has a .env to edit rather than one the
   // user must know to create. Without a key the entries stay commented out: an
   // empty `OPENAI_API_KEY=` would shadow a key already exported in the shell.
-  const lines = apiKey
-    ? [`OPENAI_API_KEY=${apiKey}`]
-    : [
-        "# Your OpenAI-compatible provider key. Uncomment and fill it in.",
-        "# OPENAI_API_KEY=sk-your-key-here",
-        "# Optional:",
-        "# OPENAI_MODEL=gpt-5.2",
-        "# OPENAI_BASE_URL=https://api.openai.com/v1",
-      ];
+  if (apiKey) {
+    return { envWritten: true, envVars: { OPENAI_API_KEY: apiKey } };
+  }
 
   return {
     // False without a key, so the immediate dev-server gate and the
     // "add your API key" message still apply even though .env now exists.
-    envWritten: apiKey != null,
-    envContent: lines.join("\n") + "\n",
+    envWritten: false,
+    envStub: [
+      "# Your OpenAI-compatible provider key. Uncomment and fill it in.",
+      "# OPENAI_API_KEY=sk-your-key-here",
+      "# Optional:",
+      "# OPENAI_MODEL=gpt-5.2",
+      "# OPENAI_BASE_URL=https://api.openai.com/v1",
+      "",
+    ].join("\n"),
   };
 }
 
@@ -123,10 +138,12 @@ export async function resolveCloudEnv(
     console.error(`\n[!] Could not obtain an API key: ${msg}`);
     console.error(`  Add THESYS_API_KEY to .env later (keys: ${THESYS_KEYS_URL}).\n`);
   }
-  const lines = [`THESYS_API_KEY=${apiKey ?? ""}`, `DEMO_USER_ID=demo-user`];
   return {
     envWritten: apiKey != null,
-    envContent: lines.join("\n") + "\n",
+    envVars: {
+      THESYS_API_KEY: apiKey ?? "",
+      DEMO_USER_ID: "demo-user",
+    },
     authMethod,
     authSucceeded: apiKey != null,
   };

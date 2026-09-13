@@ -2,10 +2,10 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 
-import { checkoutSource } from "./checkout";
-import type { PackageManagerName } from "./detect-package-manager";
-import { CreateError } from "./errors";
-import type { ExampleProject } from "./examples-catalog";
+import { checkoutSource } from "../../../lib/checkout";
+import type { PackageManagerName } from "../../../lib/detect-package-manager";
+import { CreateError } from "../../../lib/errors";
+import type { ExampleProject } from "../../../lib/examples-catalog";
 
 const ARTIFACT_DIRS = new Set(["node_modules", ".next", ".turbo", "dist", ".nuxt", ".svelte-kit"]);
 

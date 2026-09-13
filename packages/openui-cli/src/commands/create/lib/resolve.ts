@@ -7,6 +7,9 @@ import {
   type ExampleProject,
 } from "../../../lib/examples-catalog";
 import { resolveArgs } from "../../../lib/resolve-args";
+import type { OverlayName, TemplateName } from "./create-types";
+import { resolveAvailableTarget } from "./target-dir";
+import type { CreateTelemetryClient } from "./telemetry";
 import {
   DEFAULT_TEMPLATE_KEY,
   findCatalogOverlay,
@@ -14,10 +17,7 @@ import {
   loadTemplatesCatalog,
   type CatalogOverlay,
   type CatalogTemplate,
-} from "../../../lib/templates-catalog";
-import type { OverlayName, TemplateName } from "./create-types";
-import { resolveAvailableTarget } from "./target-dir";
-import type { CreateTelemetryClient } from "./telemetry";
+} from "./templates-catalog";
 
 export function rejectConflictingImmediateFlags(args: string[]): void {
   const separatorIndex = args.indexOf("--");

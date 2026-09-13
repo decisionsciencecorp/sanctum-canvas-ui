@@ -1,20 +1,20 @@
 import * as path from "node:path";
 
 import { resolveInstallPackageManager } from "../../../lib/detect-package-manager";
-import { upsertEnvVar } from "../../../lib/env";
 import { CliCancelledError, CreateError } from "../../../lib/errors";
 import type { ExampleProject } from "../../../lib/examples-catalog";
+import { withSpinner } from "../../../lib/spinner";
+import { cliErrorProperties } from "../../../lib/utils";
+import type { CreateAppOptions, EnvResult } from "./create-types";
+import { writeEnvVar } from "./env";
+import { installRequestedSkill, shouldInstallSkill } from "./install-skill";
 import {
   exampleDevCommand,
   exampleLayout,
   isNestedExample,
   scaffoldExample,
   type ExampleLayout,
-} from "../../../lib/scaffold-example";
-import { withSpinner } from "../../../lib/spinner";
-import { cliErrorProperties } from "../../../lib/utils";
-import type { CreateAppOptions, EnvResult } from "./create-types";
-import { installRequestedSkill, shouldInstallSkill } from "./install-skill";
+} from "./scaffold-example";
 import type { CreateTelemetryClient } from "./telemetry";
 
 export async function runCreateExample(params: {
@@ -84,7 +84,7 @@ export async function runCreateExample(params: {
 
   try {
     if (envResult.envKeyValue && example.envKey) {
-      upsertEnvVar(path.join(targetDir, example.envFile), example.envKey, envResult.envKeyValue);
+      writeEnvVar(path.join(targetDir, example.envFile), example.envKey, envResult.envKeyValue);
     }
   } catch (err) {
     const properties = cliErrorProperties(err, {

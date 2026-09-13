@@ -1,5 +1,5 @@
-import { fetchSourceFile } from "./checkout";
-import { CreateError } from "./errors";
+import { fetchSourceFile } from "../../../lib/checkout";
+import { CreateError } from "../../../lib/errors";
 
 export const TEMPLATES_CATALOG_PATH = "templates/templates.json";
 
