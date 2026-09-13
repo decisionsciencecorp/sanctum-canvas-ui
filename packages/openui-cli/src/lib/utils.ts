@@ -1,4 +1,3 @@
-import type { OverlayName, TemplateName } from "../commands/create/lib/create-types";
 import {
   CliCancelledError,
   CreateError,
@@ -226,34 +225,4 @@ export function handleCliError(
   telemetry.capture(capturedEvent, { ...extra, ...errorProperties });
 
   process.exitCode = cancelled ? e.exitCode : 1;
-}
-
-export function normalizeTemplate(t?: string): TemplateName | undefined {
-  if (!t) return undefined;
-  const v = t.toLowerCase();
-  if (v === "self-hosted" || v === "openui-self-hosted") return "openui-self-hosted";
-  if (v === "cloud" || v === "openui-cloud") return "openui-cloud";
-  return v;
-}
-
-export function normalizeBackendFramework(framework?: string): OverlayName | undefined {
-  if (!framework) return undefined;
-  switch (framework.toLowerCase()) {
-    case "default":
-    case "none":
-    case "no-framework":
-      return "default";
-    case "langgraph":
-    case "lang-graph":
-      return "langgraph";
-    case "vercel":
-    case "vercel-ai-sdk":
-    case "ai-sdk":
-      return "vercel-ai-sdk";
-    case "eve":
-    case "vercel-eve":
-      return "vercel-eve";
-    default:
-      return framework.toLowerCase();
-  }
 }

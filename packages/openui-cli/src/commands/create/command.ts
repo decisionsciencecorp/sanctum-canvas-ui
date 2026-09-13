@@ -3,7 +3,6 @@ import { Command } from "commander";
 import { normalizeAuth } from "../../lib/auth/mint";
 import { context } from "../../lib/context";
 import { rejectConflictingScaffoldSelectors } from "../../lib/examples-catalog";
-import { normalizeBackendFramework, normalizeTemplate } from "../../lib/utils";
 import { rejectConflictingImmediateFlags } from "./lib/resolve";
 
 import { runCreateApp } from "./run";
@@ -74,15 +73,15 @@ OpenUI examples:
       rejectConflictingImmediateFlags(context.argv.slice(2));
       rejectConflictingScaffoldSelectors({
         example: options.example,
-        backendFramework: normalizeBackendFramework(options.backendFramework),
+        backendFramework: options.backendFramework,
         template: options.template,
       });
 
       await runCreateApp(
         {
           name: options.name,
-          template: normalizeTemplate(options.template),
-          backendFramework: normalizeBackendFramework(options.backendFramework),
+          template: options.template,
+          backendFramework: options.backendFramework,
           example: options.example,
           apiKey: options.apiKey,
           auth: normalizeAuth(options.auth),
