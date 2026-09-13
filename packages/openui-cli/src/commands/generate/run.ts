@@ -5,7 +5,7 @@ import * as path from "path";
 import type { CliContext } from "../../lib/context";
 import { CreateError } from "../../lib/errors";
 import { GenerateTelemetryClient } from "./lib/telemetry";
-import { SEPARATION_DELIMITER } from "./lib/worker";
+import { SEPARATION_DELIMITER } from "./lib/delimiter";
 
 export interface GenerateOptions {
   out?: string;

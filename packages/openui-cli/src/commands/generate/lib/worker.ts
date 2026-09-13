@@ -14,10 +14,7 @@ import * as os from "os";
 import * as path from "path";
 
 import * as esbuild from "esbuild";
-
-/** ASCII Record Separator — Untypeable in prompt text and always
- *  escaped by JSON.stringify, so it can never collide with either artifact. */
-export const SEPARATION_DELIMITER = "\u001E";
+import { SEPARATION_DELIMITER } from "./delimiter";
 
 // ── Main ──
 
