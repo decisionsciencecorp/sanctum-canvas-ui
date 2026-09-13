@@ -1,7 +1,17 @@
-import type { Telemetry } from "./telemetry";
+import { telemetry, type Telemetry } from "./telemetry";
 
 export type CliContext = {
   cwd: string;
-  telemetry: Telemetry;
   argv: string[];
+  telemetry: Telemetry;
+};
+
+export const context: CliContext = {
+  get cwd() {
+    return process.cwd();
+  },
+  get argv() {
+    return process.argv;
+  },
+  telemetry,
 };

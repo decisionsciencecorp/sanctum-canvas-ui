@@ -3,9 +3,10 @@ import * as path from "node:path";
 
 import type { CliContext } from "../../lib/context";
 import { resolveInstallPackageManager } from "../../lib/detect-package-manager";
-import { CreateError } from "../../lib/telemetry";
+import { CreateError } from "../../lib/errors";
 import { assertOpenUiProject, DEFAULT_DEPLOY_TARGET, type DeployTargetOptions } from "./lib";
 import { deployToTarget } from "./lib/targets";
+import { DeployTelemetryClient } from "./lib/telemetry";
 
 /** OpenUI-only flags. Everything else is forwarded for the target CLI to validate. */
 const OWN_FLAGS = new Set(["--skip-env", "--no-interactive", "--verbose"]);
@@ -26,6 +27,7 @@ type ResolvedDeploy = {
 
 /** Resolve flags, validate the project dir, then hand off to the deploy target. */
 export async function runDeploy(options: DeployOptions, ctx: CliContext): Promise<void> {
+  const tel = new DeployTelemetryClient(ctx.telemetry);
   const resolved = resolveDeployInvocation(options);
   const projectDir = resolveProjectDir(resolved.projectDir, ctx.cwd);
   const extraArgs = resolved.extraArgs.filter((arg) => arg !== "--verbose");
@@ -46,10 +48,11 @@ export async function runDeploy(options: DeployOptions, ctx: CliContext): Promis
     skipEnv,
     noInteractive: Boolean(options.noInteractive),
     verbose,
+    tel,
   };
 
-  ctx.telemetry.register({ package_manager: resolveInstallPackageManager().name });
-  ctx.telemetry.capture("cli_deploy_started", {
+  tel.registerContext({ package_manager: resolveInstallPackageManager().name });
+  tel.trackStarted({
     target: DEFAULT_DEPLOY_TARGET,
     prod,
     yes,

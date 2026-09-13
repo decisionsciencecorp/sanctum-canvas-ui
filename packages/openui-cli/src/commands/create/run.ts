@@ -2,14 +2,13 @@ import * as fs from "node:fs";
 
 import type { CliContext } from "../../lib/context";
 import { resolveInstallPackageManager } from "../../lib/detect-package-manager";
+import { CreateError } from "../../lib/errors";
 import type { TemplateOverlay } from "../../lib/overlays";
 import { applyScaffoldFiles, resolveTemplateSource } from "../../lib/scaffold";
 import { withSpinner } from "../../lib/spinner";
-import { CreateError } from "../../lib/telemetry";
 import { findCatalogOverlay } from "../../lib/templates-catalog";
 import { cliErrorProperties, processErrorProperties } from "../../lib/utils";
 import { runCreateExample } from "./lib/create-example";
-import { aiSetupFromTemplate, createFunnelProps } from "./lib/create-telemetry";
 import type { CreateAppOptions } from "./lib/create-types";
 import { runDevCommand } from "./lib/dev-server";
 import {
@@ -28,14 +27,15 @@ import {
   resolveImmediate,
   resolveProjectIdentity,
 } from "./lib/resolve";
+import { aiSetupFromTemplate, CreateTelemetryClient } from "./lib/telemetry";
 
 export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): Promise<void> {
+  const tel = new CreateTelemetryClient(ctx.telemetry);
   const interactive = !options.noInteractive;
   const packageManager = resolveInstallPackageManager();
   const t0 = Date.now();
-  ctx.telemetry.register({ interactive, package_manager: packageManager.name });
-  ctx.telemetry.capture("cli_create_started", {
-    ...createFunnelProps("create_started"),
+  tel.registerContext({ interactive, package_manager: packageManager.name });
+  tel.trackStarted({
     interactive,
     has_name_arg: Boolean(options.name),
     has_template_arg: Boolean(options.template),
@@ -53,7 +53,7 @@ export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): 
     backendFramework: options.backendFramework,
     interactive,
   });
-  const { name, targetDir } = await resolveProjectIdentity(options.name, interactive);
+  const { name, targetDir } = await resolveProjectIdentity(options.name, interactive, tel);
 
   const selected = await resolveCreateSelection({
     backendFramework: options.backendFramework,
@@ -71,7 +71,7 @@ export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): 
       name,
       targetDir,
       example: selected.example,
-      ctx,
+      tel,
     });
     return;
   }
@@ -91,14 +91,9 @@ export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): 
   findCatalogOverlay(templateEntry, backendFramework);
 
   const aiSetup = aiSetupFromTemplate(template);
-  ctx.telemetry.register({ template, ai_setup: aiSetup, backend_framework: backendFramework });
-  ctx.telemetry.capture("cli_ai_setup_selected", {
-    ...createFunnelProps("ai_setup_selected"),
-    template,
-    ai_setup: aiSetup,
-  });
-  ctx.telemetry.capture("cli_backend_framework_selected", {
-    ...createFunnelProps("backend_framework_selected"),
+  tel.registerContext({ template, ai_setup: aiSetup, backend_framework: backendFramework });
+  tel.trackAiSetupSelected({ template, ai_setup: aiSetup });
+  tel.trackBackendFrameworkSelected({
     backend_framework: backendFramework,
     backend_framework_source: options.backendFramework
       ? "flag"
@@ -107,27 +102,20 @@ export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): 
         : "default",
   });
 
-  ctx.telemetry.capture("cli_env_resolution_started", {
-    ...createFunnelProps("env_resolution_started"),
-    template,
-    ai_setup: aiSetup,
-  });
+  tel.trackEnvResolutionStarted({ template, ai_setup: aiSetup });
   const envResult =
     template === "openui-self-hosted"
       ? await resolveChatEnv(interactive)
-      : await resolveCloudEnv(name, options, interactive, ctx);
+      : await resolveCloudEnv(name, options, interactive, tel);
 
   const installSkill = await shouldInstallSkill(options.skill, interactive);
-  ctx.telemetry.capture("cli_skill_installed", {
-    ...createFunnelProps("skill_prompt_resolved"),
-    skill_installed: installSkill,
-  });
+  tel.trackSkillInstalled({ skill_installed: installSkill });
 
   const immediateResolution = resolveImmediate(options.immediate, options.noInstall, interactive);
   const apiKeyEnv = requiredApiKeyEnv(template);
   const apiKeyAvailable = envResult.envWritten || Boolean(process.env[apiKeyEnv]?.trim());
   const devStartBlockedByMissingApiKey = immediateResolution.immediate && !apiKeyAvailable;
-  ctx.telemetry.capture("cli_immediate_selected", {
+  tel.trackImmediateSelected({
     immediate: immediateResolution.immediate,
     dependency_install_requested: immediateResolution.installDependencies,
     selection_source: immediateResolution.source,
@@ -136,11 +124,7 @@ export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): 
   let overlay: TemplateOverlay | undefined;
   const runScaffold = async () => {
     const { dir: templateDir } = await resolveTemplateSource(template);
-    ctx.telemetry.capture("cli_scaffold_started", {
-      ...createFunnelProps("scaffold_started"),
-      template,
-      ai_setup: aiSetup,
-    });
+    tel.trackScaffoldStarted({ template, ai_setup: aiSetup });
     try {
       overlay = applyScaffoldFiles({
         templateDir,
@@ -160,12 +144,7 @@ export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): 
         error_class: "filesystem",
         error_code: "SCAFFOLD_FAILED",
       });
-      ctx.telemetry.capture("cli_scaffold_failed", {
-        ...createFunnelProps("scaffold_failed"),
-        template,
-        ai_setup: aiSetup,
-        ...properties,
-      });
+      tel.trackScaffoldFailed({ template, ai_setup: aiSetup, ...properties });
       throw new CreateError(
         properties.failure_stage,
         err instanceof Error ? err.message : String(err),
@@ -185,13 +164,8 @@ export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): 
     await withSpinner("Scaffolding...", runScaffold);
     console.info("✓ Scaffolded");
   }
-  ctx.telemetry.capture("cli_scaffold_succeeded", {
-    ...createFunnelProps("scaffold_succeeded"),
-    template,
-    ai_setup: aiSetup,
-  });
-  ctx.telemetry.capture("cli_env_resolved", {
-    ...createFunnelProps("env_written"),
+  tel.trackScaffoldSucceeded({ template, ai_setup: aiSetup });
+  tel.trackEnvResolved({
     template,
     ai_setup: aiSetup,
     env_written: envResult.envWritten,
@@ -205,7 +179,7 @@ export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): 
     targetDir,
   });
   const dependencyInstalled = await installProjectDependencies({
-    ctx,
+    tel,
     verbose: options.verbose,
     targetDir,
     template,
@@ -220,15 +194,14 @@ export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): 
     enabled: installSkill,
     verbose: options.verbose,
     targetDir,
-    ctx,
+    tel,
   });
 
   const devCmd = packageManager.runCmd;
   const startDev =
     immediateResolution.immediate && dependencyInstalled && !devStartBlockedByMissingApiKey;
 
-  ctx.telemetry.capture("cli_create_succeeded", {
-    ...createFunnelProps("create_succeeded"),
+  tel.trackCreateSucceeded({
     template,
     ai_setup: aiSetup,
     duration_ms: Date.now() - t0,
@@ -251,7 +224,7 @@ export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): 
   );
 
   if (devStartBlockedByMissingApiKey) {
-    ctx.telemetry.capture("cli_dev_command_skipped", {
+    tel.trackDevCommandSkipped({
       skip_reason: "missing_api_key",
       required_env: apiKeyEnv,
     });
@@ -260,13 +233,13 @@ export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): 
   }
 
   if (!startDev) {
-    ctx.telemetry.capture("cli_dev_command_skipped", {
+    tel.trackDevCommandSkipped({
       skip_reason: options.noInstall ? "dependencies_not_installed" : "not_immediate",
     });
     return;
   }
 
-  ctx.telemetry.capture("cli_dev_command_started", {
+  tel.trackDevCommandStarted({
     package_manager: packageManager.name,
   });
   const devResult = await runDevCommand(devCmd, targetDir);
@@ -278,7 +251,7 @@ export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): 
     devResult.signal === "SIGTERM";
 
   if (stoppedNormally) {
-    ctx.telemetry.capture("cli_dev_command_stopped", {
+    tel.trackDevCommandStopped({
       package_manager: packageManager.name,
       duration_ms: devResult.durationMs,
       exit_code: devResult.status,
@@ -290,7 +263,7 @@ export async function runCreateApp(options: CreateAppOptions, ctx: CliContext): 
       error_class: "process",
       error_code: "NONZERO_EXIT",
     });
-    ctx.telemetry.capture("cli_dev_command_failed", {
+    tel.trackDevCommandFailed({
       package_manager: packageManager.name,
       failure_reason: devResult.error ? "spawn_error" : "nonzero_exit",
       ...properties,

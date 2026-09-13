@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import { CreateError } from "../../../lib/telemetry";
+import { CreateError } from "../../../lib/errors";
 
 type ProjectPackageJson = {
   name?: string;

@@ -1,8 +1,7 @@
 import { Command } from "commander";
 
-import type { CliContext } from "../../lib/context";
+import { context } from "../../lib/context";
 import { DEFAULT_ENV_FILE } from "../../lib/env";
-import { wrapCommand } from "../../lib/wrap-command";
 
 import { runGenerateApiKey } from "./run";
 
@@ -27,18 +26,6 @@ Examples:
   openui generate-api-key --file .env.local --key THESYS_API_KEY
 `,
   )
-  .action(
-    wrapCommand(
-      "cli_generate_api_key_failed",
-      async (options: { file?: string; key?: string; name?: string }, ctx: CliContext) => {
-        await runGenerateApiKey(
-          {
-            file: options.file,
-            key: options.key,
-            name: options.name,
-          },
-          ctx,
-        );
-      },
-    ),
-  );
+  .action(async (options: { file?: string; key?: string; name?: string }) => {
+    await runGenerateApiKey(options, context);
+  });

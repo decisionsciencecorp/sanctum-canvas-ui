@@ -3,7 +3,7 @@ import * as path from "node:path";
 
 import { parse as parseDotenv } from "dotenv";
 
-import { CreateError } from "./telemetry";
+import { CreateError } from "./errors";
 
 /** True for `"1"` or `"true"` (any case). */
 export const isTruthyEnv = (value?: string) => value === "1" || value?.toLowerCase() === "true";

@@ -3,8 +3,9 @@ import * as fs from "fs";
 import * as path from "path";
 
 import type { CliContext } from "../../lib/context";
-import { CreateError } from "../../lib/telemetry";
-import { SEPARATION_DELIMITER } from "./lib/delimiter";
+import { CreateError } from "../../lib/errors";
+import { GenerateTelemetryClient } from "./lib/telemetry";
+import { SEPARATION_DELIMITER } from "./lib/worker";
 
 export interface GenerateOptions {
   out?: string;
@@ -20,8 +21,9 @@ export async function runGenerate(
   options: Omit<GenerateOptions, "interactive">,
   ctx: CliContext,
 ): Promise<void> {
+  const tel = new GenerateTelemetryClient(ctx.telemetry);
   const t0 = Date.now();
-  ctx.telemetry.capture("cli_generate_started", {
+  tel.trackStarted({
     json_schema: !!options.jsonSchema,
     spec: !!options.spec,
     out_to_file: !!options.out,
@@ -80,7 +82,7 @@ export async function runGenerate(
     }
   }
 
-  ctx.telemetry.capture("cli_generate_succeeded", {
+  tel.trackSucceeded({
     json_schema: !!options.jsonSchema,
     spec: !!options.spec,
     out_to_file: !!options.out,

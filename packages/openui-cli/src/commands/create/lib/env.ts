@@ -2,11 +2,10 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 import { resolveCloudApiKey, THESYS_KEYS_URL } from "../../../lib/auth/mint";
-import type { CliContext } from "../../../lib/context";
-import { CliCancelledError } from "../../../lib/telemetry";
+import { CliCancelledError } from "../../../lib/errors";
 import { cliErrorProperties } from "../../../lib/utils";
-import { createFunnelProps } from "./create-telemetry";
 import type { CreateAppOptions, EnvResult, TemplateName } from "./create-types";
+import type { CreateTelemetryClient } from "./telemetry";
 
 export function buildAppId(name: string): string {
   // Stable per-scaffold identity (see writeEnv). Slugified because the name is
@@ -80,13 +79,12 @@ export async function resolveCloudEnv(
   name: string,
   options: CreateAppOptions,
   interactive: boolean,
-  ctx: CliContext,
+  tel: CreateTelemetryClient,
 ): Promise<EnvResult> {
   let apiKey: string | null = null;
   let authMethod: EnvResult["authMethod"];
   try {
-    ctx.telemetry.capture("cli_cloud_auth_started", {
-      ...createFunnelProps("cloud_auth_started"),
+    tel.trackCloudAuthStarted({
       auth_method: options.auth ?? (options.apiKey ? "apikey-flag" : undefined),
     });
     const resolved = await resolveCloudApiKey({
@@ -94,18 +92,17 @@ export async function resolveCloudEnv(
       auth: options.auth,
       projectName: name,
       interactive,
+      tel: tel.authClient(),
     });
     apiKey = resolved.key;
     authMethod = resolved.method;
-    ctx.telemetry.capture("cli_cloud_auth_method", {
-      ...createFunnelProps("cloud_auth_resolved"),
+    tel.trackCloudAuthMethod({
       auth_method: resolved.method,
       auth_succeeded: apiKey != null,
     });
   } catch (err) {
     if (err instanceof CliCancelledError) {
-      ctx.telemetry.capture("cli_cloud_auth_cancelled", {
-        ...createFunnelProps("cloud_auth_cancelled"),
+      tel.trackCloudAuthCancelled({
         auth_method: options.auth ?? (options.apiKey ? "apikey-flag" : undefined),
         auth_succeeded: false,
         ...cliErrorProperties(err),
@@ -118,8 +115,7 @@ export async function resolveCloudEnv(
       error_class: "authentication",
       error_code: "AUTH_FAILED",
     });
-    ctx.telemetry.capture("cli_cloud_auth_failed", {
-      ...createFunnelProps("cloud_auth_failed"),
+    tel.trackCloudAuthFailed({
       auth_method: options.auth ?? (options.apiKey ? "apikey-flag" : undefined),
       auth_succeeded: false,
       ...properties,

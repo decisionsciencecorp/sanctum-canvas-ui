@@ -2,14 +2,13 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 import { printLogTail, QUIET_COMMAND_CAPTURE_LIMIT } from "../../../lib/command-output";
-import type { CliContext } from "../../../lib/context";
 import type { PackageManager } from "../../../lib/detect-package-manager";
+import { CliCancelledError, CreateError } from "../../../lib/errors";
 import { mutedNpmEnv, runCommand } from "../../../lib/process-runner";
 import { withSpinner } from "../../../lib/spinner";
-import { CliCancelledError, CreateError } from "../../../lib/telemetry";
 import { processErrorProperties } from "../../../lib/utils";
-import { createFunnelProps } from "./create-telemetry";
 import type { OverlayName, TemplateName } from "./create-types";
+import type { CreateTelemetryClient } from "./telemetry";
 
 export function resolveInstallInvocation(params: {
   backendFramework: OverlayName;
@@ -40,7 +39,7 @@ export function resolveInstallInvocation(params: {
 }
 
 export async function installProjectDependencies(params: {
-  ctx: CliContext;
+  tel: CreateTelemetryClient;
   verbose?: boolean;
   targetDir: string;
   template: TemplateName;
@@ -51,7 +50,7 @@ export async function installProjectDependencies(params: {
   installDependencies: boolean;
 }): Promise<boolean> {
   const {
-    ctx,
+    tel,
     verbose,
     targetDir,
     template,
@@ -63,18 +62,14 @@ export async function installProjectDependencies(params: {
   } = params;
 
   if (!installDependencies) {
-    ctx.telemetry.capture("cli_dependency_install_skipped", {
+    tel.trackDependencyInstallSkipped({
       skip_reason: "no_install_flag",
     });
     console.info(`Skipping dependency install (--no-install). Run \`${installCmd}\` later.`);
     return false;
   }
 
-  ctx.telemetry.capture("cli_dependency_install_started", {
-    ...createFunnelProps("dependency_install_started"),
-    template,
-    ai_setup: aiSetup,
-  });
+  tel.trackDependencyInstallStarted({ template, ai_setup: aiSetup });
   const runInstall = () =>
     verbose
       ? runCommand(packageManager.runCmd, installArgs, targetDir)
@@ -95,8 +90,7 @@ export async function installProjectDependencies(params: {
     if (!verbose) {
       console.info("✓ Dependencies installed");
     }
-    ctx.telemetry.capture("cli_dependency_install_succeeded", {
-      ...createFunnelProps("dependency_install_succeeded"),
+    tel.trackDependencyInstallSucceeded({
       template,
       ai_setup: aiSetup,
       dependency_installed: true,
@@ -112,8 +106,7 @@ export async function installProjectDependencies(params: {
     error_code: "NONZERO_EXIT",
   });
   if (properties.error_class === "user_cancelled") {
-    ctx.telemetry.capture("cli_dependency_install_cancelled", {
-      ...createFunnelProps("dependency_install_cancelled"),
+    tel.trackDependencyInstallCancelled({
       template,
       ai_setup: aiSetup,
       dependency_installed: false,
@@ -125,8 +118,7 @@ export async function installProjectDependencies(params: {
       properties,
     );
   }
-  ctx.telemetry.capture("cli_dependency_install_failed", {
-    ...createFunnelProps("dependency_install_failed"),
+  tel.trackDependencyInstallFailed({
     template,
     ai_setup: aiSetup,
     dependency_installed: false,

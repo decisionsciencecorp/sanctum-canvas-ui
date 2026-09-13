@@ -1,3 +1,4 @@
+import { CliCancelledError, CreateError } from "../../../lib/errors";
 import {
   findExample,
   groupedExampleChoices,
@@ -6,7 +7,6 @@ import {
   type ExampleProject,
 } from "../../../lib/examples-catalog";
 import { resolveArgs } from "../../../lib/resolve-args";
-import { CliCancelledError, CreateError } from "../../../lib/telemetry";
 import {
   DEFAULT_TEMPLATE_KEY,
   findCatalogOverlay,
@@ -17,6 +17,7 @@ import {
 } from "../../../lib/templates-catalog";
 import type { OverlayName, TemplateName } from "./create-types";
 import { resolveAvailableTarget } from "./target-dir";
+import type { CreateTelemetryClient } from "./telemetry";
 
 export function rejectConflictingImmediateFlags(args: string[]): void {
   const separatorIndex = args.indexOf("--");
@@ -87,6 +88,7 @@ export async function loadCreateCatalog(params: {
 export async function resolveProjectIdentity(
   requestedName: string | undefined,
   interactive: boolean,
+  tel: CreateTelemetryClient,
 ): Promise<{ name: string; targetDir: string }> {
   const nameArgs = await resolveArgs(
     {
@@ -99,7 +101,7 @@ export async function resolveProjectIdentity(
     },
     interactive,
   );
-  return resolveAvailableTarget((nameArgs as { name: string }).name, interactive);
+  return resolveAvailableTarget((nameArgs as { name: string }).name, interactive, tel);
 }
 
 const OPENUI_EXAMPLES_CHOICE = "openui-examples";

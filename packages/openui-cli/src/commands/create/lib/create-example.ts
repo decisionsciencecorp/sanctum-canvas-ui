@@ -1,8 +1,8 @@
 import * as path from "node:path";
 
-import type { CliContext } from "../../../lib/context";
 import { resolveInstallPackageManager } from "../../../lib/detect-package-manager";
 import { upsertEnvVar } from "../../../lib/env";
+import { CliCancelledError, CreateError } from "../../../lib/errors";
 import type { ExampleProject } from "../../../lib/examples-catalog";
 import {
   exampleDevCommand,
@@ -12,11 +12,10 @@ import {
   type ExampleLayout,
 } from "../../../lib/scaffold-example";
 import { withSpinner } from "../../../lib/spinner";
-import { CliCancelledError, CreateError } from "../../../lib/telemetry";
 import { cliErrorProperties } from "../../../lib/utils";
-import { createFunnelProps } from "./create-telemetry";
 import type { CreateAppOptions, EnvResult } from "./create-types";
 import { installRequestedSkill, shouldInstallSkill } from "./install-skill";
+import type { CreateTelemetryClient } from "./telemetry";
 
 export async function runCreateExample(params: {
   options: CreateAppOptions;
@@ -26,39 +25,29 @@ export async function runCreateExample(params: {
   name: string;
   targetDir: string;
   example: ExampleProject;
-  ctx: CliContext;
+  tel: CreateTelemetryClient;
 }): Promise<void> {
-  const { options, interactive, packageManager, t0, name, targetDir, example, ctx } = params;
+  const { options, interactive, packageManager, t0, name, targetDir, example, tel } = params;
 
-  ctx.telemetry.register({ example: example.name, project_category: "example" });
-  ctx.telemetry.capture("cli_example_selected", {
-    ...createFunnelProps("example_selected"),
+  tel.registerContext({ example: example.name, project_category: "example" });
+  tel.trackExampleSelected({
     example: example.name,
     example_source: options.example ? "flag" : interactive ? "prompt" : "default",
   });
 
-  ctx.telemetry.capture("cli_env_resolution_started", {
-    ...createFunnelProps("env_resolution_started"),
-    example: example.name,
-  });
+  tel.trackEnvResolutionStarted({ example: example.name });
   const envResult = await resolveExampleEnv(example, interactive);
 
   const installSkill = await shouldInstallSkill(options.skill, false);
-  ctx.telemetry.capture("cli_skill_installed", {
-    ...createFunnelProps("skill_prompt_resolved"),
-    skill_installed: installSkill,
-  });
-  ctx.telemetry.capture("cli_immediate_selected", {
+  tel.trackSkillInstalled({ skill_installed: installSkill });
+  tel.trackImmediateSelected({
     immediate: false,
     dependency_install_requested: false,
     selection_source: "no_install",
   });
 
   console.info();
-  ctx.telemetry.capture("cli_scaffold_started", {
-    ...createFunnelProps("scaffold_started"),
-    example: example.name,
-  });
+  tel.trackScaffoldStarted({ example: example.name });
   let layout: ExampleLayout | undefined;
   try {
     const runScaffold = () =>
@@ -80,8 +69,7 @@ export async function runCreateExample(params: {
       error_class: "filesystem",
       error_code: "SCAFFOLD_FAILED",
     });
-    ctx.telemetry.capture("cli_scaffold_failed", {
-      ...createFunnelProps("scaffold_failed"),
+    tel.trackScaffoldFailed({
       example: example.name,
       ...properties,
     });
@@ -92,10 +80,7 @@ export async function runCreateExample(params: {
       properties.error_code,
     );
   }
-  ctx.telemetry.capture("cli_scaffold_succeeded", {
-    ...createFunnelProps("scaffold_succeeded"),
-    example: example.name,
-  });
+  tel.trackScaffoldSucceeded({ example: example.name });
 
   try {
     if (envResult.envKeyValue && example.envKey) {
@@ -114,18 +99,17 @@ export async function runCreateExample(params: {
       properties.error_code,
     );
   }
-  ctx.telemetry.capture("cli_env_resolved", {
-    ...createFunnelProps("env_written"),
+  tel.trackEnvResolved({
     example: example.name,
     env_written: envResult.envWritten,
   });
 
   layout ??= exampleLayout(targetDir);
   const installCmd = packageManager.installCmd;
-  ctx.telemetry.capture("cli_dependency_install_skipped", {
+  tel.trackDependencyInstallSkipped({
     skip_reason: "example_scaffold_only",
   });
-  ctx.telemetry.capture("cli_dev_command_skipped", {
+  tel.trackDevCommandSkipped({
     skip_reason: "not_immediate",
   });
 
@@ -133,12 +117,11 @@ export async function runCreateExample(params: {
     enabled: installSkill,
     verbose: options.verbose,
     targetDir,
-    ctx,
+    tel,
     printFailureLog: true,
   });
 
-  ctx.telemetry.capture("cli_create_succeeded", {
-    ...createFunnelProps("create_succeeded"),
+  tel.trackCreateSucceeded({
     example: example.name,
     duration_ms: Date.now() - t0,
     skill_installed: skillInstalled,

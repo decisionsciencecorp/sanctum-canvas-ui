@@ -1,14 +1,13 @@
 import { printLogTail, QUIET_COMMAND_CAPTURE_LIMIT } from "../../../lib/command-output";
-import type { CliContext } from "../../../lib/context";
+import { CliCancelledError } from "../../../lib/errors";
 import {
   runCommand,
   type CommandResult,
   type RunCommandOptions,
 } from "../../../lib/process-runner";
 import { withSpinner } from "../../../lib/spinner";
-import { CliCancelledError } from "../../../lib/telemetry";
 import { processErrorProperties } from "../../../lib/utils";
-import { createFunnelProps } from "./create-telemetry";
+import type { CreateTelemetryClient } from "./telemetry";
 
 const OPENUI_SKILL_SOURCE = "thesysdev/skills";
 
@@ -34,7 +33,7 @@ export async function shouldInstallSkill(
   }
 }
 
-export async function runSkillInstall(
+async function runSkillInstall(
   targetDir: string,
   options: RunCommandOptions = {},
 ): Promise<CommandResult> {
@@ -50,16 +49,13 @@ export async function installRequestedSkill(params: {
   enabled: boolean;
   verbose?: boolean;
   targetDir: string;
-  ctx: CliContext;
+  tel: CreateTelemetryClient;
   printFailureLog?: boolean;
 }): Promise<boolean> {
-  const { enabled, verbose, targetDir, ctx, printFailureLog } = params;
+  const { enabled, verbose, targetDir, tel, printFailureLog } = params;
   if (!enabled) return false;
 
-  ctx.telemetry.capture("cli_skill_install_started", {
-    ...createFunnelProps("skill_install_started"),
-    skill_installed: true,
-  });
+  tel.trackSkillInstallStarted({ skill_installed: true });
   const runSkill = () =>
     verbose
       ? runSkillInstall(targetDir)
@@ -79,8 +75,7 @@ export async function installRequestedSkill(params: {
     if (!verbose) {
       console.info("✓ OpenUI agent skill installed");
     }
-    ctx.telemetry.capture("cli_skill_install_finished", {
-      ...createFunnelProps("skill_install_finished"),
+    tel.trackSkillInstallFinished({
       skill_installed: true,
       duration_ms: skillResult.durationMs,
       exit_code: skillResult.status,
@@ -93,8 +88,7 @@ export async function installRequestedSkill(params: {
     error_code: "SKILL_INSTALL_FAILED",
   });
   if (properties.error_class === "user_cancelled") {
-    ctx.telemetry.capture("cli_skill_install_cancelled", {
-      ...createFunnelProps("skill_install_cancelled"),
+    tel.trackSkillInstallCancelled({
       skill_installed: false,
       ...properties,
     });
@@ -104,8 +98,7 @@ export async function installRequestedSkill(params: {
       properties,
     );
   }
-  ctx.telemetry.capture("cli_skill_install_failed", {
-    ...createFunnelProps("skill_install_failed"),
+  tel.trackSkillInstallFailed({
     skill_installed: false,
     ...properties,
   });

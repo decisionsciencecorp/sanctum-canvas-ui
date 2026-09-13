@@ -1,3 +1,5 @@
+import type { DeployTelemetryClient } from "./telemetry";
+
 /** Shared options every deploy target receives from `openui deploy`. */
 export type DeployTargetOptions = {
   projectDir: string;
@@ -7,6 +9,7 @@ export type DeployTargetOptions = {
   skipEnv: boolean;
   noInteractive: boolean;
   verbose: boolean;
+  tel: DeployTelemetryClient;
 };
 
 export const DEPLOY_TARGETS = ["vercel"] as const;

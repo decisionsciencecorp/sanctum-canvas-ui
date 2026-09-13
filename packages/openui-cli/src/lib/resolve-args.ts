@@ -1,4 +1,4 @@
-import { CliCancelledError, CreateError } from "./telemetry";
+import { CliCancelledError, CreateError } from "./errors";
 
 type InputPromptConfig = {
   type: "input";

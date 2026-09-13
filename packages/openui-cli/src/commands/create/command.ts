@@ -1,10 +1,9 @@
 import { Command } from "commander";
 
 import { normalizeAuth } from "../../lib/auth/mint";
-import type { CliContext } from "../../lib/context";
+import { context } from "../../lib/context";
 import { rejectConflictingScaffoldSelectors } from "../../lib/examples-catalog";
 import { normalizeBackendFramework, normalizeTemplate } from "../../lib/utils";
-import { wrapCommand } from "../../lib/wrap-command";
 import { rejectConflictingImmediateFlags } from "./lib/resolve";
 
 import { runCreateApp } from "./run";
@@ -59,46 +58,41 @@ OpenUI examples:
 `,
   )
   .action(
-    wrapCommand(
-      "cli_create_failed",
-      async (
-        options: {
-          name?: string;
-          template?: string;
-          backendFramework?: string;
-          example?: string;
-          apiKey?: string;
-          auth?: string;
-          skill?: boolean;
-          interactive: boolean;
-          install: boolean;
-          immediate?: boolean;
-          verbose?: boolean;
-        },
-        ctx: CliContext,
-      ) => {
-        rejectConflictingImmediateFlags(ctx.argv.slice(2));
-        rejectConflictingScaffoldSelectors({
-          example: options.example,
+    async (options: {
+      name?: string;
+      template?: string;
+      backendFramework?: string;
+      example?: string;
+      apiKey?: string;
+      auth?: string;
+      skill?: boolean;
+      interactive: boolean;
+      install: boolean;
+      immediate?: boolean;
+      verbose?: boolean;
+    }) => {
+      rejectConflictingImmediateFlags(context.argv.slice(2));
+      rejectConflictingScaffoldSelectors({
+        example: options.example,
+        backendFramework: normalizeBackendFramework(options.backendFramework),
+        template: options.template,
+      });
+
+      await runCreateApp(
+        {
+          name: options.name,
+          template: normalizeTemplate(options.template),
           backendFramework: normalizeBackendFramework(options.backendFramework),
-          template: options.template,
-        });
-        await runCreateApp(
-          {
-            name: options.name,
-            template: normalizeTemplate(options.template),
-            backendFramework: normalizeBackendFramework(options.backendFramework),
-            example: options.example,
-            apiKey: options.apiKey,
-            auth: normalizeAuth(options.auth),
-            skill: options.skill,
-            noInteractive: !options.interactive,
-            noInstall: !options.install,
-            immediate: options.immediate,
-            verbose: options.verbose,
-          },
-          ctx,
-        );
-      },
-    ),
+          example: options.example,
+          apiKey: options.apiKey,
+          auth: normalizeAuth(options.auth),
+          skill: options.skill,
+          noInteractive: !options.interactive,
+          noInstall: !options.install,
+          immediate: options.immediate,
+          verbose: options.verbose,
+        },
+        context,
+      );
+    },
   );

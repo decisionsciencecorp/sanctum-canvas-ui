@@ -4,8 +4,8 @@ import * as path from "node:path";
 
 import { checkoutSource } from "./checkout";
 import type { PackageManagerName } from "./detect-package-manager";
+import { CreateError } from "./errors";
 import type { ExampleProject } from "./examples-catalog";
-import { CreateError } from "./telemetry";
 
 const ARTIFACT_DIRS = new Set(["node_modules", ".next", ".turbo", "dist", ".nuxt", ".svelte-kit"]);
 

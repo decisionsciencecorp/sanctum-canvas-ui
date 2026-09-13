@@ -5,10 +5,16 @@ import * as path from "node:path";
 import { Command } from "commander";
 
 import { commands } from "./commands";
+import { CreateTelemetryClient } from "./commands/create/lib/telemetry";
+import { context as ctx } from "./lib/context";
 import { detectAgent, UNKNOWN_AGENT_NAME } from "./lib/detect-agent";
-import { telemetry } from "./lib/telemetry";
+import { CliCancelledError } from "./lib/errors";
+import { RootTelemetryClient } from "./lib/telemetry-client";
+import { handleCliError } from "./lib/utils";
 
-export function buildProgram(): Command {
+let activeCommand = "unknown";
+
+function buildProgram(): Command {
   const program = new Command();
 
   const cliVersion = (
@@ -27,16 +33,17 @@ export function buildProgram(): Command {
   program.configureHelp({ showGlobalOptions: true });
 
   program.hook("preAction", (_thisCommand, actionCommand) => {
+    activeCommand = actionCommand.name();
     const globalOptions = program.opts<{ agentName: string; telemetry?: boolean }>();
-    const command = actionCommand.name();
-    telemetry.init({ cliVersion, flagEnabled: globalOptions.telemetry !== false });
-    telemetry.register({
+    const tel = new RootTelemetryClient(ctx.telemetry);
+    tel.init({ cliVersion, flagEnabled: globalOptions.telemetry !== false });
+    tel.registerRun({
       agent_name: globalOptions.agentName,
       detected_agent_name: detectAgent(),
       cli_run_id: randomUUID(),
-      command,
+      command: actionCommand.name(),
     });
-    telemetry.capture("cli_invoked");
+    tel.trackInvoked();
   });
 
   for (const command of commands) {
@@ -45,4 +52,19 @@ export function buildProgram(): Command {
   }
 
   return program;
+}
+
+export async function runProgram(): Promise<void> {
+  const program = buildProgram();
+  try {
+    await program.parseAsync(process.argv);
+  } catch (e) {
+    const cancelled = e instanceof CliCancelledError;
+    const event = `cli_${activeCommand.replace(/-/g, "_")}_failed`;
+    const extra =
+      activeCommand === "create" ? CreateTelemetryClient.failedProperties(cancelled) : undefined;
+    handleCliError(e, event, ctx.telemetry, extra);
+  } finally {
+    await ctx.telemetry.shutdown();
+  }
 }

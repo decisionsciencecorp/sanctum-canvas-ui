@@ -8,7 +8,6 @@ import {
 import { printLogTail } from "../../../../../lib/command-output";
 import { adoptVercelEnvVars } from "../../../../../lib/env";
 import { runCommand, runQuietCommand } from "../../../../../lib/process-runner";
-import { telemetry } from "../../../../../lib/telemetry";
 import { throwCommandFailure } from "../../../../../lib/utils";
 import { formatCliCommand, resolveCliInvocation } from "../../cli-bin";
 import { buildVercelDeployArgs, publicVercelArgs, vercelSpawnArgs } from "./args";
@@ -109,7 +108,7 @@ export async function deployToVercel(opts: DeployTargetOptions): Promise<void> {
         noWait,
       );
     }
-    telemetry.capture("cli_deploy_succeeded", {
+    opts.tel.trackSucceeded({
       target: "vercel",
       prod: opts.prod,
       yes: opts.yes,

@@ -2,8 +2,10 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 import { assertValidApiKeyName, mintCloudApiKey } from "../../lib/auth/mint";
+import { AuthTelemetryClient } from "../../lib/auth/telemetry";
 import type { CliContext } from "../../lib/context";
 import { assertValidEnvVarName, DEFAULT_ENV_FILE, upsertEnvVar } from "../../lib/env";
+import { GenerateApiKeyTelemetryClient } from "./lib/telemetry";
 
 export interface GenerateApiKeyOptions {
   file?: string;
@@ -31,6 +33,8 @@ export async function runGenerateApiKey(
   options: GenerateApiKeyOptions,
   ctx: CliContext,
 ): Promise<void> {
+  const tel = new GenerateApiKeyTelemetryClient(ctx.telemetry);
+  const authTel = new AuthTelemetryClient(ctx.telemetry);
   const t0 = Date.now();
   const file = options.file?.trim() || DEFAULT_ENV_FILE;
   const envKey = options.key?.trim() || DEFAULT_ENV_KEY;
@@ -38,12 +42,12 @@ export async function runGenerateApiKey(
   assertValidEnvVarName(envKey, "--key");
   if (options.name?.trim()) assertValidApiKeyName(projectName);
 
-  ctx.telemetry.capture("cli_generate_api_key_started", {
+  tel.trackStarted({
     env_file: path.basename(file),
     env_key: envKey,
   });
 
-  const apiKey = await mintCloudApiKey(projectName);
+  const apiKey = await mintCloudApiKey(projectName, authTel);
 
   const filePath = path.resolve(ctx.cwd, file);
   upsertEnvVar(filePath, envKey, apiKey);
@@ -51,7 +55,7 @@ export async function runGenerateApiKey(
   const displayPath = path.relative(ctx.cwd, filePath) || file;
   console.info(`✅ ${envKey} written to ${displayPath}`);
 
-  ctx.telemetry.capture("cli_generate_api_key_succeeded", {
+  tel.trackSucceeded({
     auth_method: "oauth",
     env_file: path.basename(file),
     env_key: envKey,

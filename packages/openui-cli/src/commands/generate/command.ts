@@ -1,8 +1,7 @@
 import { Command } from "commander";
 
-import type { CliContext } from "../../lib/context";
+import { context } from "../../lib/context";
 import { resolveArgs } from "../../lib/resolve-args";
-import { wrapCommand } from "../../lib/wrap-command";
 
 import { type GenerateOptions, runGenerate } from "./run";
 
@@ -24,23 +23,18 @@ export const generateCommand = new Command("generate")
     "Name of the PromptOptions export to use (auto-detected by default)",
   )
   .option("--no-interactive", "Fail with error if required args are missing")
-  .action(
-    wrapCommand(
-      "cli_generate_failed",
-      async (entry: string | undefined, options: GenerateOptions, ctx: CliContext) => {
-        const args = await resolveArgs(
-          {
-            entry: entry
-              ? { value: entry }
-              : {
-                  prompt: { type: "input", message: "Entry file path?" },
-                  required: true,
-                },
-          },
-          options.interactive,
-        );
-
-        await runGenerate((args as { entry: string }).entry, options, ctx);
+  .action(async (entry: string | undefined, options: GenerateOptions) => {
+    const args = await resolveArgs(
+      {
+        entry: entry
+          ? { value: entry }
+          : {
+              prompt: { type: "input", message: "Entry file path?" },
+              required: true,
+            },
       },
-    ),
-  );
+      options.interactive,
+    );
+
+    await runGenerate((args as { entry: string }).entry, options, context);
+  });

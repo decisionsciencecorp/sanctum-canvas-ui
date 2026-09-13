@@ -1,4 +1,4 @@
-import { CliCancelledError } from "../../../lib/telemetry";
+import { CliCancelledError } from "../../../lib/errors";
 
 /** True when stdin/stdout are TTYs and `--no-interactive` was not passed. */
 export function canPromptInteractive(noInteractive = false): boolean {

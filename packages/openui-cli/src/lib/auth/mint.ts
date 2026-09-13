@@ -1,6 +1,6 @@
-import { createFunnelProps } from "../../commands/create/lib/create-telemetry";
-import { CliCancelledError, CreateError, telemetry } from "../telemetry";
+import { CliCancelledError, CreateError } from "../errors";
 import { Authenticator } from "./authenticator";
+import type { AuthTelemetryClient } from "./telemetry";
 
 // Thesys console OAuth + key mint (same flow as create-c1-app). The OpenUI Cloud
 // master key is the same C1-flavored org API key (usageType "C1").
@@ -100,12 +100,12 @@ async function cloudAuthPrompt<T>(
 }
 
 /** Sign in via the browser and mint an OpenUI Cloud API key for the user's org. */
-export async function mintCloudApiKey(projectName: string): Promise<string> {
+export async function mintCloudApiKey(
+  projectName: string,
+  tel: AuthTelemetryClient,
+): Promise<string> {
   const auth = new Authenticator({ issuerUrl: THESYS_ISSUER_URL, clientId: THESYS_CLIENT_ID });
-  telemetry.capture("cli_cloud_oidc_started", {
-    ...createFunnelProps("cloud_auth_started"),
-    auth_method: "oauth",
-  });
+  tel.trackOidcStarted();
   await cloudAuthStep("oidc_discovery", "OIDC_DISCOVERY_FAILED", () => auth.initialize());
   const { accessToken, userInfo } = await cloudAuthStep("browser_auth", "OIDC_FAILED", () =>
     auth.authenticate(),
@@ -163,7 +163,7 @@ export async function mintCloudApiKey(projectName: string): Promise<string> {
 
   const oidcSub =
     (profile["sub"] as string | undefined) ?? (userInfo?.["sub"] as string | undefined);
-  if (oidcSub) telemetry.aliasOidcSubject(oidcSub);
+  if (oidcSub) tel.aliasOidcSubject(oidcSub);
 
   return data.apiKey;
 }
@@ -178,6 +178,7 @@ export async function resolveCloudApiKey(opts: {
   auth?: CloudAuthMethod;
   projectName: string;
   interactive: boolean;
+  tel: AuthTelemetryClient;
 }): Promise<{ key: string | null; method: ResolvedAuthMethod }> {
   const provided = opts.apiKey?.trim();
   if (provided) return { key: provided, method: "apikey-flag" };
@@ -220,5 +221,5 @@ export async function resolveCloudApiKey(opts: {
     return { key: key.trim() || null, method: "manual" };
   }
 
-  return { key: await mintCloudApiKey(opts.projectName), method: "oauth" };
+  return { key: await mintCloudApiKey(opts.projectName, opts.tel), method: "oauth" };
 }

@@ -1,7 +1,6 @@
 import { Command } from "commander";
 
-import type { CliContext } from "../../lib/context";
-import { wrapCommand } from "../../lib/wrap-command";
+import { context } from "../../lib/context";
 
 import { runDeploy } from "./run";
 
@@ -31,30 +30,26 @@ Examples:
 `,
   )
   .action(
-    wrapCommand(
-      "cli_deploy_failed",
-      async (
-        dir: string | undefined,
-        options: {
-          yes?: boolean;
-          skipEnv?: boolean;
-          interactive: boolean;
-          verbose?: boolean;
-        },
-        command: Command,
-        ctx: CliContext,
-      ) => {
-        await runDeploy(
-          {
-            dir,
-            yes: options.yes,
-            skipEnv: options.skipEnv,
-            noInteractive: !options.interactive,
-            verbose: options.verbose,
-            extraArgs: command.args,
-          },
-          ctx,
-        );
+    async (
+      dir: string | undefined,
+      options: {
+        yes?: boolean;
+        skipEnv?: boolean;
+        interactive: boolean;
+        verbose?: boolean;
       },
-    ),
+      command: Command,
+    ) => {
+      await runDeploy(
+        {
+          dir,
+          yes: options.yes,
+          skipEnv: options.skipEnv,
+          noInteractive: !options.interactive,
+          verbose: options.verbose,
+          extraArgs: command.args,
+        },
+        context,
+      );
+    },
   );

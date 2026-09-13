@@ -1,7 +1,7 @@
 import { styleText } from "node:util";
 
 import { fetchSourceFile } from "./checkout";
-import { CreateError } from "./telemetry";
+import { CreateError } from "./errors";
 
 export const EXAMPLES_CATALOG_PATH = "examples/examples.json";
 

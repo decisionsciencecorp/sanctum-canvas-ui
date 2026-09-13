@@ -1,8 +1,9 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
+import { CreateError } from "../../../lib/errors";
 import { resolveArgs } from "../../../lib/resolve-args";
-import { CreateError, telemetry } from "../../../lib/telemetry";
+import type { CreateTelemetryClient } from "./telemetry";
 
 /** How many times an interactive run may re-prompt before aborting. */
 const MAX_NAME_RETRIES = 5;
@@ -22,6 +23,7 @@ function suggestAvailableName(name: string): string {
 export async function resolveAvailableTarget(
   requestedName: string,
   interactive: boolean,
+  tel: CreateTelemetryClient,
 ): Promise<{ name: string; targetDir: string }> {
   let name = requestedName;
   let retries = 0;
@@ -29,7 +31,7 @@ export async function resolveAvailableTarget(
   for (;;) {
     const targetDir = path.resolve(process.cwd(), name);
     if (!fs.existsSync(targetDir)) {
-      if (retries > 0) telemetry.capture("cli_target_name_retried", { retries });
+      if (retries > 0) tel.trackTargetNameRetried({ retries });
       return { name, targetDir };
     }
 
@@ -38,7 +40,7 @@ export async function resolveAvailableTarget(
     // Fired on every collision, in both modes. Interactive runs now recover
     // instead of throwing, so without this the TARGET_EXISTS signal that used
     // to reach analytics via cli_create_failed would disappear for them.
-    telemetry.capture("cli_target_exists", {
+    tel.trackTargetExists({
       interactive,
       attempt: retries + 1,
       exhausted,

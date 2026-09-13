@@ -1,14 +1,12 @@
-import { createFunnelProps } from "../commands/create/lib/create-telemetry";
 import type { OverlayName, TemplateName } from "../commands/create/lib/create-types";
-import type { CommandResult } from "./process-runner";
 import {
   CliCancelledError,
   CreateError,
-  telemetry as defaultTelemetry,
   type CliErrorClass,
   type CliErrorMetadata,
-  type Telemetry,
-} from "./telemetry";
+} from "./errors";
+import type { CommandResult } from "./process-runner";
+import type { Telemetry } from "./telemetry";
 
 export type CliErrorProperties = CliErrorMetadata & {
   failure_stage: string;
@@ -215,7 +213,8 @@ export function throwCommandFailure(
 export function handleCliError(
   e: unknown,
   event: string,
-  telemetry: Telemetry = defaultTelemetry,
+  telemetry: Telemetry,
+  extra?: Record<string, unknown>,
 ): void {
   const cancelled = e instanceof CliCancelledError;
   const message = e instanceof Error ? e.message : String(e);
@@ -224,15 +223,7 @@ export function handleCliError(
 
   const errorProperties = cliErrorProperties(e);
   const capturedEvent = cancelled ? event.replace(/_failed$/, "_cancelled") : event;
-
-  if (event === "cli_create_failed") {
-    telemetry.capture(capturedEvent, {
-      ...createFunnelProps(cancelled ? "create_cancelled" : "create_failed"),
-      ...errorProperties,
-    });
-  } else {
-    telemetry.capture(capturedEvent, errorProperties);
-  }
+  telemetry.capture(capturedEvent, { ...extra, ...errorProperties });
 
   process.exitCode = cancelled ? e.exitCode : 1;
 }
