@@ -8,11 +8,18 @@ import {
   type DeployTargetOptions,
 } from "../../deploy";
 import { deployStage, skipDeployStage } from "../../deploy-telemetry";
+import { checkDeployCompatibility, printDeployEnvSummary } from "../../deploy/preflight";
+import { printDeployNextSteps } from "../../deploy/quiet";
 import { adoptVercelEnvVars } from "../../env";
 import { runCommand, runQuietCommand } from "../../process-runner";
 import { telemetry } from "../../telemetry";
 import { throwCommandFailure } from "../../utils";
-import { buildVercelDeployArgs, publicVercelArgs, vercelSpawnArgs } from "./args";
+import {
+  buildVercelDeployArgs,
+  publicVercelArgs,
+  vercelPreflightEnvironments,
+  vercelSpawnArgs,
+} from "./args";
 import {
   isVercelLinked,
   isVercelLoggedIn,
@@ -21,6 +28,11 @@ import {
   prepareVercelCli,
   vercelCliEnv,
 } from "./connect";
+import {
+  printVercelDestination,
+  readVercelProjectLink,
+  requestedVercelEnvironment,
+} from "./destination";
 import { syncLocalEnvToVercelProject } from "./project-env";
 import { extractVercelDeploymentSummary } from "./summary";
 
@@ -30,6 +42,34 @@ const VERCEL_CLI_PACKAGE = "vercel@59.15.1";
 /** Login, link, optionally save env, then run `vercel` deploy. */
 export async function deployToVercel(opts: DeployTargetOptions): Promise<void> {
   const t0 = Date.now();
+  const environment = requestedVercelEnvironment(opts.extraArgs);
+  telemetry.register({ requested_environment: environment.category });
+  const vercel = resolveCliInvocation(opts.projectDir, "vercel", VERCEL_CLI_PACKAGE);
+  telemetry.register({ cli_source: vercel.source });
+  const informational = opts.extraArgs.some((arg) =>
+    ["--help", "-h", "--version", "-v", "-V"].includes(arg),
+  );
+  if (informational) {
+    // Asking the provider for help must not log in, link a project or persist keys.
+    await deployStage("cli_prepare", async () => {
+      const result = await runCommand(
+        vercel.command,
+        vercelSpawnArgs(vercel, opts.extraArgs),
+        opts.projectDir,
+        { inheritOutput: true },
+      );
+      if (result.error || result.status !== 0 || result.signal)
+        throwCommandFailure(result, "vercel_cli_info", "Could not display Vercel CLI help/version");
+    });
+    telemetry.capture("cli_deploy_succeeded", {
+      completion_status: "unverified",
+      confirmation_source: "none",
+      reported_environment: "unknown",
+      environment_confirmation_source: "none",
+      duration_ms: Date.now() - t0,
+    });
+    return;
+  }
   const { projectEnv, availableEnv } = await deployStage("environment_load", () => {
     adoptVercelEnvVars(opts.projectDir);
     const projectEnv = loadProjectDeployFileEnv(opts.projectDir);
@@ -39,14 +79,18 @@ export async function deployToVercel(opts: DeployTargetOptions): Promise<void> {
   });
   const localEnv = opts.skipEnv ? {} : availableEnv;
   const projectEnvToSave = opts.skipEnv ? {} : projectEnv;
+  await deployStage("preflight", () =>
+    checkDeployCompatibility(
+      opts.projectDir,
+      vercelPreflightEnvironments(opts.extraArgs, localEnv),
+    ),
+  );
 
-  const vercel = resolveCliInvocation(opts.projectDir, "vercel", VERCEL_CLI_PACKAGE);
-  telemetry.register({ cli_source: vercel.source });
-  await deployStage("cli_prepare", () => prepareVercelCli(vercel, opts.projectDir));
+  await deployStage("cli_prepare", () => prepareVercelCli(vercel, opts.projectDir, opts.extraArgs));
 
   let loggedIn = await deployStage(
     "login_check",
-    () => isVercelLoggedIn(vercel, opts.projectDir),
+    () => isVercelLoggedIn(vercel, opts.projectDir, opts.extraArgs),
     (value) => ({ login_required: !value }),
   );
   telemetry.register({ login_required: !loggedIn });
@@ -67,8 +111,16 @@ export async function deployToVercel(opts: DeployTargetOptions): Promise<void> {
     skipDeployStage("link", "already_linked");
   }
 
+  printVercelDestination(
+    readVercelProjectLink(opts.projectDir, vercelCliEnv(opts.projectDir)),
+    environment,
+  );
+  printDeployEnvSummary(opts.projectDir, localEnv, opts.skipEnv);
+
   let envSavedKeyCount = 0;
-  if (Object.keys(projectEnvToSave).length > 0) {
+  const canSaveEnvironment =
+    environment.category === "production" || environment.category === "preview";
+  if (Object.keys(projectEnvToSave).length > 0 && canSaveEnvironment) {
     const envSync = await deployStage(
       "env_sync",
       () =>
@@ -78,13 +130,24 @@ export async function deployToVercel(opts: DeployTargetOptions): Promise<void> {
           localEnv: projectEnvToSave,
           yes: opts.yes,
           noInteractive: opts.noInteractive,
+          environment: environment.category as "preview" | "production",
+          extraArgs: opts.extraArgs,
         }),
       (result) => ({ env_sync_outcome: result.outcome, env_saved_key_count: result.savedKeyCount }),
     );
     envSavedKeyCount = envSync.savedKeyCount;
     telemetry.register({ env_sync_outcome: envSync.outcome });
   } else {
-    const reason = opts.skipEnv ? "skip_env" : "no_local_keys";
+    const reason = opts.skipEnv
+      ? "skip_env"
+      : Object.keys(projectEnvToSave).length === 0
+        ? "no_local_keys"
+        : "environment_not_selected";
+    if (reason === "environment_not_selected") {
+      console.info(
+        "Using local keys for this deployment only. To save missing file values for later, select --target preview or --prod. For custom environments, configure saved keys in Vercel.\n",
+      );
+    }
     telemetry.register({ env_sync_outcome: reason });
     skipDeployStage("env_sync", reason);
   }
@@ -92,11 +155,9 @@ export async function deployToVercel(opts: DeployTargetOptions): Promise<void> {
   const linkedNow = isVercelLinked(opts.projectDir);
   const quiet = !opts.verbose;
   const noWait = opts.extraArgs.includes("--no-wait");
-  const informational = opts.extraArgs.some((arg) =>
-    ["--help", "-h", "--version", "-v", "-V"].includes(arg),
-  );
-  // Quiet mode needs a non-interactive Vercel deploy (piped stdio).
-  const deployYes = opts.yes || (quiet && linkedNow);
+  // Setup is already complete. Piped output lets verbose mode stream and retain
+  // a tail for the same result parsing as quiet mode, without mid-build prompts.
+  const deployYes = opts.yes || linkedNow;
   const vercelArgs = buildVercelDeployArgs({
     extraArgs: opts.extraArgs,
     yes: deployYes,
@@ -128,23 +189,31 @@ export async function deployToVercel(opts: DeployTargetOptions): Promise<void> {
           env: deployEnv,
         })
       : await runCommand(vercel.command, vercelSpawnArgs(vercel, vercelArgs), opts.projectDir, {
-          inheritOutput: true,
+          echo: true,
+          stdin: "ignore",
           env: deployEnv,
         });
     if (result.error || result.status !== 0 || result.signal) {
       if (quiet) printLogTail(result.diagnosticTail, "Vercel log (tail)");
+      console.info(
+        "Fix the error above, then rerun the same command with --verbose for full logs. Your Vercel project link is retained.\n",
+      );
       throwCommandFailure(result, "vercel_deploy", "Vercel deploy failed");
     }
     return result;
   });
 
+  const summary = extractVercelDeploymentSummary(result.diagnosticTail);
   if (quiet) {
-    printQuietDeploySuccess(
-      extractVercelDeploymentSummary(result.diagnosticTail),
-      result.durationMs,
-      noWait,
-    );
+    printQuietDeploySuccess(summary, result.durationMs, noWait);
   }
+  const environmentFlag =
+    environment.category === "provider-default" ? "" : ` --target ${environment.name}`;
+  printDeployNextSteps(
+    summary,
+    noWait,
+    `npx @openuidev/cli@latest deploy${environmentFlag}${opts.skipEnv ? " --skip-env" : ""}`,
+  );
   const properties = {
     target: "vercel",
     prod: opts.prod,
@@ -157,11 +226,13 @@ export async function deployToVercel(opts: DeployTargetOptions): Promise<void> {
     env_saved_key_count: envSavedKeyCount,
     duration_ms: Date.now() - t0,
     no_wait: noWait,
-    completion_status: informational ? "unverified" : noWait ? "submitted" : "ready",
-    confirmation_source: informational ? "none" : "vercel_cli_exit",
+    completion_status: noWait ? "submitted" : "ready",
+    confirmation_source: "vercel_cli_exit",
+    requested_environment: environment.category,
+    reported_environment: summary.environment ?? "unknown",
+    environment_confirmation_source: summary.environment ? "vercel_cli_output" : "none",
   };
   // Preserve the legacy event. New outcomes distinguish provider wait completion from submission.
   telemetry.capture("cli_deploy_succeeded", properties);
-  if (!informational)
-    telemetry.capture(noWait ? "cli_deploy_submitted" : "cli_deploy_ready", properties);
+  telemetry.capture(noWait ? "cli_deploy_submitted" : "cli_deploy_ready", properties);
 }

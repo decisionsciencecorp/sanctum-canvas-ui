@@ -3,7 +3,28 @@ import type { CliInvocation } from "../../cli-bin";
 const ENV_FLAGS = ["--env", "-e"] as const;
 const BUILD_ENV_FLAGS = ["--build-env", "-b"] as const;
 const ALL_ENV_FLAGS = [...ENV_FLAGS, ...BUILD_ENV_FLAGS] as const;
-const LINK_SCOPE_FLAGS = ["--scope", "-S", "--team"] as const;
+const CONTEXT_FLAGS = ["--scope", "-S", "--team", "--token", "-t", "--global-config"] as const;
+
+/** Effective build/runtime overrides for compatibility checks. Values never leave the CLI. */
+export function vercelPreflightEnvironments(
+  args: string[],
+  localEnv: Record<string, string>,
+): Record<string, string>[] {
+  return [ENV_FLAGS, BUILD_ENV_FLAGS].map((flags) => {
+    const env = { ...localEnv };
+    for (let index = 0; index < args.length; index++) {
+      const arg = args[index]!;
+      const flag = flags.find((candidate) => arg === candidate || arg.startsWith(`${candidate}=`));
+      if (!flag) continue;
+      const assignment = arg === flag ? args[++index] : arg.slice(flag.length + 1);
+      if (!assignment) continue;
+      const separator = assignment.indexOf("=");
+      const key = separator < 0 ? assignment : assignment.slice(0, separator);
+      env[key] = separator < 0 ? (process.env[key] ?? "") : assignment.slice(separator + 1);
+    }
+    return env;
+  });
+}
 
 /** Build `vercel` args: `--yes`, forwarded extras, and allowlisted `--env`/`--build-env`. */
 export function buildVercelDeployArgs(opts: {
@@ -30,19 +51,24 @@ export function buildVercelDeployArgs(opts: {
 
 /** Strip env assignments so verbose logs never print secret values. */
 export function publicVercelArgs(args: string[]): string[] {
-  return args.filter((_, index) => !isVercelEnvFlag(args, index));
+  return args.filter(
+    (arg, index) =>
+      !isVercelEnvFlag(args, index) &&
+      !/^(?:--token|-t)(?:=|$)/.test(arg) &&
+      !["--token", "-t"].includes(args[index - 1] ?? ""),
+  );
 }
 
-/** Keep only team/scope flags that are valid during the link step. */
-export function vercelLinkScopeArgs(args: string[]): string[] {
+/** Reuse the same account/credentials for setup, env operations and deployment. Never log these. */
+export function vercelContextArgs(args: string[]): string[] {
   const out: string[] = [];
   for (let index = 0; index < args.length; index++) {
     const arg = args[index]!;
-    if (LINK_SCOPE_FLAGS.some((flag) => arg.startsWith(`${flag}=`))) {
+    if (CONTEXT_FLAGS.some((flag) => arg.startsWith(`${flag}=`))) {
       out.push(arg);
       continue;
     }
-    if (!(LINK_SCOPE_FLAGS as readonly string[]).includes(arg)) continue;
+    if (!(CONTEXT_FLAGS as readonly string[]).includes(arg)) continue;
     const value = args[index + 1];
     if (value !== undefined) {
       out.push(arg, value);

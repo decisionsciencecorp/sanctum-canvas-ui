@@ -3,11 +3,9 @@ import { SENSITIVE_DEPLOY_ENV_KEYS } from "../../deploy/project-env";
 import { canPromptInteractive, confirmOrDefault } from "../../deploy/prompt";
 import { runCommand } from "../../process-runner";
 import { throwCommandFailure } from "../../utils";
-import { vercelSpawnArgs } from "./args";
+import { vercelContextArgs, vercelSpawnArgs } from "./args";
 import { isVercelLinked, vercelCliEnv } from "./connect";
-
-/** Environments we keep in sync for template deploys. */
-const PROJECT_ENV_TARGETS = ["production", "preview", "development"] as const;
+import type { RequestedEnvironment } from "./destination";
 
 type VercelEnvEntry = {
   key: string;
@@ -33,6 +31,8 @@ export async function syncLocalEnvToVercelProject(opts: {
   localEnv: Record<string, string>;
   yes: boolean;
   noInteractive: boolean;
+  environment: Extract<RequestedEnvironment, "preview" | "production">;
+  extraArgs: string[];
 }): Promise<EnvSyncResult> {
   if (!isVercelLinked(opts.projectDir)) {
     console.info(
@@ -41,7 +41,7 @@ export async function syncLocalEnvToVercelProject(opts: {
     return { savedKeyCount: 0, outcome: "not_linked" };
   }
 
-  const existing = await listVercelProjectEnv(opts.invocation, opts.projectDir);
+  const existing = await listVercelProjectEnv(opts.invocation, opts.projectDir, opts.extraArgs);
   if (!existing) {
     console.info("Could not read Vercel project env — continuing with deployment-only env.\n");
     return { savedKeyCount: 0, outcome: "unavailable" };
@@ -51,21 +51,21 @@ export async function syncLocalEnvToVercelProject(opts: {
   for (const key of Object.keys(opts.localEnv).sort()) {
     const value = opts.localEnv[key];
     if (value === undefined) continue;
-    const targets = missingTargetsForKey(existing, key);
+    const targets = missingTargetsForKey(existing, key, opts.environment);
     if (targets.length === 0) continue;
     pending.push({ key, targets, value });
   }
 
   if (pending.length === 0) {
     console.info(
-      `Vercel project already has ${Object.keys(opts.localEnv).sort().join(", ")} — leaving project env unchanged.\n`,
+      `Vercel ${opts.environment} already has ${Object.keys(opts.localEnv).sort().join(", ")} — leaving saved values unchanged.\n`,
     );
     return { savedKeyCount: 0, outcome: "already_configured" };
   }
 
   const keyList = pending.map((item) => item.key).join(", ");
   const shouldSave = await confirmOrDefault(
-    `Save ${keyList} to this Vercel project where missing (production / preview / development)?`,
+    `Also save file values for ${keyList} to ${opts.environment} for future deployments? Existing saved values will not be overwritten.`,
     {
       yes: opts.yes,
       noInteractive: opts.noInteractive,
@@ -89,6 +89,7 @@ export async function syncLocalEnvToVercelProject(opts: {
       key: item.key,
       value: item.value,
       targets: item.targets,
+      extraArgs: opts.extraArgs,
     });
     if (ok) {
       savedKeyNames.push(item.key);
@@ -97,7 +98,7 @@ export async function syncLocalEnvToVercelProject(opts: {
   }
 
   if (savedKeyNames.length > 0) {
-    console.info(`Saved ${savedKeyNames.join(", ")} to the Vercel project.\n`);
+    console.info(`Saved ${savedKeyNames.join(", ")} to Vercel ${opts.environment}.\n`);
   }
   return {
     savedKeyCount: savedKeyNames.length,
@@ -114,10 +115,17 @@ export async function syncLocalEnvToVercelProject(opts: {
 async function listVercelProjectEnv(
   invocation: CliInvocation,
   projectDir: string,
+  extraArgs: string[],
 ): Promise<VercelEnvEntry[] | null> {
   const result = await runCommand(
     invocation.command,
-    vercelSpawnArgs(invocation, ["env", "list", "--json", "--non-interactive"]),
+    vercelSpawnArgs(invocation, [
+      "env",
+      "list",
+      "--json",
+      "--non-interactive",
+      ...vercelContextArgs(extraArgs),
+    ]),
     projectDir,
     { echo: false, stdin: "ignore", env: vercelCliEnv(projectDir) },
   );
@@ -125,6 +133,17 @@ async function listVercelProjectEnv(
   if (result.error || result.status !== 0) return null;
   const parsed = extractJsonObject(result.diagnosticTail) as { envs?: VercelEnvEntry[] } | null;
   if (!parsed || !Array.isArray(parsed.envs)) return null;
+  if (
+    parsed.envs.some(
+      (entry) =>
+        !entry ||
+        typeof entry.key !== "string" ||
+        (entry.target !== undefined &&
+          (!Array.isArray(entry.target) ||
+            entry.target.some((target) => typeof target !== "string"))),
+    )
+  )
+    return null;
   return parsed.envs;
 }
 
@@ -140,14 +159,18 @@ function extractJsonObject(text: string): unknown | null {
   }
 }
 
-/** Production/preview/development targets that do not already have this key. */
-function missingTargetsForKey(entries: VercelEnvEntry[], key: string): string[] {
+/** Only save into the explicitly selected environment, never all environments. */
+function missingTargetsForKey(
+  entries: VercelEnvEntry[],
+  key: string,
+  environment: string,
+): string[] {
   const present = new Set<string>();
   for (const entry of entries) {
     if (entry.key !== key) continue;
     for (const target of entry.target ?? []) present.add(target);
   }
-  return PROJECT_ENV_TARGETS.filter((target) => !present.has(target));
+  return present.has(environment) ? [] : [environment];
 }
 
 /** Add one key to the given Vercel env targets; returns false if `vercel env add` fails. */
@@ -157,6 +180,7 @@ async function addVercelProjectEnv(opts: {
   key: string;
   value: string;
   targets: string[];
+  extraArgs: string[];
 }): Promise<boolean> {
   const args = [
     "env",
@@ -169,6 +193,7 @@ async function addVercelProjectEnv(opts: {
     "--non-interactive",
     "--type",
     SENSITIVE_DEPLOY_ENV_KEYS.has(opts.key) ? "secret" : "config",
+    ...vercelContextArgs(opts.extraArgs),
   ];
 
   const result = await runCommand(

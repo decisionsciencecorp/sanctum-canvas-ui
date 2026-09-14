@@ -53,13 +53,21 @@ At the center of OpenUI is **OpenUI Lang**: a compact, streaming-first language 
 ## Quick Start
 
 ```bash
-npx @openuidev/cli@latest create --name genui-chat-app
+npx @openuidev/cli@latest create --name genui-chat-app --template openui-self-hosted --no-immediate
 cd genui-chat-app
 echo "OPENAI_API_KEY=sk-your-key-here" > .env
 npm run dev
 ```
 
 This is the fastest way to start with OpenUI. The scaffolded app gives you an end-to-end starting point with streaming, built-in UI, and OpenUI Lang support.
+
+Once a prompt works locally, open another terminal in `genui-chat-app` and deploy to your Vercel account:
+
+```bash
+npx @openuidev/cli@latest deploy
+```
+
+Open the hosted URL, repeat your local prompt, and check access before sharing. A new Vercel project's first deployment may be production. See the [deployment guide](https://www.openui.com/docs/deploy) for keys, backend compatibility, authentication and updates.
 
 What this gives you:
 
@@ -102,7 +110,7 @@ Try it yourself in the [Playground](https://www.openui.com/playground): generate
 | [`@openuidev/vue-lang`](./packages/vue-lang)                                                               | Vue integrations                                 | Vue 3 bindings for defining model-renderable components and rendering streamed OpenUI Lang                   |
 | [`@openuidev/svelte-lang`](./packages/svelte-lang)                                                         | Svelte integrations                              | Svelte 5 bindings for defining model-renderable components and rendering streamed OpenUI Lang                |
 | [`@openuidev/browser-bundle`](./packages/browser-bundle)                                                   | CDN, iframe, and no-build embeds                 | Prebuilt browser bundle that ships the renderer, UI library, React, and styles as script + stylesheet assets |
-| [`@openuidev/cli`](./packages/openui-cli)                                                                  | Project scaffolding and prompt generation        | CLI for creating new apps and generating system prompts or JSON schema from a library definition             |
+| [`@openuidev/cli`](./packages/openui-cli)                                                                  | Create, generate and deploy                      | Scaffold apps, generate system prompts or library specs, and deploy OpenUI projects to Vercel                |
 | [`@openuidev/openclaw-os-plugin`](https://github.com/thesysdev/openclaw-os/tree/main/packages/claw-plugin) | OpenClaw workspaces                              | OpenClaw OS plugin for serving OpenUI-powered OpenClaw workspaces                                            |
 
 Common starting points:
@@ -166,7 +174,7 @@ openui/
 │   ├── vue-lang/         # Vue runtime bindings for OpenUI Lang
 │   ├── svelte-lang/      # Svelte runtime bindings for OpenUI Lang
 │   ├── browser-bundle/   # Script-tag bundle for CDN / iframe / no-build embeds
-│   └── openui-cli/       # CLI for scaffolding & prompt generation
+│   └── openui-cli/       # CLI for scaffolding, prompt generation & deployment
 ├── skills/
 │   └── openui/           # Claude Code skill for AI-assisted development
 ├── examples/             # Capability and integration reference implementations
@@ -183,6 +191,7 @@ Good places to start:
 
 - [openui.com](https://openui.com) for the full docs
 - [Quickstart](https://www.openui.com/docs/agent/getting-started/quickstart) to scaffold a working app
+- [Deployment guide](https://www.openui.com/docs/deploy) to take it from localhost to a shared app
 - [`examples/README.md`](./examples/README.md) to find a focused reference implementation
 - [`CONTRIBUTING.md`](./CONTRIBUTING.md) if you want to contribute
 

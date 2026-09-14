@@ -816,8 +816,15 @@ function getStartedMessage(o: {
       ].join("\n");
 
   const frameworkNote = o.backendGettingStarted?.replaceAll("{{packageManager}}", o.devCmd) ?? "";
+  const deployNote = [
+    o.startDev
+      ? `When it works locally, open another terminal in "${o.name}".`
+      : `When it works locally, run this from the "${o.name}" project folder.`,
+    o.deployHint,
+    "Uses your Vercel account. Guide: https://www.openui.com/docs/deploy",
+  ].join("\n");
 
-  return `\n${[skillMessage.trim(), "Done!", envNote, frameworkNote, nextStep, o.deployHint]
+  return `\n${[skillMessage.trim(), "Done!", envNote, frameworkNote, nextStep, deployNote]
     .filter(Boolean)
     .join("\n\n")}\n`;
 }

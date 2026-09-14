@@ -1,0 +1,112 @@
+---
+title: Deploy and share your app
+description: Take a working OpenUI app from localhost to your Vercel account, verify its hosted response, and deploy updates.
+---
+
+Once your app gives a useful response locally, deploy it from your project folder:
+
+```bash tab="npm" tab-group="pkg"
+npx @openuidev/cli@latest deploy
+```
+
+```bash tab="pnpm" tab-group="pkg"
+pnpx @openuidev/cli@latest deploy
+```
+
+```bash tab="bun" tab-group="pkg"
+bunx @openuidev/cli@latest deploy
+```
+
+```bash tab="yarn" tab-group="pkg"
+yarn dlx @openuidev/cli@latest deploy
+```
+
+Keep the dev server running if you like; use another terminal in the same project folder. For an existing app, pass its directory: `npx @openuidev/cli@latest deploy ./my-app`.
+
+OpenUI handles Vercel CLI preparation, login, project linking and supported local environment variables. Deployment uses **your Vercel account** and its hosting limits; your model provider still handles model usage. The command does not deploy a separate backend, configure application authentication, or change your model provider.
+
+## 1. Check the app
+
+Run your project's build command and try a representative prompt locally. Check that streaming and any application tools work.
+
+The current default, LangGraph and Vercel AI SDK starters run their backend inside Next.js. Their frontend and API routes deploy together. Eve also embeds in the Next.js process; review any additional infrastructure your Eve app uses.
+
+Older LangGraph scaffolds and the LangGraph Platform example can use a separate Agent Server. Inspect your generated files: if the frontend proxies to `LANGGRAPH_API_URL`, host that server separately and use a reachable URL. A deployed app cannot call the server on your laptop's `localhost`.
+
+For other examples or existing apps, check the framework, project root, build command, output directory and external services. An `@openuidev/*` dependency does not make a mobile app, development harness or arbitrary server deployable to Vercel.
+
+## 2. Review the destination
+
+On first use, sign in to Vercel and choose a team and project. Later runs reuse the project link. OpenUI displays the linked project, team/account ID and requested environment before upload. To select a different project, run `vercel link` from that folder first.
+
+Plain `deploy` leaves environment selection to Vercel. **Do not assume it is a preview**: Vercel documents that a new project's first deployment is production even without `--prod`. You can request an environment explicitly:
+
+```bash
+# Request preview
+npx @openuidev/cli@latest deploy --target preview
+
+# Request production
+npx @openuidev/cli@latest deploy --prod
+```
+
+Check the environment reported by Vercel and the deployment's Inspect page before sharing. If output does not identify the environment, OpenUI reports it as unconfirmed instead of guessing. See [Vercel's deployment options](https://vercel.com/docs/cli/deploy).
+
+Deployment environment and production readiness are different: a production URL does not add authentication or protect a demo API key.
+
+## 3. Choose how to use your keys
+
+OpenUI separates **this deployment** from **future deployments**:
+
+| Choice                        | What happens                                                                                                                                        |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Use local values for this run | Allowlisted shell/file values are attached to this deployment's build and runtime.                                                                  |
+| Also save for later           | With explicit `--target preview` or `--prod`, you can save missing file values to that environment only. Existing saved values are not overwritten. |
+| Use Vercel configuration      | `--skip-env` disables automatic local attachment and saving. Explicit Vercel `--env` and `--build-env` flags still apply.                           |
+
+Shell values override `.env.local`, which overrides `.env`. Explicit Vercel env flags override automatic values for their respective build/runtime phase. The CLI shows key names and their source, never their values.
+
+Declining the save prompt still uses the local values for this run. With no explicit environment, or a custom environment, OpenUI only attaches local values; configure saved values in Vercel. `--yes` accepts saving for an explicitly selected preview/production environment. `--no-interactive` implies `--yes` and requires Vercel credentials to be available already.
+
+Only file values are eligible for persistence. If you override a file key in your shell, the deployment can use a different value from the one saved for later. Review these separately.
+
+Supported keys are `THESYS_API_KEY`, `THESYS_API_BASE_URL`, `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_MODEL`, `OPENUI_MODEL`, `APP_ID`, `DEMO_USER_ID`, `LANGGRAPH_API_URL`, `LANGGRAPH_ASSISTANT_ID` and `LANGSMITH_API_KEY`. Configure other application keys in Vercel yourself. Never use a browser-exposed `NEXT_PUBLIC_` variable for a server API key.
+
+## 4. Verify the hosted app
+
+A successful build is not proof that the AI response works. Open the deployment URL and:
+
+1. Run the prompt that worked locally. Check streaming and the rendered result.
+2. Exercise a tool that calls your backend or another service.
+3. Reload and check conversation storage if configured. The self-hosted starter uses in-memory history by default; deployment does not make it durable.
+4. Check the deployment's access settings, then test as an intended recipient before sharing the link.
+
+With `--no-wait`, the command reports **submitted**, not ready. Wait for Ready in Vercel before running these checks. OpenUI does not make a billable model call or track hosted responses for you.
+
+If you have configured [OpenUI Observability](/docs/observability), inspect the hosted request there. Otherwise, use Vercel's build/runtime logs and your backend's logs. Observability is not enabled by deploying.
+
+## Before public use
+
+Starters are examples, not a complete multi-user security boundary. For a controlled evaluation, restrict access using your Vercel project's deployment protection. Before public or multi-user use:
+
+- Authenticate model/chat requests and apply usage or rate limits.
+- For Cloud/Gateway storage, replace `demo-user` with an identity derived from a verified server-side session. Authenticate `/api/chat` and `/api/frontend-token` independently and authorize conversation access.
+- Keep provider keys server-side. Review tool permissions and access to application data.
+- Verify one user cannot access another user's conversations or artifacts.
+
+Choosing `--prod` does not add these controls. Use your application's authentication and authorization system; see [conversation concepts](/docs/agent/core-concepts/conversations).
+
+## Recover and deploy an update
+
+| Where it stopped       | Next step                                                                                                                        |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Project check          | Run from the app root containing `package.json`, or pass that directory.                                                         |
+| Vercel CLI preparation | Check Node, your package registry and network access; retry.                                                                     |
+| Login                  | Run `vercel login` in your terminal, or configure `VERCEL_TOKEN` securely in CI. Do not paste tokens into chat.                  |
+| Project link           | Run `vercel link` and choose the intended team/project. In CI, configure both `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID`.           |
+| Env save               | Local values still attach to this run. Fix Vercel permissions/configuration before later Git/CI deploys that rely on saved keys. |
+| Remote build           | Read the error tail; rerun the same command with `--verbose` for full logs.                                                      |
+| Hosted request         | Check runtime logs, server keys, backend URLs, authentication and timeouts. A ready build alone does not validate these.         |
+
+After a change, rerun the same deploy command with the same directory and environment flags. Successful login/link setup is retained. You can also connect the Vercel project to Git and use its normal Git/CI workflow; make sure that environment has the keys it needs.
+
+See the [CLI reference](/docs/api-reference/cli#deploy) for flags and [deployment analytics](/docs/api-reference/cli#deployment-analytics) for measurement semantics.

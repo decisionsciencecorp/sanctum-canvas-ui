@@ -89,6 +89,7 @@ export function deployCopySource(pathname: string): string {
   if (path === "/docs/getting-started") return "getting-started";
   if (path === "/docs/agent/getting-started/quickstart") return "agent-quickstart";
   if (path === "/docs/api-reference/cli") return "cli-reference";
+  if (path === "/docs/deploy") return "deploy-guide";
   return "docs";
 }
 
@@ -115,6 +116,7 @@ export function getDeployCommandCopiedProperties(command: string, source: string
     "getting-started",
     "agent-quickstart",
     "cli-reference",
+    "deploy-guide",
     "docs",
   ];
   return {

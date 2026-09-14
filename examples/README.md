@@ -20,13 +20,13 @@ Each example has one primary home based on the integration seam it is intended t
 
 ### Agent frameworks
 
-| Example                                           | Demonstrates                                                            |
-| ------------------------------------------------- | ----------------------------------------------------------------------- |
-| [Google ADK](./agent-frameworks/google-adk)       | A Google ADK TypeScript agent streaming OpenUI Lang to a Next.js client |
+| Example                                                     | Demonstrates                                                                               |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [Google ADK](./agent-frameworks/google-adk)                 | A Google ADK TypeScript agent streaming OpenUI Lang to a Next.js client                    |
 | [LangGraph Platform](./agent-frameworks/langgraph-platform) | A DeepAgents graph on LangGraph Platform, streamed to OpenUI through the LangChain adapter |
-| [Mastra](./agent-frameworks/mastra)               | A Mastra agent connected to OpenUI through AG-UI                        |
-| [Vercel AI SDK](./agent-frameworks/vercel-ai-sdk) | AgentInterface over a Vercel AI SDK `streamText` backend              |
-| [Vercel Eve](./agent-frameworks/vercel-eve)       | An Eve agent rendered through Agent Interface                           |
+| [Mastra](./agent-frameworks/mastra)                         | A Mastra agent connected to OpenUI through AG-UI                                           |
+| [Vercel AI SDK](./agent-frameworks/vercel-ai-sdk)           | AgentInterface over a Vercel AI SDK `streamText` backend                                   |
+| [Vercel Eve](./agent-frameworks/vercel-eve)                 | An Eve agent rendered through Agent Interface                                              |
 
 ### App frameworks
 
@@ -99,6 +99,12 @@ Examples that use static system prompts generate them locally before `dev`, `bui
 All `@openuidev/*` dependencies are exact published versions rather than links to packages in this repository. The manually triggered `Update example OpenUI packages` workflow updates them together, refreshes every application's `pnpm-lock.yaml`, verifies every example, and opens or updates one pull request when versions change.
 
 pnpm lockfiles are the reproducibility contract for repository CI; npm and Bun users can generate their native local lockfiles, which are ignored under `examples/` to avoid maintaining three lock formats for every application.
+
+## Deploy a compatible example
+
+After it works locally, run `npx @openuidev/cli@latest deploy` from a Vercel-compatible application's directory. The [deployment guide](https://www.openui.com/docs/deploy) explains destination, keys and hosted verification.
+
+Check the example's topology first: a mobile client, local coding harness or separate Agent Server is not deployed by uploading its frontend. Host external backends separately and replace localhost URLs. Add application authentication and usage limits before public access; examples are not production security boundaries.
 
 ## Maintenance contract
 

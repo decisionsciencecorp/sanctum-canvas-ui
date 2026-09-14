@@ -89,16 +89,16 @@ In non-interactive mode, dependencies are installed without starting the long-ru
 
 **Backend frameworks**
 
-| Value           | OpenUI Gateway route                      | Self-hosted route                        |
-| --------------- | ----------------------------------------- | ---------------------------------------- |
-| `default`       | Direct OpenAI SDK Responses proxy         | Direct OpenAI SDK Chat Completions proxy |
-| `langgraph`     | LangGraph Agent Server + Gateway provider | LangGraph Agent Server + your provider   |
-| `vercel-ai-sdk` | Vercel AI SDK Next.js agent + Gateway     | Vercel AI SDK `streamText()` route       |
-| `vercel-eve`    | Vercel Eve agent + Gateway provider       | Vercel Eve agent + your provider         |
+| Value           | OpenUI Gateway route                    | Self-hosted route                        |
+| --------------- | --------------------------------------- | ---------------------------------------- |
+| `default`       | Direct OpenAI SDK Responses proxy       | Direct OpenAI SDK Chat Completions proxy |
+| `langgraph`     | In-process LangGraph + Gateway provider | In-process LangGraph + your provider     |
+| `vercel-ai-sdk` | Vercel AI SDK Next.js agent + Gateway   | Vercel AI SDK `streamText()` route       |
+| `vercel-eve`    | Vercel Eve agent + Gateway provider     | Vercel Eve agent + your provider         |
 
-The CLI applies the selected framework's final route/page files, dependencies, and deployment configuration over the base template. Both Vercel AI SDK variants are standard Next.js deployments with `streamText()`, `toUIMessageStreamResponse()`, and `vercelAIAdapter()`. Both LangGraph variants separate the Agent Server described by `langgraph.json` from the Next.js frontend/proxy. The proxy uses `@openuidev/langchain`, and the browser consumes its AG-UI stream with `agUIAdapter()`. Both Eve variants wrap Next.js with `withEve()` and talk to Eve's native `/eve/v1/session*` protocol from the browser; a small client adapter maps Eve events to AG-UI for `agUIAdapter()`.
+The CLI applies the selected framework's final route/page files, dependencies, and deployment configuration over the base template. Both Vercel AI SDK variants are standard Next.js deployments with `streamText()`, `toUIMessageStreamResponse()`, and `vercelAIAdapter()`. The current LangGraph variants execute the graph in-process inside the Next.js `/api/chat` route. Both Eve variants wrap Next.js with `withEve()` and talk to Eve's native `/eve/v1/session*` protocol from the browser; a small client adapter maps Eve events to AG-UI for `agUIAdapter()`.
 
-For Gateway-backed LangGraph and Vercel AI SDK variants, the framework owns orchestration and application tool execution. OpenUI Gateway is attached as the Responses/Chat Completions model provider and conversation store. Reports, presentations, web search, image search, and configured MCP tools remain Gateway-hosted tools. The Eve Gateway overlay uses Gateway as the Chat Completions provider and conversation store, without those hosted tools. For either LangGraph template, `pnpm dev` starts the local Agent Server and Next.js together. Deploy the Next.js frontend to Vercel and point `LANGGRAPH_API_URL` at wherever the Agent Server runs. Eve embeds in the Next.js process, so `pnpm dev` is enough for both Eve variants.
+For Gateway-backed LangGraph and Vercel AI SDK variants, the framework owns orchestration and application tool execution. OpenUI Gateway is attached as the Responses/Chat Completions model provider and conversation store. Reports, presentations, web search, image search, and configured MCP tools remain Gateway-hosted tools. The Eve Gateway overlay uses Gateway as the Chat Completions provider and conversation store, without those hosted tools. Current LangGraph and Eve starters run with Next.js. Older LangGraph scaffolds or examples that proxy to a separate Agent Server still need that server deployed separately and a reachable `LANGGRAPH_API_URL`; inspect the generated files. See the [deployment guide](/docs/deploy).
 
 Every framework overlay includes a `get_weather` example backed by Open-Meteo. Ask “What’s the weather in Berlin?” to verify the selected framework’s native multi-step tool loop.
 
@@ -108,9 +108,9 @@ Interactive `openui create` lists starter templates, and option to create an app
 
 **Conversation storage**
 
-Every Gateway-backed variant uses Gateway as its durable conversation and artifact store. The browser connects directly through `useOpenuiCloudStorage()` with a short-lived frontend token. For default, LangGraph, and Vercel AI SDK routes, the `threadId` sent to `/api/chat` is the Gateway conversation ID, and each backend appends model turns to it with `conversation: threadId` and `store: true`. The Vercel AI SDK route does not create a second store. The Eve Gateway overlay keeps that Gateway thread store and maps each Gateway `threadId` to an Eve session cursor in the browser; it does not use `/api/chat`. The Gateway-backed LangGraph relay creates and deletes a temporary Agent Server thread for each run; configure a separate LangGraph checkpointer only when graph state, interrupts, or resumable runs must persist independently.
+Every Gateway-backed variant uses Gateway as its durable conversation and artifact store. The browser connects directly through `useOpenuiCloudStorage()` with a short-lived frontend token. For default, LangGraph, and Vercel AI SDK routes, the `threadId` sent to `/api/chat` is the Gateway conversation ID, and each backend appends model turns to it with `conversation: threadId` and `store: true`. The Vercel AI SDK route does not create a second store. The Eve Gateway overlay keeps that Gateway thread store and maps each Gateway `threadId` to an Eve session cursor in the browser; it does not use `/api/chat`. Configure a separate LangGraph checkpointer only when graph state, interrupts, or resumable runs must persist independently.
 
-The self-hosted variants do not configure durable storage. `AgentInterface` keeps messages in memory for the current page session; refreshing the page loses it. Default, Vercel AI SDK, and LangGraph send that history to `/api/chat`. The self-hosted LangGraph relay also creates and deletes a temporary Agent Server thread for each run. Eve maps follow-ups onto its session protocol for the page session only. Pass a storage implementation to `AgentInterface` and back it with your own database when persistence is required; add a LangGraph checkpointer only for graph-specific durable state.
+The self-hosted variants do not configure durable storage. `AgentInterface` keeps messages in memory for the current page session; refreshing the page loses it. Default, Vercel AI SDK, and LangGraph send that history to `/api/chat`. Eve maps follow-ups onto its session protocol for the page session only. Pass a storage implementation to `AgentInterface` and back it with your own database when persistence is required; add a LangGraph checkpointer only for graph-specific durable state.
 
 **Agent skill**
 
@@ -241,6 +241,8 @@ npx @openuidev/cli@latest create --name my-app --no-skill
 
 Deploys an OpenUI project. The default supported platform is **Vercel**.
 
+For the full local-response → deploy → hosted-verification journey, follow [Deploy and share your app](/docs/deploy).
+
 ```
 openui deploy [dir] [options]
 ```
@@ -253,19 +255,23 @@ openui deploy [dir] [options]
 
 **Options**
 
-| Flag               | Description                                                                   |
-| ------------------ | ----------------------------------------------------------------------------- |
-| `-y, --yes`        | Skip confirmation prompts (also saves missing env keys to the Vercel project) |
-| `--skip-env`       | Do not pass or save local `.env` / `.env.local` values                        |
-| `--no-interactive` | Skip prompts (implies `--yes`)                                                |
-| `--verbose`        | Stream full Vercel build logs (hidden by default; failures print a log tail)  |
+| Flag               | Description                                                                            |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| `-y, --yes`        | Skip prompts; save missing file values only for explicitly selected preview/production |
+| `--skip-env`       | Do not pass or save local `.env` / `.env.local` values                                 |
+| `--no-interactive` | Skip prompts (implies `--yes`)                                                         |
+| `--verbose`        | Stream full Vercel build logs (hidden by default; failures print a log tail)           |
 
-Extra flags after `deploy` are forwarded as-is to the target deployment platform, which validates them. `--skip-env` is OpenUI-specific so it does not collide with the target platform's env specific args.
+Extra flags after `deploy` are forwarded to Vercel, which validates them. Pass the project directory positionally instead of `--cwd`, so validation and env loading use the same directory. `--skip-env` is OpenUI-specific.
 
-Unlinked projects are linked to the platform first. Allowlisted keys from `.env` / `.env.local` that are missing on different deployment environments can be saved to the project (auto-accepted with `--yes`). Build logs are quiet by default; use `--verbose` to stream them.
+Unlinked projects are linked first. OpenUI shows the project/team IDs, requested environment and local key names/sources before upload. Plain `deploy` leaves environment selection to Vercel; a new project's first deployment may be production. Use `--target preview` or `--prod` to request an environment, and check Vercel's reported environment afterward.
+
+Allowlisted local values attach to this run's build and runtime; shell overrides `.env.local`, then `.env`. Saving file values for later is a separate choice, offered only for explicitly selected preview/production. Existing saved values are not overwritten. Declining still attaches local values. Default/custom environments use deployment-only local values; configure saved keys in Vercel. Explicit `--env`/`--build-env` flags take precedence and still work with `--skip-env`.
+
+Build logs are quiet by default; use `--verbose` to stream them. `--no-wait` reports submission rather than a completed build. Verify a hosted response and intended sharing access after Ready; deployment does not configure application authentication.
 
 ```bash tab="pnpm" tab-group="pkg"
-# Preview deploy from the project directory
+# Deploy from the project directory (Vercel chooses the environment)
 pnpx @openuidev/cli@latest deploy
 
 # Production deploy
@@ -276,7 +282,7 @@ pnpx @openuidev/cli@latest deploy ./my-app --skip-env
 ```
 
 ```bash tab="bun" tab-group="pkg"
-# Preview deploy from the project directory
+# Deploy from the project directory (Vercel chooses the environment)
 bunx @openuidev/cli@latest deploy
 
 # Production deploy
@@ -287,7 +293,7 @@ bunx @openuidev/cli@latest deploy ./my-app --skip-env
 ```
 
 ```bash tab="yarn" tab-group="pkg"
-# Preview deploy from the project directory
+# Deploy from the project directory (Vercel chooses the environment)
 yarn dlx @openuidev/cli@latest deploy
 
 # Production deploy
@@ -298,7 +304,7 @@ yarn dlx @openuidev/cli@latest deploy ./my-app --skip-env
 ```
 
 ```bash tab="npm" tab-group="pkg"
-# Preview deploy from the project directory
+# Deploy from the project directory (Vercel chooses the environment)
 npx @openuidev/cli@latest deploy
 
 # Production deploy
@@ -526,7 +532,7 @@ and `detected_agent_name`, inferred best-effort from known product environment m
 value can be spoofed, inherited, missing, or ambiguous, so neither should be treated as an
 authentication or security signal. Every invocation gets an ephemeral, unpersisted `cli_run_id` so
 its events can be correlated. For `create`, analytics also include `package_manager`, the
-immediate-start selection, and best-effort dev-command start and result events. For `deploy`, analytics include the target (currently `vercel`), production vs preview, whether
+immediate-start selection, and best-effort dev-command start and result events. For `deploy`, analytics include the target (currently `vercel`), requested and Vercel-reported environment, whether
 local env was passed (true/false), CLI resolution source, and process status — not env
 values, project paths, or command output.
 Failure events use

@@ -1,6 +1,7 @@
 "use client";
 
 import { captureCliCommandCopied } from "@/lib/analytics";
+import Link from "next/link";
 import { ClipboardCommandButton } from "../../components/Button/Button";
 import styles from "./BuildChatSection.module.css";
 
@@ -51,6 +52,37 @@ export function BuildChatSection() {
                 <SectionTitle />
               </div>
               <CtaButton />
+              <ol className={styles.journey} aria-label="From local app to shared app">
+                <li>
+                  <strong>Create</strong>
+                  <span>Scaffold your OpenUI app.</span>
+                </li>
+                <li>
+                  <strong>Run locally</strong>
+                  <span>Try a prompt and make it useful.</span>
+                </li>
+                <li>
+                  <strong>Deploy and share</strong>
+                  <span>Use your Vercel account, verify the hosted response, then share.</span>
+                </li>
+              </ol>
+              <div className={styles.deployActions}>
+                <ClipboardCommandButton
+                  command="npx @openuidev/cli@latest deploy"
+                  onCopySuccess={captureBuildChatCliCopy}
+                  className={styles.deployButton}
+                  copyIconColor="currentColor"
+                >
+                  <span>Copy deploy command</span>
+                </ClipboardCommandButton>
+                <Link href="/docs/deploy" className={styles.guideLink}>
+                  Read the deployment guide →
+                </Link>
+              </div>
+              <p className={styles.deployNote}>
+                Run from your project folder. Check the deployment environment and access before
+                sharing.
+              </p>
             </div>
           </div>
         </div>

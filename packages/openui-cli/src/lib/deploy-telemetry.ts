@@ -4,6 +4,7 @@ import { cliErrorProperties } from "./utils";
 type DeployStage =
   | "validate_project"
   | "environment_load"
+  | "preflight"
   | "cli_prepare"
   | "login_check"
   | "login"
@@ -40,7 +41,12 @@ export async function deployStage<T>(
 
 export function skipDeployStage(
   stage: DeployStage,
-  reason: "already_logged_in" | "already_linked" | "skip_env" | "no_local_keys",
+  reason:
+    | "already_logged_in"
+    | "already_linked"
+    | "skip_env"
+    | "no_local_keys"
+    | "environment_not_selected",
 ) {
   telemetry.capture("cli_deploy_stage_completed", {
     stage,

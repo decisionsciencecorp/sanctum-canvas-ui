@@ -5,6 +5,7 @@ import { CreateError } from "../telemetry";
 
 type ProjectPackageJson = {
   name?: string;
+  scripts?: Record<string, string>;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
 };

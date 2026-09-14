@@ -51,9 +51,17 @@ export async function runDeploy(options: DeployOptions): Promise<void> {
     no_wait: noWait,
     package_manager: resolveInstallPackageManager().name,
   });
-  const projectDir = await deployStage("validate_project", () =>
-    resolveProjectDir(resolved.projectDir),
-  );
+  const projectDir = await deployStage("validate_project", () => {
+    if (extraArgs.some((arg) => arg === "--cwd" || arg.startsWith("--cwd="))) {
+      throw new CreateError(
+        "args_resolution",
+        "Pass the project directory as `openui deploy <dir>` instead of --cwd so validation and env loading use the same directory.",
+        "invalid_input",
+        "UNSUPPORTED_DEPLOY_CWD",
+      );
+    }
+    return resolveProjectDir(resolved.projectDir);
+  });
 
   const targetOpts: DeployTargetOptions = {
     projectDir,

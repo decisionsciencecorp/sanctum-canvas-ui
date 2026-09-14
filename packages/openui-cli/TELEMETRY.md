@@ -23,15 +23,17 @@ The submitted and ready events are mutually exclusive for an invocation. Do not 
 
 Readiness uses Vercel's CLI waiting-mode contract, recorded as `confirmation_source: vercel_cli_exit`. It is not a separate HTTP health check or a hosted-response check. No background polling is added for `--no-wait`.
 
-Forwarded help/version flags can exit successfully without deploying. These have `completion_status: unverified` and produce neither submitted nor ready events.
+Forwarded help/version flags can exit successfully without deploying. These have `completion_status: unverified` and produce neither submitted nor ready events. They do not run login, linking, env loading/saving or deployment.
 
 Historical `cli_deploy_succeeded` events without `no_wait` cannot be reliably separated into submitted and ready deployments. Do not treat a missing property as `false`.
 
 `prod` retains its legacy meaning: whether `--prod` was supplied. It is not a provider-confirmed deployment environment, especially with forwarded `--target` flags.
 
+`requested_environment` is `provider-default`, `preview`, `production` or `custom`. `reported_environment` is `preview`, `production` or `unknown`, based only on a recognized Vercel output label (`environment_confirmation_source: vercel_cli_output`); absent/unsupported labels stay unknown. Custom names and destination IDs are not sent. Output parsing is not an independent provider API check.
+
 ## Setup stages
 
-Stages are `validate_project`, `environment_load`, `cli_prepare`, `login_check`, `login`, `link`, `env_sync` and `deploy`.
+Stages are `validate_project`, `environment_load`, `preflight`, `cli_prepare`, `login_check`, `login`, `link`, `env_sync` and `deploy`.
 
 Every started stage emits a completed event on normal return, failure or caught cancellation. Skipped stages emit only a completed event with `outcome: skipped` and `duration_ms: 0`. Abrupt process termination or offline delivery can leave stages unmatched.
 
@@ -39,25 +41,25 @@ Completion outcomes are `succeeded`, `failed`, `cancelled` and `skipped`. A stag
 
 `login_required` records whether login was needed before the attempt. `link_required` records whether linking was needed. The legacy `logged_in` success property still describes the final state. Unknown preflight state is absent, not false.
 
-Environment sync is best-effort. A completed operation can have `env_sync_outcome: partial`, `save_failed` or `unavailable` while deployment continues with locally attached values. Other outcomes are `saved`, `already_configured`, `declined`, `not_linked`, `skip_env` and `no_local_keys`. Use this property rather than stage completion to measure successful persistence.
+Environment sync is best-effort. A completed operation can have `env_sync_outcome: partial`, `save_failed` or `unavailable` while deployment continues with locally attached values. Other outcomes are `saved`, `already_configured`, `declined`, `not_linked`, `skip_env`, `no_local_keys` and `environment_not_selected`. The last means no explicit preview/production environment was chosen, so keys are attached to the deployment only. Use this property rather than stage completion to measure successful persistence.
 
 ## Discovery sources
 
-Website copy events categorize the page as `getting-started`, `agent-quickstart`, `cli-reference`, `homepage` or `docs`. The copied text is inspected locally and never included in the event. Existing create-copy events retain their name and properties.
+Website copy events categorize the page as `getting-started`, `agent-quickstart`, `cli-reference`, `deploy-guide`, `homepage` or `docs`. The copied text is inspected locally and never included in the event. Existing create-copy events retain their name and properties.
 
 Deploy commands remain unchanged, with no attribution flags or embedded identity. Website copy sources measure interest by surface, not the origin of an individual CLI run. A shared PostHog project alone does not connect anonymous browser and CLI identities. Use the exposed CLI experiment cohort for experimental conversion analysis.
 
 ## Experiment attribution
 
-No experiment is enabled by this change. Without a configured flag, the existing “Share a preview” heading remains the baseline.
+No experiment is enabled by this change. Without a configured flag, “Deploy to Vercel” is the baseline. This corrects the earlier preview guarantee; the new experiment key and message versions prevent mixing the two baselines.
 
-To run the optional copy experiment, configure the PostHog multivariate flag `cli-deploy-hint-v1` with `control` and `share-app` variants. The latter changes the heading to “Ready to share your app?”. The command and behavior are identical in both arms.
+To run the optional copy experiment, configure the PostHog multivariate flag `cli-deploy-hint-v2` with `control` and `share-app` variants. The latter changes the heading to “Ready to share your app?”. The command and behavior are identical in both arms.
 
 The CLI evaluates the flag only at the post-create hint surface, with a 750 ms budget. False, unknown, failed or timed-out evaluations use baseline copy and do not enroll a new installation. Evaluation is skipped entirely when telemetry is disabled.
 
 The first exposed experimental assignment is saved with its experiment ID in the existing CLI telemetry state. Subsequent active evaluations reuse that assignment, even if allocation weights change. Disabling the flag restores baseline copy. Use a new flag key when designing a different experiment; assignments from older keys are ignored.
 
-Exposure is recorded after printing. `$feature_flag_called` reports the actual rendered experimental variant, not merely a remote evaluation. Follow-up events include `$feature/cli-deploy-hint-v1` and:
+Exposure is recorded after printing. `$feature_flag_called` reports the actual rendered experimental variant, not merely a remote evaluation. Follow-up events include `$feature/cli-deploy-hint-v2` and:
 
 - `last_deploy_hint_experiment_id`
 - `last_deploy_hint_variant`
@@ -67,6 +69,8 @@ Exposure is recorded after printing. `$feature_flag_called` reports the actual r
 These properties survive separate CLI invocations through the telemetry config. They describe the last hint printed on that installation, not the current project's origin. Deploy never reassigns the experiment or makes a feature-flag request.
 
 Use the first experimental exposure to assign a cohort. Compare control and treatment conversion within a fixed window, for example seven days. Exclude baseline/unenrolled exposures. Track outcomes by the existing stable CLI identity, not `cli_run_id`, which changes between create and deploy.
+
+The homepage, guide and local devtools hint are baseline product changes, not randomized arms of this copy test. Stabilize their rollout before starting the experiment. The local hint stores its seen state in the browser only; it sends no exposure/copy/response events and cannot be joined to CLI identities. Measuring a local-nudge experiment needs a separately reviewed opt-out/assignment bridge, not inferred attribution.
 
 Read-only config storage, deleted state, separate machines, shared installations and telemetry opt-out limit attribution. OAuth aliasing can link CLI usage to an account, but there is no project identifier or guarantee of distinct people.
 

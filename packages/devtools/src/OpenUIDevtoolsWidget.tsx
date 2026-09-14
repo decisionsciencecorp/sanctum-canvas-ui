@@ -29,6 +29,7 @@ import {
 } from "./theme";
 import type { DevtoolsPosition, OpenUIDevtoolsWidgetProps } from "./types";
 import { ErrorBoundary, IconButton, ShiroLogo, ThemeSegmented } from "./ui";
+import { DeployHint } from "./ui/DeployHint";
 import ReliabilityBanner from "./ui/ReliabilityBanner";
 
 export type { DevtoolsPosition, OpenUIDevtoolsProps, OpenUIDevtoolsWidgetProps } from "./types";
@@ -59,8 +60,10 @@ export function OpenUIDevtoolsWidget({
   maxEvents = 50,
   errorsOnly = false,
   autoOpenOnError = true,
+  deployHint = true,
   theme: themeProp,
   __autoMounted = false,
+  __development,
 }: OpenUIDevtoolsWidgetProps) {
   const isEnabled =
     enabled ?? (typeof process === "undefined" || process.env["NODE_ENV"] !== "production");
@@ -144,6 +147,9 @@ export function OpenUIDevtoolsWidget({
 
   return (
     <DevtoolsModeProvider mode={mode}>
+      {deployHint && (__development ?? __autoMounted) ? (
+        <DeployHint position={position} hidden={open || debug.trayOpen} />
+      ) : null}
       <div style={{ ...styles.toggleWrap, ...rootStyle(mode), ...positionStyles[position] }}>
         <button
           style={{

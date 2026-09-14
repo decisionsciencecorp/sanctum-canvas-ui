@@ -1,4 +1,3 @@
-import * as fs from "node:fs";
 import * as path from "node:path";
 
 import type { CliInvocation } from "../../cli-bin";
@@ -10,7 +9,8 @@ import { mutedNpmEnv, runCommand } from "../../process-runner";
 import { withSpinner } from "../../spinner";
 import { CreateError } from "../../telemetry";
 import { throwCommandFailure } from "../../utils";
-import { vercelLinkScopeArgs, vercelSpawnArgs } from "./args";
+import { vercelContextArgs, vercelSpawnArgs } from "./args";
+import { readVercelProjectLink } from "./destination";
 
 /** Auth vars Vercel CLI reads. OpenUI apps keep these in `.env`; Vercel often writes `.env.local`. */
 const VERCEL_CLI_ENV_KEYS = ["VERCEL_TOKEN", "VERCEL_ORG_ID", "VERCEL_PROJECT_ID"] as const;
@@ -36,9 +36,9 @@ export function vercelCliEnv(projectDir: string): NodeJS.ProcessEnv {
   return env;
 }
 
-/** True when `.vercel/project.json` exists in the project. */
+/** True when the project has a valid directory link or Vercel environment ID pair. */
 export function isVercelLinked(projectDir: string): boolean {
-  return fs.existsSync(path.join(projectDir, ".vercel", "project.json"));
+  return Boolean(readVercelProjectLink(projectDir, vercelCliEnv(projectDir)));
 }
 
 /**
@@ -75,14 +75,23 @@ function vercelSlug(value?: string): string {
 }
 
 /** Ensure the Vercel CLI is runnable, installing via dlx when needed. */
-export async function prepareVercelCli(invocation: CliInvocation, cwd: string): Promise<void> {
+export async function prepareVercelCli(
+  invocation: CliInvocation,
+  cwd: string,
+  extraArgs: string[] = [],
+): Promise<void> {
   const preparing = invocation.source === "dlx";
   const runVersion = () =>
-    runCommand(invocation.command, vercelSpawnArgs(invocation, ["--version"]), cwd, {
-      echo: false,
-      stdin: "ignore",
-      env: vercelCliEnv(cwd),
-    });
+    runCommand(
+      invocation.command,
+      vercelSpawnArgs(invocation, ["--version", ...vercelContextArgs(extraArgs)]),
+      cwd,
+      {
+        echo: false,
+        stdin: "ignore",
+        env: vercelCliEnv(cwd),
+      },
+    );
 
   const result = preparing
     ? await withSpinner("Preparing Vercel CLI...", runVersion)
@@ -102,10 +111,14 @@ export async function prepareVercelCli(invocation: CliInvocation, cwd: string): 
 }
 
 /** Probe login with a non-interactive `vercel whoami`. */
-export async function isVercelLoggedIn(invocation: CliInvocation, cwd: string): Promise<boolean> {
+export async function isVercelLoggedIn(
+  invocation: CliInvocation,
+  cwd: string,
+  extraArgs: string[] = [],
+): Promise<boolean> {
   const result = await runCommand(
     invocation.command,
-    vercelSpawnArgs(invocation, ["--non-interactive", "whoami"]),
+    vercelSpawnArgs(invocation, ["--non-interactive", "whoami", ...vercelContextArgs(extraArgs)]),
     cwd,
     { echo: false, stdin: "ignore", env: vercelCliEnv(cwd) },
   );
@@ -116,7 +129,7 @@ export async function isVercelLoggedIn(invocation: CliInvocation, cwd: string): 
 /** Run interactive `vercel login`, or fail if there is no TTY. */
 export async function loginToVercel(
   invocation: CliInvocation,
-  opts: Pick<DeployTargetOptions, "projectDir" | "noInteractive">,
+  opts: Pick<DeployTargetOptions, "projectDir" | "noInteractive" | "extraArgs">,
 ): Promise<void> {
   if (!canPromptInteractive(opts.noInteractive)) {
     throw new CreateError(
@@ -130,7 +143,7 @@ export async function loginToVercel(
   console.info("Not logged into Vercel. Starting login...\n");
   const result = await runCommand(
     invocation.command,
-    vercelSpawnArgs(invocation, ["login"]),
+    vercelSpawnArgs(invocation, ["login", ...vercelContextArgs(opts.extraArgs)]),
     opts.projectDir,
     { inheritOutput: true, env: vercelCliEnv(opts.projectDir) },
   );
@@ -162,7 +175,7 @@ export async function linkVercelProject(
     "link",
     "--project",
     toVercelProjectName(opts.projectDir),
-    ...vercelLinkScopeArgs(opts.extraArgs),
+    ...vercelContextArgs(opts.extraArgs),
   ];
   if (skipPrompts) args.push("--yes");
   const result = await runCommand(

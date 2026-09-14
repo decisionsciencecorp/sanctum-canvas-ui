@@ -1,5 +1,5 @@
 /** Version the flag key before starting a different experiment. No experiment is enabled in code. */
-export const DEPLOY_HINT_EXPERIMENT = "cli-deploy-hint-v1";
+export const DEPLOY_HINT_EXPERIMENT = "cli-deploy-hint-v2";
 export type DeployHintVariant = "control" | "share-app";
 export type DeployHint = {
   experiment_id: string;
@@ -14,11 +14,11 @@ export function isDeployHintVariant(value: unknown): value is DeployHintVariant 
 }
 
 export function deployHint(variant?: DeployHintVariant): DeployHint {
-  const heading = variant === "share-app" ? "Ready to share your app?" : "Share a preview:";
+  const heading = variant === "share-app" ? "Ready to share your app?" : "Deploy to Vercel:";
   return {
     experiment_id: variant ? DEPLOY_HINT_EXPERIMENT : "none",
     variant: variant ?? "baseline",
-    message_version: variant === "share-app" ? "share-app-v1" : "share-preview-v1",
+    message_version: variant === "share-app" ? "share-app-v2" : "deploy-vercel-v2",
     message: `${heading}\n> npx @openuidev/cli@latest deploy`,
   };
 }

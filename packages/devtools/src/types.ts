@@ -21,6 +21,8 @@ export interface OpenUIDevtoolsProps {
   errorsOnly?: boolean;
   /** Initial state of the drawer's "auto-open on error" checkbox. Defaults to true. */
   autoOpenOnError?: boolean;
+  /** Offer a dismissible local deployment hint after a valid renderer stream. Development/loopback only. */
+  deployHint?: boolean;
   /**
    * Widget UI theme. If passed, it wins over the stored Settings choice
    * and is written to config. Otherwise the stored theme is used, then light.
@@ -39,6 +41,8 @@ export interface OpenUIDevtoolsProps {
    * any manually rendered <OpenUIDevtools /> so host-provided props win.
    */
   __autoMounted?: boolean;
+  /** @internal Host build mode, passed into the development CDN bundle. */
+  __development?: boolean;
 }
 
 /** Props the CDN widget itself understands (everything except the CDN tag). */

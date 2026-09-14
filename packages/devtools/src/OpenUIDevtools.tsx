@@ -24,6 +24,7 @@ export function OpenUIDevtools(props: OpenUIDevtoolsProps) {
     maxEvents,
     errorsOnly,
     autoOpenOnError,
+    deployHint,
     theme,
     version,
     __autoMounted,
@@ -36,11 +37,22 @@ export function OpenUIDevtools(props: OpenUIDevtoolsProps) {
       maxEvents,
       errorsOnly,
       autoOpenOnError,
+      deployHint,
       theme,
       version,
       __autoMounted,
     });
-  }, [enabled, position, maxEvents, errorsOnly, autoOpenOnError, theme, version, __autoMounted]);
+  }, [
+    enabled,
+    position,
+    maxEvents,
+    errorsOnly,
+    autoOpenOnError,
+    deployHint,
+    theme,
+    version,
+    __autoMounted,
+  ]);
 
   return null;
 }
