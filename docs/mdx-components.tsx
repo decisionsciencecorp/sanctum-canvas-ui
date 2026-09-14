@@ -1,3 +1,4 @@
+import { AnalyticsCodeBlock } from "@/components/analytics-code-block";
 import {
   BlankScreens,
   CompletionByModel,
@@ -24,6 +25,7 @@ import type { MDXComponents } from "mdx/types";
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
     ...defaultMdxComponents,
+    pre: AnalyticsCodeBlock,
     ...TabsComponents,
     TweetEmbed,
     FakeVisual,

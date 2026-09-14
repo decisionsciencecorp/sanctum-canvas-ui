@@ -1,7 +1,7 @@
 "use client";
 
 import { ClipboardCommandButton } from "@/app/(home)/components/Button/Button";
-import { captureCreateCliCommandCopied } from "@/lib/analytics";
+import { captureCliCommandCopied } from "@/lib/analytics";
 import { ArrowRight } from "lucide-react";
 import { useEffect, useRef } from "react";
 import styles from "./build-for-free-menu.module.css";
@@ -81,7 +81,7 @@ export function BuildForFreeMenu({
               iconContainerClassName={styles.menuItemIcon}
               copyIconColor="currentColor"
               onCopySuccess={(command) =>
-                captureCreateCliCommandCopied(command, {
+                captureCliCommandCopied(command, {
                   source: analyticsSource,
                   interaction: "dropdown",
                 })

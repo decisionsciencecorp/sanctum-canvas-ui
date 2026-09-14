@@ -1,6 +1,6 @@
 "use client";
 
-import { captureCreateCliCommandCopied } from "@/lib/analytics";
+import { captureCliCommandCopied } from "@/lib/analytics";
 import { ClipboardCommandButton } from "../../components/Button/Button";
 import styles from "./BuildChatSection.module.css";
 
@@ -9,7 +9,7 @@ import styles from "./BuildChatSection.module.css";
 // ---------------------------------------------------------------------------
 
 function captureBuildChatCliCopy(command: string) {
-  captureCreateCliCommandCopied(command, {
+  captureCliCommandCopied(command, {
     source: "homepage_build_chat",
     interaction: "primary",
   });

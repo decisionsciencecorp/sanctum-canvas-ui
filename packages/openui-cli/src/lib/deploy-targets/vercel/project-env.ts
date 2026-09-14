@@ -2,6 +2,7 @@ import type { CliInvocation } from "../../cli-bin";
 import { SENSITIVE_DEPLOY_ENV_KEYS } from "../../deploy/project-env";
 import { canPromptInteractive, confirmOrDefault } from "../../deploy/prompt";
 import { runCommand } from "../../process-runner";
+import { throwCommandFailure } from "../../utils";
 import { vercelSpawnArgs } from "./args";
 import { isVercelLinked, vercelCliEnv } from "./connect";
 
@@ -13,6 +14,18 @@ type VercelEnvEntry = {
   target?: string[];
 };
 
+type EnvSyncResult = {
+  savedKeyCount: number;
+  outcome:
+    | "not_linked"
+    | "unavailable"
+    | "already_configured"
+    | "declined"
+    | "saved"
+    | "partial"
+    | "save_failed";
+};
+
 /** Save missing allowlisted keys to the Vercel project without overwriting existing ones. */
 export async function syncLocalEnvToVercelProject(opts: {
   invocation: CliInvocation;
@@ -20,18 +33,18 @@ export async function syncLocalEnvToVercelProject(opts: {
   localEnv: Record<string, string>;
   yes: boolean;
   noInteractive: boolean;
-}): Promise<number> {
+}): Promise<EnvSyncResult> {
   if (!isVercelLinked(opts.projectDir)) {
     console.info(
       "Vercel project not linked yet — env is attached to this deployment only. After the first deploy, missing keys can be saved to the project.\n",
     );
-    return 0;
+    return { savedKeyCount: 0, outcome: "not_linked" };
   }
 
   const existing = await listVercelProjectEnv(opts.invocation, opts.projectDir);
   if (!existing) {
     console.info("Could not read Vercel project env — continuing with deployment-only env.\n");
-    return 0;
+    return { savedKeyCount: 0, outcome: "unavailable" };
   }
 
   const pending: { key: string; targets: string[]; value: string }[] = [];
@@ -47,7 +60,7 @@ export async function syncLocalEnvToVercelProject(opts: {
     console.info(
       `Vercel project already has ${Object.keys(opts.localEnv).sort().join(", ")} — leaving project env unchanged.\n`,
     );
-    return 0;
+    return { savedKeyCount: 0, outcome: "already_configured" };
   }
 
   const keyList = pending.map((item) => item.key).join(", ");
@@ -65,7 +78,7 @@ export async function syncLocalEnvToVercelProject(opts: {
         ? "Skipping project env save — using deployment-only env for this run.\n"
         : "No TTY — not saving env to the Vercel project (pass --yes to save).\n",
     );
-    return 0;
+    return { savedKeyCount: 0, outcome: "declined" };
   }
 
   const savedKeyNames: string[] = [];
@@ -86,7 +99,15 @@ export async function syncLocalEnvToVercelProject(opts: {
   if (savedKeyNames.length > 0) {
     console.info(`Saved ${savedKeyNames.join(", ")} to the Vercel project.\n`);
   }
-  return savedKeyNames.length;
+  return {
+    savedKeyCount: savedKeyNames.length,
+    outcome:
+      savedKeyNames.length === pending.length
+        ? "saved"
+        : savedKeyNames.length > 0
+          ? "partial"
+          : "save_failed",
+  };
 }
 
 /** Read project env via `vercel env list --json`, or null if that fails. */
@@ -100,6 +121,7 @@ async function listVercelProjectEnv(
     projectDir,
     { echo: false, stdin: "ignore", env: vercelCliEnv(projectDir) },
   );
+  if (result.signal) throwCommandFailure(result, "vercel_env_list", "Vercel env lookup cancelled");
   if (result.error || result.status !== 0) return null;
   const parsed = extractJsonObject(result.diagnosticTail) as { envs?: VercelEnvEntry[] } | null;
   if (!parsed || !Array.isArray(parsed.envs)) return null;
@@ -155,6 +177,7 @@ async function addVercelProjectEnv(opts: {
     opts.projectDir,
     { echo: false, stdin: "ignore", env: vercelCliEnv(opts.projectDir) },
   );
+  if (result.signal) throwCommandFailure(result, "vercel_env_save", "Vercel env save cancelled");
   if (!result.error && result.status === 0) return true;
 
   console.info(

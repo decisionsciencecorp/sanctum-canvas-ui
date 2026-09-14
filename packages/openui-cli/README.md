@@ -218,7 +218,6 @@ Extra flags after `deploy` are forwarded as-is to the target deployment platform
 
 Unlinked projects are linked to the platform first. Allowlisted keys from `.env` / `.env.local` that are missing on different deployment environments can be saved to the project (auto-accepted with `--yes`). Build logs are quiet by default; use `--verbose` to stream them.
 
-
 ```bash
 openui deploy
 openui deploy ./my-app
@@ -340,6 +339,8 @@ Telemetry includes both `agent_name` (the CLI declaration) and `detected_agent_n
 ```bash
 openui create --no-telemetry
 ```
+
+Deployment telemetry distinguishes no-wait submission from waiting-mode readiness, records setup stages and hint exposure, and preserves experiment attribution across CLI runs. See [Deployment adoption telemetry](./TELEMETRY.md) for the event contract, privacy boundaries and dashboard recipes. No experiment or generated-app tracking is enabled by default.
 
 ## Notes
 

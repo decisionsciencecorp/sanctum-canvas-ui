@@ -88,7 +88,7 @@ export async function prepareVercelCli(invocation: CliInvocation, cwd: string): 
     ? await withSpinner("Preparing Vercel CLI...", runVersion)
     : await runVersion();
 
-  if (!result.error && result.status === 0) {
+  if (!result.error && result.status === 0 && !result.signal) {
     if (preparing) console.info("✓ Vercel CLI ready\n");
     return;
   }
@@ -109,6 +109,7 @@ export async function isVercelLoggedIn(invocation: CliInvocation, cwd: string): 
     cwd,
     { echo: false, stdin: "ignore", env: vercelCliEnv(cwd) },
   );
+  if (result.signal) throwCommandFailure(result, "vercel_login", "Vercel login check cancelled");
   return !result.error && result.status === 0;
 }
 
@@ -133,7 +134,7 @@ export async function loginToVercel(
     opts.projectDir,
     { inheritOutput: true, env: vercelCliEnv(opts.projectDir) },
   );
-  if (!result.error && result.status === 0) return;
+  if (!result.error && result.status === 0 && !result.signal) return;
   throwCommandFailure(result, "vercel_login", "Vercel login failed");
 }
 
@@ -175,7 +176,7 @@ export async function linkVercelProject(
       env: vercelCliEnv(opts.projectDir),
     },
   );
-  if (!result.error && result.status === 0 && isVercelLinked(opts.projectDir)) {
+  if (!result.error && result.status === 0 && !result.signal && isVercelLinked(opts.projectDir)) {
     adoptVercelEnvVars(opts.projectDir);
     return;
   }

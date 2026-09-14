@@ -561,6 +561,7 @@ export async function runCreateApp(options: CreateAppOptions): Promise<void> {
   const devCmd = packageManager.runCmd;
   const startDev =
     immediateResolution.immediate && dependencyInstalled && !devStartBlockedByMissingApiKey;
+  const deployHint = await telemetry.resolveDeployHint();
 
   telemetry.capture("cli_create_succeeded", {
     ...createFunnelProps("create_succeeded"),
@@ -582,8 +583,10 @@ export async function runCreateApp(options: CreateAppOptions): Promise<void> {
       startDev,
       installCmd,
       dependencyInstalled,
+      deployHint: deployHint.message,
     }),
   );
+  telemetry.deployHintPrinted(deployHint, { dev_server_starting: startDev });
 
   if (devStartBlockedByMissingApiKey) {
     telemetry.capture("cli_dev_command_skipped", {
@@ -789,6 +792,7 @@ function getStartedMessage(o: {
   startDev: boolean;
   installCmd: string;
   dependencyInstalled: boolean;
+  deployHint: string;
 }): string {
   const skillMessage = o.skillInstalled
     ? "The OpenUI agent skill was installed.\nAI coding assistants will use it to help you build with OpenUI.\n"
@@ -811,11 +815,9 @@ function getStartedMessage(o: {
         `> ${o.devCmd} run dev`,
       ].join("\n");
 
-  const deployHint = "Share a preview:\n> npx @openuidev/cli@latest deploy";
-
   const frameworkNote = o.backendGettingStarted?.replaceAll("{{packageManager}}", o.devCmd) ?? "";
 
-  return `\n${[skillMessage.trim(), "Done!", envNote, frameworkNote, nextStep, deployHint]
+  return `\n${[skillMessage.trim(), "Done!", envNote, frameworkNote, nextStep, o.deployHint]
     .filter(Boolean)
     .join("\n\n")}\n`;
 }

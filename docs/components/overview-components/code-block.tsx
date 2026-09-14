@@ -1,5 +1,7 @@
 "use client";
 
+import { captureCliCommandCopied } from "@/lib/analytics";
+import { copyText } from "@/lib/copy-text";
 import { useState } from "react";
 
 interface CodeBlockProps {
@@ -18,8 +20,9 @@ export function CodeBlock({
 }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(code);
+  const handleCopy = async () => {
+    if (!(await copyText(code))) return;
+    captureCliCommandCopied(code, { source: "overview_code_block", interaction: "copy_button" });
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
