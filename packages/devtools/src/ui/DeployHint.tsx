@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { withDevtoolsAttribution } from "../lib/links";
 import { FONT, MONO, useStyles, type ThemeTokens } from "../theme";
 import type { DevtoolsPosition } from "../types";
+import { IconButton } from "./IconButton";
 
 const COMMAND = "npx @openuidev/cli@latest deploy";
 const DEPLOY_DOCS_URL = "https://www.openui.com/docs/api-reference/cli#deploy";
@@ -185,6 +186,7 @@ function DeployCommand({
   onDismiss?: () => void;
 }) {
   const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const [docsHovered, setDocsHovered] = useState(false);
   const styles = useStyles(commandStyles);
 
   const copyCommand = async () => {
@@ -209,30 +211,44 @@ function DeployCommand({
             rel="noopener noreferrer"
             aria-label="Deployment docs"
             title="Deployment docs"
-            style={styles.docsLink}
+            style={{ ...styles.docsLink, ...(docsHovered ? styles.docsLinkHover : null) }}
+            onMouseEnter={() => setDocsHovered(true)}
+            onMouseLeave={() => setDocsHovered(false)}
           >
             <ExternalLink size={14} aria-hidden />
           </a>
         ) : null}
-        <button
-          type="button"
-          aria-label="Copy deploy command"
-          title="Copy deploy command"
-          style={{ ...styles.button, ...(compact ? styles.compactButton : null) }}
-          onClick={copyCommand}
-        >
-          {status === "copied" ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />}
-        </button>
-        {onDismiss ? (
+        {compact ? (
+          <IconButton
+            type="button"
+            aria-label="Copy deploy command"
+            title="Copy deploy command"
+            style={styles.iconButton}
+            onClick={copyCommand}
+          >
+            {status === "copied" ? <Check size={14} aria-hidden /> : <Copy size={14} aria-hidden />}
+          </IconButton>
+        ) : (
           <button
+            type="button"
+            aria-label="Copy deploy command"
+            title="Copy deploy command"
+            style={styles.button}
+            onClick={copyCommand}
+          >
+            {status === "copied" ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />}
+          </button>
+        )}
+        {onDismiss ? (
+          <IconButton
             type="button"
             aria-label="Dismiss deployment banner"
             title="Dismiss deployment banner"
-            style={styles.closeButton}
+            style={styles.iconButton}
             onClick={onDismiss}
           >
             <X size={14} aria-hidden />
-          </button>
+          </IconButton>
         ) : null}
       </div>
       <span
@@ -277,16 +293,26 @@ function commandStyles(t: ThemeTokens) {
       lineHeight: 1.5,
     },
     compactCommand: { fontSize: 11 },
-    compactRow: { gap: 4 },
+    compactRow: {
+      gap: 4,
+      padding: "6px 8px 6px 12px",
+      borderRadius: 12,
+      background: t.card,
+      boxShadow: t.shadowSubtle,
+    },
+    iconButton: { flexShrink: 0 },
     docsLink: {
       display: "inline-flex",
       alignItems: "center",
       justifyContent: "center",
       flexShrink: 0,
-      width: 28,
-      height: 36,
-      color: t.fgSecondary,
+      width: 26,
+      height: 26,
+      borderRadius: 8,
+      color: t.fgMuted,
+      transition: "background 150ms ease, color 150ms ease",
     },
+    docsLinkHover: { background: t.bgSubtle, color: t.fg },
     button: {
       display: "inline-flex",
       alignItems: "center",
@@ -298,20 +324,6 @@ function commandStyles(t: ThemeTokens) {
       borderRadius: 7,
       background: t.inverted,
       color: t.invertedFg,
-      cursor: "pointer",
-    },
-    compactButton: { width: 36, height: 36 },
-    closeButton: {
-      display: "inline-flex",
-      alignItems: "center",
-      justifyContent: "center",
-      flexShrink: 0,
-      width: 28,
-      height: 36,
-      padding: 0,
-      border: "none",
-      background: "transparent",
-      color: t.fgSecondary,
       cursor: "pointer",
     },
     visuallyHidden: {
