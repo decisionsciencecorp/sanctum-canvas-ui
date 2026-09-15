@@ -47,11 +47,9 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) and request an interface such as a comparison table or interactive form.
 
-<span id="4-share-a-preview" />
+## 4. Share a preview
 
-## 4. Deploy and share your app
-
-Once a prompt works locally, deploy to your Vercel account from the project directory. If the dev server is running, use another terminal:
+Deploy a Vercel preview from the project directory:
 
 ```bash tab="pnpm" tab-group="pkg"
 pnpx @openuidev/cli@latest deploy
@@ -71,11 +69,9 @@ npx @openuidev/cli@latest deploy
 
 Allowlisted keys from `.env`, such as `OPENAI_API_KEY`, are passed to the deployment.
 
-Check the environment and access settings in Vercel: the first deployment may be production. Open the hosted URL and try the same prompt before sharing. The [deployment guide](/docs/deploy) covers key persistence, backend compatibility and the controls needed before public use.
-
 ## What to read next
 
-- [Deploy and share your app](/docs/deploy)
+- [Deploy with the CLI](/docs/api-reference/cli#deploy)
 - [Adapters and formats](/docs/agent/reference/adapters-and-formats)
 - [Generative UI](/docs/agent/core-concepts/generative-ui)
 - [Customize Agent Interface](/docs/agent/customize/welcome-and-starters)

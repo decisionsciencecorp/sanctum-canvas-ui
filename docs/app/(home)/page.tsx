@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { AGENT_SETUP_PROMPT, AgentPicker } from "./components/AgentPicker/AgentPicker";
 import styles from "./page.module.css";
-import { BuildChatSection } from "./sections/BuildChatSection/BuildChatSection";
 import { CloudBanner } from "./sections/CloudBanner/CloudBanner";
 import { CloudSection } from "./sections/CloudSection/CloudSection";
 import { FaqSection } from "./sections/FaqSection/FaqSection";
@@ -53,7 +52,6 @@ export default function HomePage() {
               works with. The grid runs on its own six features — Live data and
               Cross-platform are only stated here. */}
           <FeatureGridSection gridFirst showHeaderSeparator={false} showBottomSeparator={false} />
-          <BuildChatSection />
 
           <div className={styles.cloudGroup}>
             <ShiroPeek />

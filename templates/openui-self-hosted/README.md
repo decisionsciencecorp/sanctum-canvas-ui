@@ -33,21 +33,14 @@ From the project directory:
 
 ```bash
 npx @openuidev/cli@latest deploy
+npx @openuidev/cli@latest deploy --prod
 ```
 
-Deploys to your Vercel account. The first deployment may be production; check Vercel's reported environment and access settings before sharing.
-
-Allowlisted keys from `.env` / `.env.local` (including `OPENAI_API_KEY`) are attached to this deployment's build and runtime, with shell values taking precedence. `--skip-env` disables automatic attachment and saving. Request `--target preview` or `--prod` to also offer saving missing file values to that environment only; declining still uses them for this run. Existing saved keys are not overwritten.
-
-Open the hosted URL and repeat the prompt that worked locally. Check streaming, tools and recipient access. `--no-wait` only submits the deployment; wait for Ready before testing. Rerun the same command and environment flags to deploy updates.
-
-Protect access for controlled evaluation. Before public use, authenticate requests and add usage limits to protect your model key and application tools. Deployment does not add authentication or durable storage.
-
-Follow the [deployment guide](https://www.openui.com/docs/deploy) for the full checklist and recovery steps.
+Deploys to Vercel. Allowlisted keys from `.env` / `.env.local` (including `OPENAI_API_KEY`) are
+passed to that deployment unless you use `--skip-env`. Persist them on the Vercel project for later
+deploys.
 
 ## Framework deployments
-
-The current LangGraph scaffold runs in-process inside the Next.js `/api/chat` route. Older scaffolds with `langgraph.json` and a `LANGGRAPH_API_URL` proxy need that server hosted separately at a reachable URL.
 
 The Vercel AI SDK scaffold runs its backend inside the Next.js API route, so the
 frontend and backend can be deployed together as one Next.js project.

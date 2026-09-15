@@ -42,7 +42,7 @@ export function loadProjectDeployEnv(projectDir: string): Record<string, string>
 export function detectRequiredDeployEnvNames(projectDir: string): string[] {
   const deps = readProjectDependencies(projectDir);
   if (deps["@openuidev/thesys-server"] || deps["@openuidev/thesys"]) return ["THESYS_API_KEY"];
-  if (deps["openai"] || deps["@ai-sdk/openai"]) return ["OPENAI_API_KEY"];
+  if (deps["openai"] || deps["ai"] || deps["@ai-sdk/openai"]) return ["OPENAI_API_KEY"];
   return [];
 }
 
@@ -55,7 +55,7 @@ export function warnMissingRequiredDeployEnv(
   for (const key of detectRequiredDeployEnvNames(projectDir)) {
     if (localEnv[key]) continue;
     console.info(
-      `[!] ${key} is not set locally. If this app uses it, configure it on ${platformLabel} or pass it explicitly before testing the hosted response.\n`,
+      `[!] ${key} is not set locally. This deployment will fail at runtime unless ${key} is already configured on ${platformLabel}.\n`,
     );
   }
 }

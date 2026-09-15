@@ -199,8 +199,6 @@ openui create --no-interactive --name my-app --template openui-cloud --api-key t
 
 Deploys an OpenUI project. The default platform supported is **Vercel**.
 
-See [Deploy and share your app](https://www.openui.com/docs/deploy) for the full journey from a working local response to hosted verification and updates. Deployment uses your Vercel account; it does not add application authentication or deploy external backends.
-
 ```bash
 openui deploy [dir] [options]
 ```
@@ -211,23 +209,19 @@ Arguments:
 
 Options:
 
-- `-y, --yes`: Skip confirmation prompts (also saves missing file values for an explicitly selected preview/production environment)
+- `-y, --yes`: Skip confirmation prompts (also saves missing env keys to the Vercel project)
 - `--skip-env`: Do not pass or save local `.env` / `.env.local` values
 - `--no-interactive`: Skip prompts (implies `--yes`)
 - `--verbose`: Stream full Vercel build logs (hidden by default; failure still prints a log tail)
 
-Extra flags after `deploy` are forwarded to Vercel, which validates them. Use the positional directory argument instead of `--cwd`, so project validation, env loading and deployment use the same directory. `--skip-env` is OpenUI-specific.
+Extra flags after `deploy` are forwarded as-is to the target deployment platform, which validates them. `--skip-env` is OpenUI-specific so it does not collide with the target platform's env specific args.
 
-Unlinked projects are linked first. The CLI shows project/team IDs, requested environment and local key names/sources before upload. Plain `deploy` uses Vercel's default environment, which can be production on a new project's first deployment. Request `--target preview` or `--prod` explicitly when needed; check the Vercel-reported environment afterward.
+Unlinked projects are linked to the platform first. Allowlisted keys from `.env` / `.env.local` that are missing on different deployment environments can be saved to the project (auto-accepted with `--yes`). Build logs are quiet by default; use `--verbose` to stream them.
 
-Allowlisted shell values override `.env.local`, then `.env`, and attach to this deployment's build and runtime. Saving file values for future deployments is separate: only an explicitly selected preview/production environment is eligible, existing values are not overwritten, and `--yes` accepts the save. Declining still attaches local values. With the provider-default or a custom environment, use-once is automatic; configure saved keys in Vercel. A shell override can differ from a persisted file value. `--skip-env` disables automatic local attachment and saving, but explicit `--env`/`--build-env` flags still apply.
-
-Build logs are quiet by default; use `--verbose` to stream them. `--no-wait` reports submission, not a finished build. After Ready, verify the hosted response, tools and sharing access. Rerun the same directory/environment command to deploy an update; normal Git/CI deployments remain supported.
 
 ```bash
 openui deploy
 openui deploy ./my-app
-openui deploy ./my-app --target preview
 openui deploy ./my-app --prod
 openui deploy --skip-env -- --force
 ```
@@ -341,13 +335,11 @@ The CLI sends usage analytics; OAuth sign-ins may link usage to your OIDC accoun
 
 When a coding agent invokes the CLI, it should pass `--agent-name` using its stable, lowercase kebab-case product slug—for example, `codex`, `claude-code`, `cline`, `factory-droid`, or `pi`. Do not pass a model/version, user name, session ID, or other unique value. Humans can omit the flag; it defaults to `unknown`.
 
-Telemetry includes both `agent_name` (the CLI declaration) and `detected_agent_name` (best-effort environment detection). Either can be spoofed, inherited, missing, or ambiguous; neither is an authentication signal. Every invocation gets an ephemeral, unpersisted `cli_run_id` so its events can be correlated. Failure events include bounded `failure_stage`, `error_class`, and `error_code` values, never raw error messages. Dependency failures distinguish peer, registry, network, install-script, workspace, and package-compatibility errors. Process failures include duration, exit code, and signal; Cloud-auth failures include a bounded auth substage and HTTP status when known; cancellations use separate events. For `create`, telemetry also includes `package_manager`, the immediate-start selection, and best-effort dev-command start and result events. Dev-command events contain status, duration, exit code, and signal—not project paths, command output, code, or environment values. For `deploy`, telemetry includes the target (currently `vercel`), requested and Vercel-reported environment, whether the Vercel CLI was logged in, whether local env was passed, CLI resolution source, and process status; not env values, project paths, or command output. Disable telemetry with `--no-telemetry` or `DO_NOT_TRACK=1`.
+Telemetry includes both `agent_name` (the CLI declaration) and `detected_agent_name` (best-effort environment detection). Either can be spoofed, inherited, missing, or ambiguous; neither is an authentication signal. Every invocation gets an ephemeral, unpersisted `cli_run_id` so its events can be correlated. Failure events include bounded `failure_stage`, `error_class`, and `error_code` values, never raw error messages. Dependency failures distinguish peer, registry, network, install-script, workspace, and package-compatibility errors. Process failures include duration, exit code, and signal; Cloud-auth failures include a bounded auth substage and HTTP status when known; cancellations use separate events. For `create`, telemetry also includes `package_manager`, the immediate-start selection, and best-effort dev-command start and result events. Dev-command events contain status, duration, exit code, and signal—not project paths, command output, code, or environment values. For `deploy`, telemetry includes the target (currently `vercel`), production vs preview, whether the Vercel CLI was logged in, whether local env was passed, CLI resolution source, and process status; not env values, project paths, or command output. Disable telemetry with `--no-telemetry` or `DO_NOT_TRACK=1`.
 
 ```bash
 openui create --no-telemetry
 ```
-
-Deployment telemetry distinguishes no-wait submission from waiting-mode readiness, records setup stages and hint exposure, and preserves experiment attribution across CLI runs. See [Deployment adoption telemetry](./TELEMETRY.md) for the event contract, privacy boundaries and dashboard recipes. No experiment or generated-app tracking is enabled by default.
 
 ## Notes
 

@@ -3,15 +3,6 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { PostHog } from "posthog-node";
 
-import {
-  DEPLOY_HINT_EXPERIMENT,
-  deployHint,
-  isDeployHintVariant,
-  readDeployHintExposure,
-  type DeployHint,
-  type DeployHintExposure,
-  type DeployHintVariant,
-} from "./deploy-hint";
 import { isTruthyEnv } from "./env";
 
 // Public ingestion key (same project as docs/coda-prod). Overridable for testing.
@@ -19,7 +10,6 @@ const POSTHOG_KEY =
   process.env["OPENUI_POSTHOG_KEY"] ?? "phc_3OLW53x09ZTVZSV6BEpj5uycj3ooqR6KOemOjx04e3D";
 const POSTHOG_HOST = process.env["OPENUI_POSTHOG_HOST"] ?? "https://us.i.posthog.com";
 const SHUTDOWN_TIMEOUT_MS = 2000;
-const FLAG_TIMEOUT_MS = 750;
 
 const isTelemetryDebug = () => process.env["OPENUI_TELEMETRY_DEBUG"] === "1";
 const configDir = () =>
@@ -35,32 +25,26 @@ const debugLogPostHogFailure = (stage: string, error: unknown) => {
   console.warn(`[OpenUI telemetry] PostHog ${stage} failed: ${message}`);
 };
 
-type Stored = {
-  distinctId: string;
-  firstRunNoticeShown?: boolean;
-  deployHintAssignment?: { experiment_id: string; variant: DeployHintVariant };
-  lastDeployHint?: DeployHintExposure;
-};
+type Stored = { distinctId: string; firstRunNoticeShown?: boolean };
 
 function loadOrCreateState() {
   const file = path.join(configDir(), "telemetry.json");
   try {
     const raw = JSON.parse(fs.readFileSync(file, "utf8")) as Stored;
-    if (typeof raw.distinctId !== "string" || !raw.distinctId) throw new Error("Invalid state");
     return {
       distinctId: raw.distinctId,
-      firstRunNoticeShown: raw.firstRunNoticeShown === true,
-      deployHintAssignment:
-        raw.deployHintAssignment?.experiment_id === DEPLOY_HINT_EXPERIMENT &&
-        isDeployHintVariant(raw.deployHintAssignment.variant)
-          ? { experiment_id: DEPLOY_HINT_EXPERIMENT, variant: raw.deployHintAssignment.variant }
-          : undefined,
-      lastDeployHint: readDeployHintExposure(raw.lastDeployHint),
+      isFirstRun: !raw.firstRunNoticeShown,
+      persist: () => writeState(file, { ...raw, firstRunNoticeShown: true }),
     };
   } catch {
     /* missing/corrupt → create */
   }
-  return { distinctId: crypto.randomUUID(), firstRunNoticeShown: false } as Stored;
+  const fresh: Stored = { distinctId: crypto.randomUUID(), firstRunNoticeShown: false };
+  return {
+    distinctId: fresh.distinctId,
+    isFirstRun: true,
+    persist: () => writeState(file, { ...fresh, firstRunNoticeShown: true }),
+  };
 }
 function writeState(file: string, s: Stored) {
   try {
@@ -132,7 +116,6 @@ export class Telemetry {
   private distinctId = "anonymous";
   private superProps: Record<string, unknown> = {};
   private enabled = false;
-  private state?: Stored;
 
   init(opts: { cliVersion: string; flagEnabled: boolean }) {
     const optedOut =
@@ -141,7 +124,6 @@ export class Telemetry {
       opts.flagEnabled === false;
     if (optedOut) return; // enabled stays false → all capture() are no-ops
     const state = loadOrCreateState();
-    this.state = state;
     this.distinctId = state.distinctId;
     const interactiveTerminal = isInteractiveTerminal();
     this.superProps = {
@@ -160,7 +142,6 @@ export class Telemetry {
         host: POSTHOG_HOST,
         flushAt: 1,
         flushInterval: 0,
-        featureFlagsRequestTimeoutMs: FLAG_TIMEOUT_MS,
       });
       // Telemetry is best-effort: swallow network/flush errors so an offline CLI
       // run never spams the user's console with PostHog stack traces.
@@ -170,7 +151,6 @@ export class Telemetry {
       return;
     }
     this.enabled = true;
-    if (state.lastDeployHint) this.registerDeployHintExposure(state.lastDeployHint);
     // posthog-core logs flush failures via a hardcoded console.error (not gated on
     // any logger/option). Filter ONLY those lines so an offline run stays quiet —
     // the CLI's own console.error output passes through untouched.
@@ -180,85 +160,13 @@ export class Telemetry {
       origError(...args);
     };
     if (isTelemetryDebug()) this.client.debug();
-    if (!state.firstRunNoticeShown) {
+    if (state.isFirstRun) {
       process.stderr.write(
         "\n◆ OpenUI CLI collects usage analytics; OAuth sign-ins may link usage to your OIDC account ID.\n" +
           "  No code, prompts, API keys, email, or personal name are collected. Opt out: set DO_NOT_TRACK=1 or pass --no-telemetry.\n\n",
       );
-      state.firstRunNoticeShown = true;
-      this.persistState();
+      state.persist();
     }
-  }
-
-  /** Resolve only at the hint surface, never during deploy. Unknown/offline flags keep baseline copy. */
-  async resolveDeployHint(): Promise<DeployHint> {
-    if (!this.enabled || !this.client || !this.state) return deployHint();
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    try {
-      const value = await Promise.race([
-        this.client.getFeatureFlag(DEPLOY_HINT_EXPERIMENT, this.distinctId, {
-          sendFeatureFlagEvents: false,
-        }),
-        new Promise<undefined>((resolve) => {
-          timer = setTimeout(() => resolve(undefined), FLAG_TIMEOUT_MS);
-        }),
-      ]);
-      if (!isDeployHintVariant(value)) return deployHint();
-      // Keep an enrolled installation in the same arm even if allocation weights change.
-      return deployHint(this.state.deployHintAssignment?.variant ?? value);
-    } catch {
-      return deployHint();
-    } finally {
-      if (timer) clearTimeout(timer);
-    }
-  }
-
-  /** Call only after the message was printed. Exposure is not proof that someone read it. */
-  deployHintPrinted(hint: DeployHint, properties: { dev_server_starting: boolean }) {
-    if (!this.enabled || !this.state) return;
-    const metadata = {
-      experiment_id: hint.experiment_id,
-      variant: hint.variant,
-      message_version: hint.message_version,
-    };
-    const exposure = { ...metadata, printed_at: new Date().toISOString() };
-    if (isDeployHintVariant(hint.variant)) {
-      this.state.deployHintAssignment = {
-        experiment_id: DEPLOY_HINT_EXPERIMENT,
-        variant: hint.variant,
-      };
-    }
-    this.state.lastDeployHint = exposure;
-    this.persistState();
-    this.registerDeployHintExposure(exposure);
-    this.capture("cli_deploy_hint_printed", {
-      ...metadata,
-      ...properties,
-      source: "cli-create",
-      position: "create_completion",
-    });
-    if (isDeployHintVariant(hint.variant)) {
-      // Emit native experiment exposure for the rendered, sticky variant, not the remote assignment.
-      this.capture("$feature_flag_called", {
-        $feature_flag: DEPLOY_HINT_EXPERIMENT,
-        $feature_flag_response: hint.variant,
-      });
-    }
-  }
-
-  private registerDeployHintExposure(exposure: DeployHintExposure) {
-    this.register({
-      last_deploy_hint_experiment_id: exposure.experiment_id,
-      last_deploy_hint_variant: exposure.variant,
-      last_deploy_hint_message_version: exposure.message_version,
-      last_deploy_hint_printed_at: exposure.printed_at,
-      [`$feature/${DEPLOY_HINT_EXPERIMENT}`]:
-        exposure.variant === "baseline" ? false : exposure.variant,
-    });
-  }
-
-  private persistState() {
-    if (this.state) writeState(path.join(configDir(), "telemetry.json"), this.state);
   }
 
   register(props: Record<string, unknown>) {

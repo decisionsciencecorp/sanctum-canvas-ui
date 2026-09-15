@@ -7,7 +7,6 @@ import {
   type DeployTargetOptions,
 } from "../lib/deploy";
 import { deployToTarget } from "../lib/deploy-targets";
-import { deployStage } from "../lib/deploy-telemetry";
 import { resolveInstallPackageManager } from "../lib/detect-package-manager";
 import { CreateError, telemetry } from "../lib/telemetry";
 
@@ -31,6 +30,7 @@ type ResolvedDeploy = {
 /** Resolve flags, validate the project dir, then hand off to the deploy target. */
 export async function runDeploy(options: DeployOptions): Promise<void> {
   const resolved = resolveDeployInvocation(options);
+  const projectDir = resolveProjectDir(resolved.projectDir);
   const extraArgs = resolved.extraArgs.filter((arg) => arg !== "--verbose");
   const prod = extraArgs.includes("--prod");
   const yes =
@@ -40,28 +40,6 @@ export async function runDeploy(options: DeployOptions): Promise<void> {
     extraArgs.includes("-y");
   const skipEnv = Boolean(options.skipEnv);
   const verbose = Boolean(options.verbose) || (options.extraArgs ?? []).includes("--verbose");
-  const noWait = extraArgs.includes("--no-wait");
-  telemetry.register({
-    deploy_telemetry_version: 2,
-    target: DEFAULT_DEPLOY_TARGET,
-    prod,
-    yes,
-    skip_env: skipEnv,
-    verbose,
-    no_wait: noWait,
-    package_manager: resolveInstallPackageManager().name,
-  });
-  const projectDir = await deployStage("validate_project", () => {
-    if (extraArgs.some((arg) => arg === "--cwd" || arg.startsWith("--cwd="))) {
-      throw new CreateError(
-        "args_resolution",
-        "Pass the project directory as `openui deploy <dir>` instead of --cwd so validation and env loading use the same directory.",
-        "invalid_input",
-        "UNSUPPORTED_DEPLOY_CWD",
-      );
-    }
-    return resolveProjectDir(resolved.projectDir);
-  });
 
   const targetOpts: DeployTargetOptions = {
     projectDir,
@@ -73,6 +51,7 @@ export async function runDeploy(options: DeployOptions): Promise<void> {
     verbose,
   };
 
+  telemetry.register({ package_manager: resolveInstallPackageManager().name });
   telemetry.capture("cli_deploy_started", {
     target: DEFAULT_DEPLOY_TARGET,
     prod,

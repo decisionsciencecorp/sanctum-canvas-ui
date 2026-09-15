@@ -29,7 +29,6 @@ describe("global docs navigation", () => {
         url: "/docs/getting-started",
         children: undefined,
       },
-      { type: "page", name: "Deploy and share", url: "/docs/deploy", children: undefined },
       {
         type: "page",
         name: "How OpenUI works",
@@ -101,10 +100,10 @@ describe("global docs navigation", () => {
       kind: "nested",
       root: "build-agents",
     });
-    assert.deepEqual(getDefaultSidebarMode("/docs/agent/agent-runtimes/vercel-ai-sdk"), {
-      kind: "nested",
-      root: "build-agents",
-    });
+    assert.deepEqual(
+      getDefaultSidebarMode("/docs/agent/agent-runtimes/vercel-ai-sdk"),
+      { kind: "nested", root: "build-agents" },
+    );
     assert.deepEqual(getDefaultSidebarMode("/docs/api-reference/cli"), {
       kind: "nested",
       root: "api-reference",
@@ -155,7 +154,10 @@ describe("global docs navigation", () => {
     );
     assert.equal(getGlobalActiveItemUrl("/docs/openui-lang/quickstart"), "/docs/openui-lang");
     assert.equal(getGlobalActiveItemUrl("/docs/openui-lang/renderer"), "/docs/openui-lang");
-    assert.equal(getGlobalActiveItemUrl("/docs/agent/core-concepts/tools"), "/docs/build-agents");
+    assert.equal(
+      getGlobalActiveItemUrl("/docs/agent/core-concepts/tools"),
+      "/docs/build-agents",
+    );
     assert.equal(getGlobalActiveItemUrl("/docs/build-agents/copilotkit"), "/docs/build-agents");
     assert.equal(getGlobalActiveItemUrl("/docs/gateway/api/responses"), "/docs/gateway");
     assert.equal(getGlobalActiveItemUrl("/docs/observability/dashboard"), "/docs/observability");
@@ -292,7 +294,10 @@ describe("nested docs navigation", () => {
   it("maps any page within a nested section to its root", () => {
     assert.equal(getNestedRootForPathname("/docs/openui-lang/renderer"), "openui-lang");
     assert.equal(getNestedRootForPathname("/docs/api-reference"), "api-reference");
-    assert.equal(getNestedRootForPathname("/docs/agent/customize/sidebar"), "build-agents");
+    assert.equal(
+      getNestedRootForPathname("/docs/agent/customize/sidebar"),
+      "build-agents",
+    );
     assert.equal(getNestedRootForPathname("/docs/build-agents/custom-chat-ui"), "build-agents");
     assert.equal(getNestedRootForPathname("/docs"), undefined);
   });

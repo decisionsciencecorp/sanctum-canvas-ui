@@ -1,6 +1,6 @@
 "use client";
 
-import { captureCliCommandCopied } from "@/lib/analytics";
+import { captureCreateCliCommandCopied } from "@/lib/analytics";
 import { ArrowRight } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -10,11 +10,11 @@ import { PLATFORMS } from "../../components/PlatformLogos";
 import styles from "./HeroSection.module.css";
 
 function capturePrimaryHeroCliCopy(command: string) {
-  captureCliCommandCopied(command, { source: "homepage_hero", interaction: "primary" });
+  captureCreateCliCommandCopied(command, { source: "homepage_hero", interaction: "primary" });
 }
 
 function captureDropdownHeroCliCopy(command: string) {
-  captureCliCommandCopied(command, { source: "homepage_hero", interaction: "dropdown" });
+  captureCreateCliCommandCopied(command, { source: "homepage_hero", interaction: "dropdown" });
 }
 
 export const heroStyles = styles;

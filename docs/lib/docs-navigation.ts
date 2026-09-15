@@ -1,7 +1,6 @@
 import type * as PageTree from "fumadocs-core/page-tree";
 
-export type NestedDocsRoot =
-  "openui-lang" | "build-agents" | "gateway" | "observability" | "api-reference";
+export type NestedDocsRoot = "openui-lang" | "build-agents" | "gateway" | "observability" | "api-reference";
 
 export type SidebarMode =
   | { kind: "global" }
@@ -58,7 +57,6 @@ export const NESTED_DOCS_SECTIONS: Record<NestedDocsRoot, NestedSection> = {
 const promotedGlobalUrls = new Set([
   "/docs",
   "/docs/getting-started",
-  "/docs/deploy",
   "/docs/architecture",
   "/docs/openui-lang/comparison",
   "/docs/mcp",
@@ -72,7 +70,6 @@ export const GLOBAL_DOCS_TREE: PageTree.Root = {
     { type: "separator", name: "Overview" },
     { type: "page", name: "Introduction", url: "/docs" },
     { type: "page", name: "Getting Started", url: "/docs/getting-started" },
-    { type: "page", name: "Deploy and share", url: "/docs/deploy" },
     {
       type: "page",
       name: "How OpenUI works",

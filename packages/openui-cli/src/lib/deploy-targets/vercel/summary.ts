@@ -12,7 +12,6 @@ export function extractVercelDeploymentSummary(log: string): DeploySuccessSummar
     url,
     deploymentUrl: unique && unique !== url ? unique : undefined,
     inspect: labeledUrl(text, "Inspect"),
-    environment: production ? "production" : preview ? "preview" : undefined,
   };
 }
 
