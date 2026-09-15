@@ -1,5 +1,5 @@
 import { observability, type ObservabilityEvent } from "@openuidev/observability";
-import { Check, Copy, ExternalLink } from "lucide-react";
+import { Check, Copy, ExternalLink, X } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { withDevtoolsAttribution } from "../lib/links";
 import { FONT, MONO, useStyles, type ThemeTokens } from "../theme";
@@ -9,6 +9,7 @@ const COMMAND = "npx @openuidev/cli@latest deploy";
 const DEPLOY_DOCS_URL = "https://www.openui.com/docs/api-reference/cli#deploy";
 
 const SEEN_KEY = "openui:deploy-hint:v1";
+const BANNER_DISMISSED_KEY = "openui:deploy-banner-dismissed:v1";
 
 export function shouldShowDeployment(development: boolean): boolean {
   return (
@@ -148,17 +149,41 @@ function hintStyles(t: ThemeTokens) {
   } satisfies Record<string, CSSProperties>;
 }
 
-/** Persistent discovery inside Inspect, independent of the one-time popup. */
+/** Dismissible discovery inside Inspect, independent of the one-time popup. */
 export function DeployBanner() {
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return window.localStorage.getItem(BANNER_DISMISSED_KEY) !== null;
+    } catch {
+      return false;
+    }
+  });
+
+  const dismiss = () => {
+    setDismissed(true);
+    try {
+      window.localStorage.setItem(BANNER_DISMISSED_KEY, "dismissed");
+    } catch {
+      // Still close for this mount when browser storage is unavailable.
+    }
+  };
+
+  if (dismissed) return null;
   return (
     <section aria-label="Deploy your OpenUI app" style={{ flexShrink: 0 }}>
-      <DeployCommand compact />
+      <DeployCommand compact onDismiss={dismiss} />
     </section>
   );
 }
 
 /** Shared clipboard control. Copying never executes the command or sends analytics. */
-function DeployCommand({ compact = false }: { compact?: boolean }) {
+function DeployCommand({
+  compact = false,
+  onDismiss,
+}: {
+  compact?: boolean;
+  onDismiss?: () => void;
+}) {
   const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
   const styles = useStyles(commandStyles);
 
@@ -173,7 +198,7 @@ function DeployCommand({ compact = false }: { compact?: boolean }) {
 
   return (
     <div>
-      <div style={styles.row}>
+      <div style={{ ...styles.row, ...(compact ? styles.compactRow : null) }}>
         <code style={{ ...styles.command, ...(compact ? styles.compactCommand : null) }}>
           {COMMAND}
         </code>
@@ -198,6 +223,17 @@ function DeployCommand({ compact = false }: { compact?: boolean }) {
         >
           {status === "copied" ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />}
         </button>
+        {onDismiss ? (
+          <button
+            type="button"
+            aria-label="Dismiss deployment banner"
+            title="Dismiss deployment banner"
+            style={styles.closeButton}
+            onClick={onDismiss}
+          >
+            <X size={14} aria-hidden />
+          </button>
+        ) : null}
       </div>
       <span
         role="status"
@@ -241,6 +277,7 @@ function commandStyles(t: ThemeTokens) {
       lineHeight: 1.5,
     },
     compactCommand: { fontSize: 11 },
+    compactRow: { gap: 4 },
     docsLink: {
       display: "inline-flex",
       alignItems: "center",
@@ -264,6 +301,19 @@ function commandStyles(t: ThemeTokens) {
       cursor: "pointer",
     },
     compactButton: { width: 36, height: 36 },
+    closeButton: {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+      width: 28,
+      height: 36,
+      padding: 0,
+      border: "none",
+      background: "transparent",
+      color: t.fgSecondary,
+      cursor: "pointer",
+    },
     visuallyHidden: {
       position: "absolute",
       width: 1,
