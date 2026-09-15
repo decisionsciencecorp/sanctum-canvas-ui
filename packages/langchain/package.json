@@ -91,9 +91,11 @@
     }
   },
   "devDependencies": {
-    "@langchain/core": "^1.2.1",
-    "@langchain/langgraph": "^1.4.5",
+    "@langchain/core": "^1.2.11",
+    "@langchain/langgraph": "^1.4.15",
     "@langchain/protocol": "^0.0.18",
+    "deepagents": "^1.13.4",
+    "langchain": "^1.5.11",
     "vitest": "^4.1.0",
     "zod": "^4.2.0"
   }
