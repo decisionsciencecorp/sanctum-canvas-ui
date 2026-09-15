@@ -21,7 +21,7 @@ export interface OpenUIDevtoolsProps {
   errorsOnly?: boolean;
   /** Initial state of the drawer's "auto-open on error" checkbox. Defaults to true. */
   autoOpenOnError?: boolean;
-  /** Offer a dismissible local deployment hint after a valid renderer stream. Development/loopback only. */
+  /** Show a one-time deployment popup and an Inspect command banner. Development/loopback only. */
   deployHint?: boolean;
   /**
    * Widget UI theme. If passed, it wins over the stored Settings choice

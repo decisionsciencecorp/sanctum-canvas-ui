@@ -1,10 +1,10 @@
 import { observability, type ObservabilityEvent } from "@openuidev/observability";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { withDevtoolsAttribution } from "../lib/links";
-import { FONT, MONO, useStyles, type ThemeTokens } from "../theme";
+import { FONT, useStyles, type ThemeTokens } from "../theme";
 import type { DevtoolsPosition } from "../types";
+import { DEPLOY_DOCS_URL, DeployCommand } from "./DeployCommand";
 
-const COMMAND = "npx @openuidev/cli@latest deploy";
 const SEEN_KEY = "openui:deploy-hint:v1";
 
 /** Local eligibility only, not a hosted-response analytics event or a business-success signal. */
@@ -30,7 +30,6 @@ export function isCompletedLocalResponse(event: ObservabilityEvent): boolean {
 /** A once-per-local-origin nudge. No prompts, responses or identity leave this browser. */
 export function DeployHint({ position, hidden }: { position: DevtoolsPosition; hidden: boolean }) {
   const [visible, setVisible] = useState(false);
-  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
   const shown = useRef(false);
   const styles = useStyles(hintStyles);
 
@@ -70,14 +69,6 @@ export function DeployHint({ position, hidden }: { position: DevtoolsPosition; h
     [position.startsWith("top") ? "top" : "bottom"]: 68,
     [position.endsWith("left") ? "left" : "right"]: 16,
   };
-  const copyCommand = async () => {
-    try {
-      await navigator.clipboard.writeText(COMMAND);
-      setCopyStatus("copied");
-    } catch {
-      setCopyStatus("failed");
-    }
-  };
 
   return (
     <aside aria-label="Deploy your OpenUI app" style={{ ...styles.card, ...placement }}>
@@ -95,27 +86,17 @@ export function DeployHint({ position, hidden }: { position: DevtoolsPosition; h
       <p style={styles.description}>
         Deploy from your project folder to your Vercel account. Check access before sharing.
       </p>
-      <code style={styles.command}>{COMMAND}</code>
+      <DeployCommand />
       <div style={styles.actions}>
-        <button type="button" style={styles.button} onClick={copyCommand}>
-          {copyStatus === "copied" ? "Copied" : "Copy deploy command"}
-        </button>
         <a
-          href={withDevtoolsAttribution("https://www.openui.com/docs/deploy", "local_deploy_hint")}
+          href={withDevtoolsAttribution(DEPLOY_DOCS_URL, "local_deploy_hint")}
           target="_blank"
           rel="noopener noreferrer"
           style={styles.link}
         >
-          Deployment guide ↗
+          Deployment docs ↗
         </a>
       </div>
-      <span role="status" style={styles.status}>
-        {copyStatus === "failed"
-          ? "Copy failed. Select the command above to copy it manually."
-          : copyStatus === "copied"
-            ? "Copied. Run it in another terminal from your project folder."
-            : ""}
-      </span>
     </aside>
   );
 }
@@ -149,28 +130,7 @@ function hintStyles(t: ThemeTokens) {
       cursor: "pointer",
     },
     description: { margin: "0 0 12px", lineHeight: 1.5, color: t.fgSecondary },
-    command: {
-      display: "block",
-      userSelect: "all",
-      overflowWrap: "anywhere",
-      padding: 10,
-      borderRadius: 6,
-      background: t.bgSubtle,
-      color: t.fg,
-      fontFamily: MONO,
-      fontSize: 12,
-    },
     actions: { display: "flex", alignItems: "center", flexWrap: "wrap", gap: 12, marginTop: 12 },
-    button: {
-      minHeight: 44,
-      border: `1px solid ${t.controlBorder}`,
-      borderRadius: 8,
-      padding: "8px 12px",
-      background: t.inverted,
-      color: t.invertedFg,
-      fontFamily: FONT,
-      cursor: "pointer",
-    },
     link: {
       display: "inline-flex",
       alignItems: "center",
@@ -178,6 +138,5 @@ function hintStyles(t: ThemeTokens) {
       color: t.fg,
       textDecoration: "underline",
     },
-    status: { display: "block", marginTop: 8, color: t.fgSecondary, lineHeight: 1.5 },
   } satisfies Record<string, CSSProperties>;
 }

@@ -29,6 +29,7 @@ import {
 } from "./theme";
 import type { DevtoolsPosition, OpenUIDevtoolsWidgetProps } from "./types";
 import { ErrorBoundary, IconButton, ShiroLogo, ThemeSegmented } from "./ui";
+import { DeployBanner } from "./ui/DeployBanner";
 import { DeployHint } from "./ui/DeployHint";
 import ReliabilityBanner from "./ui/ReliabilityBanner";
 
@@ -120,6 +121,11 @@ export function OpenUIDevtoolsWidget({
 
   const errorCount = events.filter((event) => event.level === "error").length;
   const visibleEvents = onlyErrors ? events.filter((event) => event.level !== "info") : events;
+  const showDeployControls =
+    deployHint &&
+    (__development ?? __autoMounted) &&
+    typeof window !== "undefined" &&
+    ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname);
 
   // Inspect is pinned to the right edge; Debug fills the rest of the block and
   // slides over to reclaim Inspect's slot whenever Inspect is out.
@@ -147,7 +153,7 @@ export function OpenUIDevtoolsWidget({
 
   return (
     <DevtoolsModeProvider mode={mode}>
-      {deployHint && (__development ?? __autoMounted) ? (
+      {showDeployControls ? (
         <DeployHint position={position} hidden={open || debug.trayOpen} />
       ) : null}
       <div style={{ ...styles.toggleWrap, ...rootStyle(mode), ...positionStyles[position] }}>
@@ -210,6 +216,7 @@ export function OpenUIDevtoolsWidget({
 
         <ErrorBoundary title="Inspect ran into a problem">
           <div style={styles.list}>
+            {showDeployControls ? <DeployBanner /> : null}
             {visibleEvents.length === 0 ? (
               <div style={styles.empty}>
                 <span style={styles.emptyIcon}>
