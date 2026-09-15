@@ -38,7 +38,7 @@ After a non-empty OpenUI renderer stream settles with no detected UI errors, a d
 
 The popup is shown once per browser origin (host + port) using the local `openui:deploy-hint:v1` storage key. Dismissal persists across reloads. This is not exact project identity: projects reusing a port share the choice; changing ports creates a separate origin. If storage is blocked, the popup stays hidden.
 
-Inspect also includes a persistent deployment banner at the top of its scrollable event list. It displays `npx @openuidev/cli@latest deploy` with a copy button, even before a response or after the popup is dismissed. Both surfaces show clipboard success/failure feedback and allow manual selection of the command. Pass `deployHint={false}` to disable both. The banner has the same development/loopback restriction but does not depend on local storage.
+Inspect also includes a persistent deployment banner at the top of its scrollable event list. It displays `npx @openuidev/cli@latest deploy` with a copy button, even before a response or after the popup is dismissed. Both surfaces show clipboard success/failure feedback and allow manual selection of the command. The banner has the same development/loopback restriction but does not depend on local storage. Deployment controls are internal widget behavior, not a separate public option.
 
 No network analytics are added. The renderer event is a local eligibility signal, not proof of a useful business outcome or a hosted-response event. The guide link uses the existing coarse devtools referral tags. In older auto-mounted wrappers, the auto-mount's development-only gate supplies the build-mode guarantee; manually mounted wrappers need the updated host package for this hint.
 
@@ -52,13 +52,12 @@ Debug renders through the host's own `Renderer`. Its previews stay off the event
 
 ## Props
 
-| Prop              | Default          | Description                                                                      |
-| ----------------- | ---------------- | -------------------------------------------------------------------------------- |
-| `enabled`         | dev-only         | Force the widget on/off.                                                         |
-| `position`        | `"bottom-right"` | Corner for the toggle button: `top-left`/`top-right`/`bottom-*`.                 |
-| `maxEvents`       | `50`             | How many events to keep; oldest are dropped first.                               |
-| `errorsOnly`      | `true`           | Capture only error/warning events, or all.                                       |
-| `autoOpenOnError` | `true`           | Initial state of the "auto-open on error" setting.                               |
-| `deployHint`      | `true`           | Show the one-time popup and persistent Inspect banner on local development apps. |
-| `theme`           | `"light"`        | Initial widget chrome theme: `"light"` or `"dark"` (Settings overrides).         |
-| `version`         | `@latest`        | CDN pin: `"0"` / `"0.1"` / `"0.1.0"`. Omit for `@latest`.                        |
+| Prop              | Default          | Description                                                              |
+| ----------------- | ---------------- | ------------------------------------------------------------------------ |
+| `enabled`         | dev-only         | Force the widget on/off.                                                 |
+| `position`        | `"bottom-right"` | Corner for the toggle button: `top-left`/`top-right`/`bottom-*`.         |
+| `maxEvents`       | `50`             | How many events to keep; oldest are dropped first.                       |
+| `errorsOnly`      | `true`           | Capture only error/warning events, or all.                               |
+| `autoOpenOnError` | `true`           | Initial state of the "auto-open on error" setting.                       |
+| `theme`           | `"light"`        | Initial widget chrome theme: `"light"` or `"dark"` (Settings overrides). |
+| `version`         | `@latest`        | CDN pin: `"0"` / `"0.1"` / `"0.1.0"`. Omit for `@latest`.                |

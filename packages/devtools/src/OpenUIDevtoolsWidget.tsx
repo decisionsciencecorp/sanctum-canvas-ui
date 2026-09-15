@@ -61,7 +61,6 @@ export function OpenUIDevtoolsWidget({
   maxEvents = 50,
   errorsOnly = false,
   autoOpenOnError = true,
-  deployHint = true,
   theme: themeProp,
   __autoMounted = false,
   __development,
@@ -122,7 +121,6 @@ export function OpenUIDevtoolsWidget({
   const errorCount = events.filter((event) => event.level === "error").length;
   const visibleEvents = onlyErrors ? events.filter((event) => event.level !== "info") : events;
   const showDeployControls =
-    deployHint &&
     (__development ?? __autoMounted) &&
     typeof window !== "undefined" &&
     ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname);
