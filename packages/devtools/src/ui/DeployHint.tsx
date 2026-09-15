@@ -1,5 +1,5 @@
 import { observability, type ObservabilityEvent } from "@openuidev/observability";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, ExternalLink } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { withDevtoolsAttribution } from "../lib/links";
 import { FONT, MONO, useStyles, type ThemeTokens } from "../theme";
@@ -150,50 +150,15 @@ function hintStyles(t: ThemeTokens) {
 
 /** Persistent discovery inside Inspect, independent of the one-time popup. */
 export function DeployBanner() {
-  const styles = useStyles(bannerStyles);
   return (
-    <section aria-label="Deploy your OpenUI app" style={styles.banner}>
-      <strong>Deploy your app to Vercel</strong>
-      <p style={styles.description}>Run this command from your project folder.</p>
-      <DeployCommand />
-      <a
-        href={withDevtoolsAttribution(DEPLOY_DOCS_URL, "inspect_deploy_banner")}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={styles.link}
-      >
-        Deployment docs ↗
-      </a>
+    <section aria-label="Deploy your OpenUI app" style={{ flexShrink: 0 }}>
+      <DeployCommand compact />
     </section>
   );
 }
 
-function bannerStyles(t: ThemeTokens) {
-  return {
-    banner: {
-      flexShrink: 0,
-      margin: "6px 0 12px",
-      padding: 12,
-      border: `1px solid ${t.borderStrong}`,
-      borderRadius: 12,
-      background: t.card,
-      color: t.fg,
-      fontSize: 13,
-    },
-    description: { margin: "6px 0 10px", color: t.fgSecondary, lineHeight: 1.5 },
-    link: {
-      display: "inline-flex",
-      alignItems: "center",
-      minHeight: 44,
-      color: t.fgSecondary,
-      fontSize: 12,
-      textDecoration: "underline",
-    },
-  } satisfies Record<string, CSSProperties>;
-}
-
 /** Shared clipboard control. Copying never executes the command or sends analytics. */
-function DeployCommand() {
+function DeployCommand({ compact = false }: { compact?: boolean }) {
   const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
   const styles = useStyles(commandStyles);
 
@@ -209,18 +174,41 @@ function DeployCommand() {
   return (
     <div>
       <div style={styles.row}>
-        <code style={styles.command}>{COMMAND}</code>
+        <code style={{ ...styles.command, ...(compact ? styles.compactCommand : null) }}>
+          {COMMAND}
+        </code>
+        {compact ? (
+          <a
+            href={withDevtoolsAttribution(DEPLOY_DOCS_URL, "inspect_deploy_banner")}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Deployment docs"
+            title="Deployment docs"
+            style={styles.docsLink}
+          >
+            <ExternalLink size={14} aria-hidden />
+          </a>
+        ) : null}
         <button
           type="button"
           aria-label="Copy deploy command"
           title="Copy deploy command"
-          style={styles.button}
+          style={{ ...styles.button, ...(compact ? styles.compactButton : null) }}
           onClick={copyCommand}
         >
           {status === "copied" ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />}
         </button>
       </div>
-      <span role="status" style={status === "idle" ? undefined : styles.status}>
+      <span
+        role="status"
+        style={
+          compact && status !== "failed"
+            ? styles.visuallyHidden
+            : status === "idle"
+              ? undefined
+              : styles.status
+        }
+      >
         {status === "failed"
           ? "Copy failed. Select the command to copy it manually."
           : status === "copied"
@@ -252,6 +240,16 @@ function commandStyles(t: ThemeTokens) {
       fontSize: 12,
       lineHeight: 1.5,
     },
+    compactCommand: { fontSize: 11 },
+    docsLink: {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+      width: 28,
+      height: 36,
+      color: t.fgSecondary,
+    },
     button: {
       display: "inline-flex",
       alignItems: "center",
@@ -264,6 +262,18 @@ function commandStyles(t: ThemeTokens) {
       background: t.inverted,
       color: t.invertedFg,
       cursor: "pointer",
+    },
+    compactButton: { width: 36, height: 36 },
+    visuallyHidden: {
+      position: "absolute",
+      width: 1,
+      height: 1,
+      padding: 0,
+      margin: -1,
+      overflow: "hidden",
+      clipPath: "inset(50%)",
+      whiteSpace: "nowrap",
+      border: 0,
     },
     status: {
       display: "block",

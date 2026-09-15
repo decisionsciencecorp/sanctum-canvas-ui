@@ -492,7 +492,7 @@ function uiStyles(t: ThemeTokens) {
       position: "absolute",
       top: "calc(100% + 6px)",
       right: 0,
-      // Above the banner group, which lifts itself over the list for its fade.
+      // Above the banner group.
       zIndex: 2,
       boxSizing: "border-box",
       width: 236,
@@ -571,7 +571,7 @@ function uiStyles(t: ThemeTokens) {
       fontWeight: 500,
       color: t.fg,
     },
-    // Mirrors bannerFade at the tray's bottom edge, so rows dissolve into the
+    // Fades rows at the tray's bottom edge, so they dissolve into the
     // drawer instead of meeting the border mid-row. Pinned to the tray rather
     // than the list, so it covers the stack-trace view too.
     trayFade: {
@@ -587,7 +587,7 @@ function uiStyles(t: ThemeTokens) {
       flex: 1,
       minHeight: 0,
       overflowY: "auto",
-      padding: 12,
+      padding: "0 12px 12px",
       display: "flex",
       flexDirection: "column",
       gap: 10,
