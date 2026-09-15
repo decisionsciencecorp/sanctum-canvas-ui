@@ -59,6 +59,33 @@ export const graph = createDeepAgent({
 results, and run errors into AG-UI events. LangGraph forwards those events
 remotely under the `custom:openui` channel.
 
+### DeepAgents context summarization
+
+DeepAgents' built-in `SummarizationMiddleware` (deepagents ≤ 1.13.4) calls
+the model without the `nostream` tag, so the generated conversation summary
+is streamed on the `messages` channel exactly like a normal assistant reply
+([langchain-ai/deepagentsjs#629](https://github.com/langchain-ai/deepagentsjs/issues/629)).
+The transformer cannot tell it apart, so plain-markdown summary text is
+emitted as `TEXT_MESSAGE_CONTENT` and breaks OpenUI Lang rendering once the
+thread grows enough to trigger compaction.
+
+Until that is fixed upstream, replace the middleware with LangChain's
+`summarizationMiddleware`, which tags its internal call as `nostream`.
+DeepAgents matches middleware by `name`, so passing it in `middleware`
+overrides the default:
+
+```ts
+import { summarizationMiddleware } from "langchain";
+
+export const graph = createDeepAgent({
+  model,
+  tools,
+  systemPrompt: SYSTEM_PROMPT,
+  middleware: [summarizationMiddleware({ model, trigger: { fraction: 0.8 } })],
+  streamTransformers: [openUIStreamTransformer],
+});
+```
+
 ## Add a server route
 
 `createLangChainStreamResponse` accepts any Web-standard `Request`, so it can be

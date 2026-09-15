@@ -79,6 +79,27 @@ and research tools.
 The integration package does not depend on DeepAgents. It works with any agent
 surface that accepts LangGraph stream transformers.
 
+### Context summarization leaks into the stream
+
+DeepAgents' built-in `SummarizationMiddleware` (deepagents ≤ 1.13.4) invokes the model without the
+`nostream` tag, so the compaction summary is streamed like a normal assistant reply
+([deepagentsjs#629](https://github.com/langchain-ai/deepagentsjs/issues/629)). The transformer
+cannot distinguish it, and the plain-markdown summary breaks OpenUI Lang rendering once a thread
+grows enough to trigger compaction. Until that is fixed upstream, override the middleware (DeepAgents
+matches it by `name`) with LangChain's `summarizationMiddleware`, which tags its internal call:
+
+```ts
+import { summarizationMiddleware } from "langchain";
+
+export const graph = createDeepAgent({
+  model,
+  tools: [getWeather, getStockPrice, searchWeb],
+  systemPrompt: cloudInstructions(/* ... */),
+  middleware: [summarizationMiddleware({ model, trigger: { fraction: 0.8 } })],
+  streamTransformers: [openUIStreamTransformer],
+});
+```
+
 ## Add the proxy route
 
 The route is a thin Web-standard adapter:
