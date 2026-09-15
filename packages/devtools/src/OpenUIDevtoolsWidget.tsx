@@ -29,8 +29,7 @@ import {
 } from "./theme";
 import type { DevtoolsPosition, OpenUIDevtoolsWidgetProps } from "./types";
 import { ErrorBoundary, IconButton, ShiroLogo, ThemeSegmented } from "./ui";
-import { DeployBanner } from "./ui/DeployBanner";
-import { DeployHint } from "./ui/DeployHint";
+import { DeployBanner, DeployHint, shouldShowDeployment } from "./ui/DeployHint";
 import ReliabilityBanner from "./ui/ReliabilityBanner";
 
 export type { DevtoolsPosition, OpenUIDevtoolsProps, OpenUIDevtoolsWidgetProps } from "./types";
@@ -120,10 +119,7 @@ export function OpenUIDevtoolsWidget({
 
   const errorCount = events.filter((event) => event.level === "error").length;
   const visibleEvents = onlyErrors ? events.filter((event) => event.level !== "info") : events;
-  const showDeployControls =
-    (__development ?? __autoMounted) &&
-    typeof window !== "undefined" &&
-    ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname);
+  const showDeployControls = shouldShowDeployment(__development ?? __autoMounted);
 
   // Inspect is pinned to the right edge; Debug fills the rest of the block and
   // slides over to reclaim Inspect's slot whenever Inspect is out.

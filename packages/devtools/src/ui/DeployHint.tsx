@@ -1,14 +1,25 @@
 import { observability, type ObservabilityEvent } from "@openuidev/observability";
+import { Check, Copy } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { withDevtoolsAttribution } from "../lib/links";
-import { FONT, useStyles, type ThemeTokens } from "../theme";
+import { FONT, MONO, useStyles, type ThemeTokens } from "../theme";
 import type { DevtoolsPosition } from "../types";
-import { DEPLOY_DOCS_URL, DeployCommand } from "./DeployCommand";
+
+const COMMAND = "npx @openuidev/cli@latest deploy";
+const DEPLOY_DOCS_URL = "https://www.openui.com/docs/api-reference/cli#deploy";
 
 const SEEN_KEY = "openui:deploy-hint:v1";
 
+export function shouldShowDeployment(development: boolean): boolean {
+  return (
+    development &&
+    typeof window !== "undefined" &&
+    ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)
+  );
+}
+
 /** Local eligibility only, not a hosted-response analytics event or a business-success signal. */
-export function isCompletedLocalResponse(event: ObservabilityEvent): boolean {
+function isCompletedLocalResponse(event: ObservabilityEvent): boolean {
   const detail = event.detail;
   const parser = detail["parser"] as Record<string, unknown> | undefined;
   return (
@@ -34,11 +45,7 @@ export function DeployHint({ position, hidden }: { position: DevtoolsPosition; h
   const styles = useStyles(hintStyles);
 
   useEffect(() => {
-    if (
-      typeof window === "undefined" ||
-      !["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)
-    )
-      return;
+    if (!shouldShowDeployment(true)) return;
     try {
       if (window.localStorage.getItem(SEEN_KEY)) return;
     } catch {
@@ -137,6 +144,134 @@ function hintStyles(t: ThemeTokens) {
       minHeight: 44,
       color: t.fg,
       textDecoration: "underline",
+    },
+  } satisfies Record<string, CSSProperties>;
+}
+
+/** Persistent discovery inside Inspect, independent of the one-time popup. */
+export function DeployBanner() {
+  const styles = useStyles(bannerStyles);
+  return (
+    <section aria-label="Deploy your OpenUI app" style={styles.banner}>
+      <strong>Deploy your app to Vercel</strong>
+      <p style={styles.description}>Run this command from your project folder.</p>
+      <DeployCommand />
+      <a
+        href={withDevtoolsAttribution(DEPLOY_DOCS_URL, "inspect_deploy_banner")}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={styles.link}
+      >
+        Deployment docs ↗
+      </a>
+    </section>
+  );
+}
+
+function bannerStyles(t: ThemeTokens) {
+  return {
+    banner: {
+      flexShrink: 0,
+      margin: "6px 0 12px",
+      padding: 12,
+      border: `1px solid ${t.borderStrong}`,
+      borderRadius: 12,
+      background: t.card,
+      color: t.fg,
+      fontSize: 13,
+    },
+    description: { margin: "6px 0 10px", color: t.fgSecondary, lineHeight: 1.5 },
+    link: {
+      display: "inline-flex",
+      alignItems: "center",
+      minHeight: 44,
+      color: t.fgSecondary,
+      fontSize: 12,
+      textDecoration: "underline",
+    },
+  } satisfies Record<string, CSSProperties>;
+}
+
+/** Shared clipboard control. Copying never executes the command or sends analytics. */
+function DeployCommand() {
+  const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const styles = useStyles(commandStyles);
+
+  const copyCommand = async () => {
+    try {
+      await navigator.clipboard.writeText(COMMAND);
+      setStatus("copied");
+    } catch {
+      setStatus("failed");
+    }
+  };
+
+  return (
+    <div>
+      <div style={styles.row}>
+        <code style={styles.command}>{COMMAND}</code>
+        <button
+          type="button"
+          aria-label="Copy deploy command"
+          title="Copy deploy command"
+          style={styles.button}
+          onClick={copyCommand}
+        >
+          {status === "copied" ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />}
+        </button>
+      </div>
+      <span role="status" style={status === "idle" ? undefined : styles.status}>
+        {status === "failed"
+          ? "Copy failed. Select the command to copy it manually."
+          : status === "copied"
+            ? "Copied. Run it in a terminal from your project folder."
+            : ""}
+      </span>
+    </div>
+  );
+}
+
+function commandStyles(t: ThemeTokens) {
+  return {
+    row: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      border: `1px solid ${t.border}`,
+      borderRadius: 8,
+      paddingLeft: 10,
+      background: t.bgSubtle,
+    },
+    command: {
+      flex: 1,
+      minWidth: 0,
+      userSelect: "all",
+      overflowWrap: "anywhere",
+      color: t.fg,
+      fontFamily: MONO,
+      fontSize: 12,
+      lineHeight: 1.5,
+    },
+    button: {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+      width: 44,
+      height: 44,
+      border: `1px solid ${t.controlBorder}`,
+      borderRadius: 7,
+      background: t.inverted,
+      color: t.invertedFg,
+      cursor: "pointer",
+    },
+    status: {
+      display: "block",
+      marginTop: 8,
+      color: t.fgSecondary,
+      fontFamily: FONT,
+      fontSize: 12,
+      lineHeight: 1.5,
     },
   } satisfies Record<string, CSSProperties>;
 }
