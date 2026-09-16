@@ -7,11 +7,12 @@ import {
   AgentInterface,
   ModelSwitcher,
   fetchLLM,
+  openuiLibrary,
+  useOpenuiCloudStorage,
   useSystemThemeMode,
   vercelAIAdapter,
   vercelAIMessageFormat,
 } from "@openuidev/react-ui";
-import { chatLibrary, useOpenuiCloudStorage } from "@openuidev/thesys";
 
 export default function CloudChat() {
   const mode = useSystemThemeMode();
@@ -37,7 +38,7 @@ export default function CloudChat() {
       <AgentInterface
         storage={storage}
         llm={llm}
-        componentLibrary={chatLibrary}
+        componentLibrary={openuiLibrary}
         logoUrl={logoPath}
         theme={{ mode }}
         starters={STARTERS}
