@@ -1,6 +1,6 @@
-import { TelemetryClient } from "../../../lib/telemetry-client";
+import { Telemetry } from "../../../lib/telemetry";
 
-export class GenerateApiKeyTelemetryClient extends TelemetryClient {
+export class GenerateApiKeyTelemetryClient extends Telemetry {
   trackStarted(props: { env_file: string; env_key: string }) {
     this.capture("cli_generate_api_key_started", props);
   }

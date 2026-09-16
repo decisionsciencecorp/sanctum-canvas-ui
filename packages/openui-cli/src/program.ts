@@ -9,7 +9,6 @@ import { CreateTelemetryClient } from "./commands/create/lib/telemetry";
 import { context as ctx } from "./lib/context";
 import { detectAgent, UNKNOWN_AGENT_NAME } from "./lib/detect-agent";
 import { CliCancelledError } from "./lib/errors";
-import { RootTelemetryClient } from "./lib/telemetry-client";
 import { handleCliError } from "./lib/utils";
 
 let activeCommand = "unknown";
@@ -41,15 +40,14 @@ function buildProgram(): Command {
       verbose?: boolean;
     }>();
     ctx.verbose = Boolean(globalOptions.verbose || actionCommand.optsWithGlobals()["verbose"]);
-    const tel = new RootTelemetryClient(ctx.telemetry);
-    tel.init({ cliVersion, flagEnabled: globalOptions.telemetry !== false });
-    tel.registerRun({
+    ctx.telemetry.init({ cliVersion, flagEnabled: globalOptions.telemetry !== false });
+    ctx.telemetry.registerRun({
       agent_name: globalOptions.agentName,
       detected_agent_name: detectAgent(),
       cli_run_id: randomUUID(),
       command: actionCommand.name(),
     });
-    tel.trackInvoked();
+    ctx.telemetry.trackInvoked();
   });
 
   for (const command of commands) {

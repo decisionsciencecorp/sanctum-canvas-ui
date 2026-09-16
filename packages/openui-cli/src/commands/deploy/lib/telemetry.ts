@@ -1,6 +1,6 @@
-import { TelemetryClient } from "../../../lib/telemetry-client";
+import { Telemetry } from "../../../lib/telemetry";
 
-export class DeployTelemetryClient extends TelemetryClient {
+export class DeployTelemetryClient extends Telemetry {
   registerContext(props: Record<string, unknown>) {
     this.register(props);
   }

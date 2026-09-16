@@ -1,5 +1,5 @@
 import { AuthTelemetryClient } from "../../../lib/auth/telemetry";
-import { TelemetryClient } from "../../../lib/telemetry-client";
+import { Telemetry } from "../../../lib/telemetry";
 import type { AiSetup, TemplateName } from "./create-types";
 
 const createFunnel = {
@@ -49,13 +49,13 @@ export function aiSetupFromTemplate(template: TemplateName): AiSetup {
   return template === "openui-cloud" ? "openui_cloud" : "openai_compatible_provider";
 }
 
-export class CreateTelemetryClient extends TelemetryClient {
+export class CreateTelemetryClient extends Telemetry {
   static failedProperties(cancelled: boolean): Record<string, string> {
     return createFunnelProps(cancelled ? "create_cancelled" : "create_failed");
   }
 
   authClient(): AuthTelemetryClient {
-    return new AuthTelemetryClient(this.store);
+    return new AuthTelemetryClient(this);
   }
 
   registerContext(props: Record<string, unknown>) {

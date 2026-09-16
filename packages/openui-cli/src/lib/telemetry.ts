@@ -55,11 +55,23 @@ function writeState(file: string, s: Stored) {
   }
 }
 
+type Session = {
+  client?: PostHog;
+  distinctId: string;
+  superProps: Record<string, unknown>;
+  enabled: boolean;
+};
+
 export class Telemetry {
-  private client?: PostHog;
-  private distinctId = "anonymous";
-  private superProps: Record<string, unknown> = {};
-  private enabled = false;
+  private readonly session: Session;
+
+  constructor(source?: Telemetry) {
+    this.session = source?.session ?? {
+      distinctId: "anonymous",
+      superProps: {},
+      enabled: false,
+    };
+  }
 
   init(opts: { cliVersion: string; flagEnabled: boolean }) {
     const optedOut =
@@ -68,9 +80,9 @@ export class Telemetry {
       opts.flagEnabled === false;
     if (optedOut) return; // enabled stays false → all capture() are no-ops
     const state = loadOrCreateState();
-    this.distinctId = state.distinctId;
+    this.session.distinctId = state.distinctId;
     const interactiveTerminal = isInteractiveTerminal();
-    this.superProps = {
+    this.session.superProps = {
       cli_version: opts.cliVersion,
       os: process.platform,
       os_release: os.release(),
@@ -82,19 +94,19 @@ export class Telemetry {
       is_interactive_terminal: interactiveTerminal,
     };
     try {
-      this.client = new PostHog(POSTHOG_KEY, {
+      this.session.client = new PostHog(POSTHOG_KEY, {
         host: POSTHOG_HOST,
         flushAt: 1,
         flushInterval: 0,
       });
       // Telemetry is best-effort: swallow network/flush errors so an offline CLI
       // run never spams the user's console with PostHog stack traces.
-      this.client.on("error", (error) => debugLogPostHogFailure("request", error));
+      this.session.client.on("error", (error) => debugLogPostHogFailure("request", error));
     } catch (error) {
       debugLogPostHogFailure("init", error);
       return;
     }
-    this.enabled = true;
+    this.session.enabled = true;
     // posthog-core logs flush failures via a hardcoded console.error (not gated on
     // any logger/option). Filter ONLY those lines so an offline run stays quiet —
     // the CLI's own console.error output passes through untouched.
@@ -103,7 +115,7 @@ export class Telemetry {
       if (typeof args[0] === "string" && args[0].includes("flushing PostHog")) return;
       origError(...args);
     };
-    if (isTelemetryDebug()) this.client.debug();
+    if (isTelemetryDebug()) this.session.client.debug();
     if (state.isFirstRun) {
       process.stderr.write(
         "\n◆ OpenUI CLI collects usage analytics; OAuth sign-ins may link usage to your OIDC account ID.\n" +
@@ -114,16 +126,30 @@ export class Telemetry {
   }
 
   register(props: Record<string, unknown>) {
-    if (this.enabled) Object.assign(this.superProps, props);
+    if (this.session.enabled) Object.assign(this.session.superProps, props);
+  }
+
+  registerRun(props: {
+    agent_name: string;
+    detected_agent_name: string;
+    cli_run_id: string;
+    command: string;
+  }) {
+    this.register(props);
+  }
+
+  trackInvoked() {
+    this.capture("cli_invoked");
   }
 
   capture(event: string, properties: Record<string, unknown> = {}) {
-    if (!this.enabled || !this.client) return;
+    const { enabled, client, distinctId, superProps } = this.session;
+    if (!enabled || !client) return;
     try {
-      this.client.capture({
-        distinctId: this.distinctId,
+      client.capture({
+        distinctId,
         event,
-        properties: { ...this.superProps, ...properties },
+        properties: { ...superProps, ...properties },
       });
     } catch (error) {
       debugLogPostHogFailure("capture", error);
@@ -131,11 +157,12 @@ export class Telemetry {
   }
 
   alias(distinctId: string, alias: string) {
-    if (!this.enabled || !this.client) return;
+    const { enabled, client } = this.session;
+    if (!enabled || !client) return;
     if (!distinctId || !alias || distinctId === alias) return;
     try {
-      this.client.alias({ distinctId, alias });
-      this.client.setPersonProperties({
+      client.alias({ distinctId, alias });
+      client.setPersonProperties({
         distinctId,
         propertiesOnce: {
           first_cli_auth_ts: new Date().toISOString(),
@@ -147,18 +174,20 @@ export class Telemetry {
   }
 
   aliasOidcSubject(oidcSub: string) {
-    if (!this.enabled || !this.client || !oidcSub || oidcSub === this.distinctId) {
+    const { enabled, client, distinctId } = this.session;
+    if (!enabled || !client || !oidcSub || oidcSub === distinctId) {
       return;
     }
 
-    this.alias(oidcSub, this.distinctId);
+    this.alias(oidcSub, distinctId);
   }
 
   async shutdown() {
-    if (!this.enabled || !this.client) return;
+    const { enabled, client } = this.session;
+    if (!enabled || !client) return;
     try {
       await Promise.race([
-        this.client.shutdown(),
+        client.shutdown(),
         new Promise<void>((r) => setTimeout(r, SHUTDOWN_TIMEOUT_MS)),
       ]);
     } catch (error) {

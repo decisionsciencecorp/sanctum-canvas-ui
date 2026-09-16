@@ -1,6 +1,6 @@
-import { TelemetryClient } from "../telemetry-client";
+import { Telemetry } from "../telemetry";
 
-export class AuthTelemetryClient extends TelemetryClient {
+export class AuthTelemetryClient extends Telemetry {
   trackOidcStarted() {
     this.capture("cli_cloud_oidc_started", {
       funnel: "cli_create",
@@ -9,9 +9,5 @@ export class AuthTelemetryClient extends TelemetryClient {
       step_key: "cloud_auth_started",
       auth_method: "oauth",
     });
-  }
-
-  aliasOidcSubject(oidcSub: string) {
-    this.store.aliasOidcSubject(oidcSub);
   }
 }
