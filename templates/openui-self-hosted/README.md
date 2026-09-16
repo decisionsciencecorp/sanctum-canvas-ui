@@ -29,14 +29,15 @@ example. Ask “What’s the weather in Berlin?” to exercise its native tool l
 
 ## Deploy
 
-From the project directory:
+From the project directory, deploy a preview with the pinned OpenUI CLI:
 
 ```bash
-npx @openuidev/cli@latest deploy
-npx @openuidev/cli@latest deploy --prod
+pnpm run deploy
+pnpm run deploy -- --prod
 ```
 
-Deploys to Vercel. Allowlisted keys from `.env` / `.env.local` (including `OPENAI_API_KEY`) are
+When the project uses npm, replace `pnpm run` with `npm run` in both commands. The command deploys
+to Vercel. Allowlisted keys from `.env` / `.env.local` (including `OPENAI_API_KEY`) are
 passed to that deployment unless you use `--skip-env`. Persist them on the Vercel project for later
 deploys.
 

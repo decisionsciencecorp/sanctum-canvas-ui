@@ -25,5 +25,5 @@
       "src/lib/tool-loop.ts"
     ]
   },
-  "gettingStarted": "The generated Vercel Eve agent uses OpenUI Cloud as its model provider. `{{packageManager}} run dev` starts Next.js with Eve embedded via withEve(). Ask \"What's the weather in Berlin?\" to exercise the included Eve tool."
+  "gettingStarted": "The generated Vercel Eve agent uses OpenUI Cloud as its model provider. `{{packageManager}} run dev` starts Next.js with Eve embedded via withEve(). Share a preview with `{{packageManager}} run deploy`.\nAsk \"What's the weather in Berlin?\" to exercise the included Eve tool."
 }
