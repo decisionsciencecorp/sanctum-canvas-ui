@@ -2,7 +2,7 @@ import { Command } from "commander";
 
 import { normalizeAuth } from "../../lib/auth/mint";
 import { context } from "../../lib/context";
-import { rejectConflictingScaffoldSelectors } from "../../lib/examples-catalog";
+import { rejectConflictingScaffoldSelectors } from "./lib/examples-catalog";
 import { rejectConflictingImmediateFlags } from "./lib/resolve";
 
 import { runCreateApp } from "./run";

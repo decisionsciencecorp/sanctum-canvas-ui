@@ -1,5 +1,9 @@
+import {
+  applyOverlay,
+  resolveOverlay,
+  type TemplateOverlay,
+} from "../../commands/create/lib/overlays";
 import type { PackageManagerName } from "../detect-package-manager";
-import { applyOverlay, resolveOverlay, type TemplateOverlay } from "../overlays";
 import { copyTemplate } from "./copy";
 import { applyLockfileHygiene } from "./lockfiles";
 import { rewritePackageJson } from "./package-json";

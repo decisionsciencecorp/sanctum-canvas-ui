@@ -2,8 +2,8 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 
+import type { OverlayManifest } from "../../commands/create/lib/overlays";
 import type { PackageManagerName } from "../detect-package-manager";
-import type { OverlayManifest } from "../overlays";
 
 /** Match npm/pnpm install: keep dependency keys alphabetically sorted. */
 function sortPackageRecord<T>(record: Record<string, T>): Record<string, T> {

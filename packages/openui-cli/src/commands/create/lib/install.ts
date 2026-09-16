@@ -3,10 +3,9 @@ import * as path from "node:path";
 
 import { printLogTail, QUIET_COMMAND_CAPTURE_LIMIT } from "../../../lib/command-output";
 import type { PackageManager } from "../../../lib/detect-package-manager";
-import { CliCancelledError, CreateError } from "../../../lib/errors";
+import { CliCancelledError, CreateError, processErrorProperties } from "../../../lib/errors";
 import { mutedNpmEnv, runCommand } from "../../../lib/process-runner";
 import { withSpinner } from "../../../lib/spinner";
-import { processErrorProperties } from "../../../lib/utils";
 import type { OverlayName, TemplateName } from "./create-types";
 import type { CreateTelemetryClient } from "./telemetry";
 

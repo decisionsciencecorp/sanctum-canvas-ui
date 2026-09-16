@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import { OVERLAYS_DIR } from "../overlays";
+import { OVERLAYS_DIR } from "../../commands/create/lib/overlays";
 
 export function shouldCopyTemplatePath(templateDir: string, src: string): boolean {
   const rel = path.relative(templateDir, src);

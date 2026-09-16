@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import { CreateError } from "./errors";
+import { CreateError } from "../../../lib/errors";
 
 export const OVERLAYS_DIR = "overlays";
 export const OVERLAY_MANIFEST = "manifest.json";

@@ -3,8 +3,7 @@ import * as path from "node:path";
 
 import { resolveCloudApiKey, THESYS_KEYS_URL } from "../../../lib/auth/mint";
 import { DEFAULT_ENV_FILE, upsertEnvVar } from "../../../lib/env";
-import { CliCancelledError } from "../../../lib/errors";
-import { cliErrorProperties } from "../../../lib/utils";
+import { CliCancelledError, cliErrorProperties } from "../../../lib/errors";
 import type { CreateAppOptions, EnvResult, TemplateName } from "./create-types";
 import type { CreateTelemetryClient } from "./telemetry";
 

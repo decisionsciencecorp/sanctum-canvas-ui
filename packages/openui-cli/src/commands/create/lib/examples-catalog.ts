@@ -1,7 +1,7 @@
 import { styleText } from "node:util";
 
-import { fetchSourceFile } from "./checkout";
-import { CreateError } from "./errors";
+import { fetchSourceFile } from "../../../lib/checkout";
+import { CreateError } from "../../../lib/errors";
 
 export const EXAMPLES_CATALOG_PATH = "examples/examples.json";
 

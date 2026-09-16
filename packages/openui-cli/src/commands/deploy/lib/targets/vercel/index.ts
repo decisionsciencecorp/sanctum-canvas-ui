@@ -6,8 +6,8 @@ import {
   type DeployTargetOptions,
 } from "../..";
 import { printLogTail } from "../../../../../lib/command-output";
+import { throwCommandFailure } from "../../../../../lib/errors";
 import { runCommand, runQuietCommand } from "../../../../../lib/process-runner";
-import { throwCommandFailure } from "../../../../../lib/utils";
 import { formatCliCommand, resolveCliInvocation } from "../../cli-bin";
 import { adoptVercelEnvVars } from "../../vercel-env";
 import { buildVercelDeployArgs, publicVercelArgs, vercelSpawnArgs } from "./args";

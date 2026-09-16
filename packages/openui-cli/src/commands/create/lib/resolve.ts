@@ -1,13 +1,13 @@
 import { CliCancelledError, CreateError } from "../../../lib/errors";
+import { resolveArgs } from "../../../lib/resolve-args";
+import type { OverlayName, TemplateName } from "./create-types";
 import {
   findExample,
   groupedExampleChoices,
   loadExamplesCatalog,
   rejectConflictingScaffoldSelectors,
   type ExampleProject,
-} from "../../../lib/examples-catalog";
-import { resolveArgs } from "../../../lib/resolve-args";
-import type { OverlayName, TemplateName } from "./create-types";
+} from "./examples-catalog";
 import { resolveAvailableTarget } from "./target-dir";
 import type { CreateTelemetryClient } from "./telemetry";
 import {

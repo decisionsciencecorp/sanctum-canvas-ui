@@ -1,12 +1,11 @@
 import * as path from "node:path";
 
 import { resolveInstallPackageManager } from "../../../lib/detect-package-manager";
-import { CliCancelledError, CreateError } from "../../../lib/errors";
-import type { ExampleProject } from "../../../lib/examples-catalog";
+import { CliCancelledError, cliErrorProperties, CreateError } from "../../../lib/errors";
 import { withSpinner } from "../../../lib/spinner";
-import { cliErrorProperties } from "../../../lib/utils";
 import type { CreateAppOptions, EnvResult } from "./create-types";
 import { writeEnvVar } from "./env";
+import type { ExampleProject } from "./examples-catalog";
 import { installRequestedSkill, shouldInstallSkill } from "./install-skill";
 import {
   exampleDevCommand,

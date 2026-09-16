@@ -8,8 +8,7 @@ import { commands } from "./commands";
 import { CreateTelemetryClient } from "./commands/create/lib/telemetry";
 import { context as ctx } from "./lib/context";
 import { detectAgent, UNKNOWN_AGENT_NAME } from "./lib/detect-agent";
-import { CliCancelledError } from "./lib/errors";
-import { handleCliError } from "./lib/utils";
+import { CliCancelledError, cliErrorProperties, CreateError } from "./lib/errors";
 
 let activeCommand = "unknown";
 
@@ -58,6 +57,19 @@ function buildProgram(): Command {
   return program;
 }
 
+function handleCliError(e: unknown, event: string, extra?: Record<string, unknown>): void {
+  const cancelled = e instanceof CliCancelledError;
+  const message = e instanceof Error ? e.message : String(e);
+  if (cancelled) console.info("Cancelled.");
+  else console.error(e instanceof CreateError ? `Error: ${message}` : message);
+
+  const errorProperties = cliErrorProperties(e);
+  const capturedEvent = cancelled ? event.replace(/_failed$/, "_cancelled") : event;
+  ctx.telemetry.capture(capturedEvent, { ...extra, ...errorProperties });
+
+  process.exitCode = cancelled ? e.exitCode : 1;
+}
+
 export async function runProgram(): Promise<void> {
   const program = buildProgram();
   try {
@@ -67,7 +79,7 @@ export async function runProgram(): Promise<void> {
     const event = `cli_${activeCommand.replace(/-/g, "_")}_failed`;
     const extra =
       activeCommand === "create" ? CreateTelemetryClient.failedProperties(cancelled) : undefined;
-    handleCliError(e, event, ctx.telemetry, extra);
+    handleCliError(e, event, extra);
   } finally {
     await ctx.telemetry.shutdown();
   }

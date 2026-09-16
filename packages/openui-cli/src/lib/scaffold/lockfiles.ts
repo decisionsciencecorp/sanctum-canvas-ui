@@ -1,8 +1,8 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
+import type { TemplateOverlay } from "../../commands/create/lib/overlays";
 import type { PackageManagerName } from "../detect-package-manager";
-import type { TemplateOverlay } from "../overlays";
 
 export function applyLockfileHygiene(params: {
   targetDir: string;

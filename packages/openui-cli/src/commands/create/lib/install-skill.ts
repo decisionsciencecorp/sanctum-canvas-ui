@@ -1,12 +1,11 @@
 import { printLogTail, QUIET_COMMAND_CAPTURE_LIMIT } from "../../../lib/command-output";
-import { CliCancelledError } from "../../../lib/errors";
+import { CliCancelledError, processErrorProperties } from "../../../lib/errors";
 import {
   runCommand,
   type CommandResult,
   type RunCommandOptions,
 } from "../../../lib/process-runner";
 import { withSpinner } from "../../../lib/spinner";
-import { processErrorProperties } from "../../../lib/utils";
 import type { CreateTelemetryClient } from "./telemetry";
 
 const OPENUI_SKILL_SOURCE = "thesysdev/skills";

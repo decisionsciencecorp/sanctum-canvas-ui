@@ -2,11 +2,9 @@ import * as fs from "node:fs";
 
 import type { CliContext } from "../../lib/context";
 import { resolveInstallPackageManager } from "../../lib/detect-package-manager";
-import { CreateError } from "../../lib/errors";
-import type { TemplateOverlay } from "../../lib/overlays";
+import { cliErrorProperties, CreateError, processErrorProperties } from "../../lib/errors";
 import { applyScaffoldFiles, resolveTemplateSource } from "../../lib/scaffold";
 import { withSpinner } from "../../lib/spinner";
-import { cliErrorProperties, processErrorProperties } from "../../lib/utils";
 import { runCreateExample } from "./lib/create-example";
 import type { CreateAppOptions } from "./lib/create-types";
 import { runDevCommand } from "./lib/dev-server";
@@ -20,6 +18,7 @@ import {
 import { installProjectDependencies, resolveInstallInvocation } from "./lib/install";
 import { installRequestedSkill, shouldInstallSkill } from "./lib/install-skill";
 import { getStartedMessage } from "./lib/messages";
+import type { TemplateOverlay } from "./lib/overlays";
 import {
   loadCreateCatalog,
   resolveCreateSelection,
