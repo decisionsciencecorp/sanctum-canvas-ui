@@ -5,7 +5,7 @@ import { PostHog } from "posthog-node";
 
 import { isTruthyEnv } from "./env";
 
-// Public ingestion key (same project as docs/coda-prod). Overridable for testing.
+// Public ingestion key
 const POSTHOG_KEY =
   process.env["OPENUI_POSTHOG_KEY"] ?? "phc_3OLW53x09ZTVZSV6BEpj5uycj3ooqR6KOemOjx04e3D";
 const POSTHOG_HOST = process.env["OPENUI_POSTHOG_HOST"] ?? "https://us.i.posthog.com";
@@ -46,6 +46,7 @@ function loadOrCreateState() {
     persist: () => writeState(file, { ...fresh, firstRunNoticeShown: true }),
   };
 }
+
 function writeState(file: string, s: Stored) {
   try {
     fs.mkdirSync(path.dirname(file), { recursive: true });
