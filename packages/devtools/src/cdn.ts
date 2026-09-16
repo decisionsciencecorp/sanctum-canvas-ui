@@ -88,8 +88,6 @@ export function mountOpenUIDevtoolsFromCdn(opts: MountFromCdnOptions = {}): () =
           props: {
             ...widgetProps,
             enabled,
-            __development:
-              typeof process !== "undefined" && process.env["NODE_ENV"] === "development",
           },
         });
       };

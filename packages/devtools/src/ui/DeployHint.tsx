@@ -12,14 +12,6 @@ const DEPLOY_DOCS_URL = "https://www.openui.com/docs/api-reference/cli#deploy";
 const SEEN_KEY = "openui:deploy-hint:v1";
 const BANNER_DISMISSED_KEY = "openui:deploy-banner-dismissed:v1";
 
-export function shouldShowDeployment(development: boolean): boolean {
-  return (
-    development &&
-    typeof window !== "undefined" &&
-    ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)
-  );
-}
-
 /** Local eligibility only, not a hosted-response analytics event or a business-success signal. */
 function isCompletedLocalResponse(event: ObservabilityEvent): boolean {
   const detail = event.detail;
@@ -40,14 +32,13 @@ function isCompletedLocalResponse(event: ObservabilityEvent): boolean {
   );
 }
 
-/** A once-per-local-origin nudge. No prompts, responses or identity leave this browser. */
+/** A once-per-origin nudge. No prompts, responses or identity leave this browser. */
 export function DeployHint({ position, hidden }: { position: DevtoolsPosition; hidden: boolean }) {
   const [visible, setVisible] = useState(false);
   const shown = useRef(false);
   const styles = useStyles(hintStyles);
 
   useEffect(() => {
-    if (!shouldShowDeployment(true)) return;
     try {
       if (window.localStorage.getItem(SEEN_KEY)) return;
     } catch {

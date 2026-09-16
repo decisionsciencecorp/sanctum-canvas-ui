@@ -39,8 +39,6 @@ export interface OpenUIDevtoolsProps {
    * any manually rendered <OpenUIDevtools /> so host-provided props win.
    */
   __autoMounted?: boolean;
-  /** @internal Host build mode, passed into the development CDN bundle. */
-  __development?: boolean;
 }
 
 /** Props the CDN widget itself understands (everything except the CDN tag). */

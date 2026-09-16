@@ -29,7 +29,7 @@ import {
 } from "./theme";
 import type { DevtoolsPosition, OpenUIDevtoolsWidgetProps } from "./types";
 import { ErrorBoundary, IconButton, ShiroLogo, ThemeSegmented } from "./ui";
-import { DeployBanner, DeployHint, shouldShowDeployment } from "./ui/DeployHint";
+import { DeployBanner, DeployHint } from "./ui/DeployHint";
 import ReliabilityBanner from "./ui/ReliabilityBanner";
 
 export type { DevtoolsPosition, OpenUIDevtoolsProps, OpenUIDevtoolsWidgetProps } from "./types";
@@ -62,7 +62,6 @@ export function OpenUIDevtoolsWidget({
   autoOpenOnError = true,
   theme: themeProp,
   __autoMounted = false,
-  __development,
 }: OpenUIDevtoolsWidgetProps) {
   const isEnabled =
     enabled ?? (typeof process === "undefined" || process.env["NODE_ENV"] !== "production");
@@ -119,7 +118,6 @@ export function OpenUIDevtoolsWidget({
 
   const errorCount = events.filter((event) => event.level === "error").length;
   const visibleEvents = onlyErrors ? events.filter((event) => event.level !== "info") : events;
-  const showDeployControls = shouldShowDeployment(__development ?? __autoMounted);
 
   // Inspect is pinned to the right edge; Debug fills the rest of the block and
   // slides over to reclaim Inspect's slot whenever Inspect is out.
@@ -147,9 +145,7 @@ export function OpenUIDevtoolsWidget({
 
   return (
     <DevtoolsModeProvider mode={mode}>
-      {showDeployControls ? (
-        <DeployHint position={position} hidden={open || debug.trayOpen} />
-      ) : null}
+      <DeployHint position={position} hidden={open || debug.trayOpen} />
       <div style={{ ...styles.toggleWrap, ...rootStyle(mode), ...positionStyles[position] }}>
         <button
           style={{
@@ -210,7 +206,7 @@ export function OpenUIDevtoolsWidget({
 
         <ErrorBoundary title="Inspect ran into a problem">
           <div style={styles.list}>
-            {showDeployControls ? <DeployBanner /> : null}
+            <DeployBanner />
             {visibleEvents.length === 0 ? (
               <div style={styles.empty}>
                 <span style={styles.emptyIcon}>
