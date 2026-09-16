@@ -4,8 +4,8 @@ import * as path from "path";
 
 import type { CliContext } from "../../lib/context";
 import { CreateError } from "../../lib/errors";
-import { GenerateTelemetryClient } from "./lib/telemetry";
 import { SEPARATION_DELIMITER } from "./lib/delimiter";
+import { GenerateTelemetryClient } from "./lib/telemetry";
 
 export interface GenerateOptions {
   out?: string;
