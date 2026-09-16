@@ -39,12 +39,12 @@ The Vercel AI SDK scaffold is a standard Next.js app: `streamText()` owns the
 agent loop and UIMessage stream, so the whole project can be deployed to Vercel.
 
 In both variants, your framework executes application tools. OpenUI Cloud
-provides managed conversation storage and executes its provider tools: reports,
-presentations, web search, image search, and configured MCP servers.
+provides managed conversation storage and executes its provider tools: web
+search, image search, and configured MCP servers.
 
 ## Conversation storage
 
-OpenUI Cloud is the only durable conversation and artifact store in every Cloud
+OpenUI Cloud is the durable conversation store in every Cloud
 variant. The browser connects directly through `useOpenuiCloudStorage()` with a
 short-lived token from `/api/frontend-token`. For default, LangGraph, and
 Vercel AI SDK routes, the `threadId` sent to `/api/chat` is the Cloud
@@ -71,12 +71,10 @@ list](https://models.dev/providers/openrouter/).
 
 ## SDK packages
 
-- `@openuidev/lang-core` — `generateSystemPrompt({ cloud: true })` and `artifactTool`
-  (from `@openuidev/lang-core/cloud`) used by the `/api/chat` route.
-- `@openuidev/thesys` — the React component library (`chatLibrary`, `Presentation`,
-  `Report`) used by the client page and artifact renderers.
-- `@openuidev/react-ui` — the chat UI runtime (`AgentInterface`, `fetchLLM`,
-  `ModelSwitcher`, storage/stream contracts).
+- `@openuidev/lang-core` — `generateSystemPrompt({ cloud: true })` used by the
+  `/api/chat` route.
+- `@openuidev/react-ui` — the chat UI runtime and component library
+  (`AgentInterface`, `openuiLibrary`, `fetchLLM`, `ModelSwitcher`, storage/stream contracts).
 
 A devtools widget is available automatically in development.
 
