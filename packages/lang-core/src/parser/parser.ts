@@ -400,14 +400,14 @@ function stripComments(input: string): string {
 
 /** Clean LLM response: strip fences, comments, and surrounding whitespace.
  *
- * Trailing newlines are preserved. The stream parser commits a statement only
- * on newline; trimming them makes the last statement look pending forever, so a
- * later redefinition of an earlier ID is skipped by the pending-merge guard.
+ * Streaming preserves trailing newlines so the final completed statement can
+ * enter the cache. Non-streaming keeps the original full-trimming behavior.
  */
-function preprocess(input: string): string {
-  const stripped = stripComments(stripFences(input.trimStart()));
+function preprocess(input: string, preserveTrailingNewlines = false): string {
+  const trimmed = preserveTrailingNewlines ? input.trimStart() : input.trim();
+  const stripped = stripComments(stripFences(trimmed));
   const content = stripped.trim();
-  if (!content) return "";
+  if (!content || !preserveTrailingNewlines) return content;
   const trailingNewlines = stripped.match(/\n*$/)?.[0] ?? "";
   return content + trailingNewlines;
 }
@@ -483,7 +483,7 @@ export function createStreamParser(cat: ParamMap, rootName?: string): StreamPars
   // and re-scan. When the prefix is stable (the common streaming case) the cache
   // is kept, so a partial trailing statement never blanks already-completed ones.
   function refreshCleaned() {
-    const next = preprocess(buf);
+    const next = preprocess(buf, true);
     if (!next.startsWith(cleaned.slice(0, completedEnd))) {
       completedEnd = 0;
       completedStmtMap.clear();
