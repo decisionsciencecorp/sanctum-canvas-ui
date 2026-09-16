@@ -79,6 +79,12 @@
       "envKey": "THESYS_API_KEY"
     },
     {
+      "title": "Autofix",
+      "description": "An AgentInterface chat that repairs invalid OpenUI Lang with the Autofix API and renders the result.",
+      "path": "miscellaneous/autofix",
+      "envKey": "THESYS_API_KEY"
+    },
+    {
       "title": "Handsontable",
       "description": "Generated spreadsheet interfaces backed by Handsontable.",
       "path": "miscellaneous/handsontable",

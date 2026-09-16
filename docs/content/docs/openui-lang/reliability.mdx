@@ -117,6 +117,8 @@ For every generation, the Autofix API:
 - **Answers** with the complete fixed generation, ready to render.
 
 ```ts
+import { generateSystemPrompt } from "@openuidev/lang-core";
+
 const client = new OpenAI({
   apiKey: process.env.THESYS_API_KEY,
   baseURL: "https://api.thesys.dev/v1/autofix",
@@ -124,9 +126,13 @@ const client = new OpenAI({
 
 const completion = await client.chat.completions.create({
   model: "openui/autofix",
-  // The generation to fix is the last assistant turn.
-  messages: [...messages, { role: "assistant", content: generation }],
-  library,
+  messages: [
+    // Send your actual component-library spec in the first turn.
+    { role: "system", content: generateSystemPrompt({ cloud: true, library }) },
+    ...messages,
+    // The completed generation to fix is the last assistant turn.
+    { role: "assistant", content: generation },
+  ],
 });
 
 // completion.fix_summary.status is "already_valid", "fixed", or "fix_failed"
@@ -134,6 +140,8 @@ const completion = await client.chat.completions.create({
 ```
 
 A generation that is already valid is free, and each fix is charged at a flat price. See the [Autofix API reference](/docs/gateway/api/autofix) for the full request and response format and the error codes.
+
+For an AgentInterface example with repair diagnostics and rendered results, see the [Autofix example](https://github.com/thesysdev/openui/tree/main/examples/miscellaneous/autofix).
 
 ### OpenUI Gateway
 
