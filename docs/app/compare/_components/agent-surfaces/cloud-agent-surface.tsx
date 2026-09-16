@@ -2,8 +2,9 @@
 
 import { createCloudChatLLM } from "@/lib/openui-cloud/chat-llm";
 import { CLOUD_USER_ID_HEADER, getOrCreateCloudUserId } from "@/lib/openui-cloud/user-id";
+import { useOpenuiCloudStorage } from "@openuidev/react-headless";
 import { AgentInterface } from "@openuidev/react-ui";
-import { artifactRenderers, chatLibrary, useOpenuiCloudStorage } from "@openuidev/thesys";
+import { artifactRenderers, chatLibrary } from "@openuidev/thesys";
 import { useMemo, useState } from "react";
 import type { ComparisonControllerRegistry } from "../comparison-mode-controller";
 import { ComparisonModeControllerBridge } from "../comparison-mode-controller";
