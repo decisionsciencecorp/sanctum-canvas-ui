@@ -35,7 +35,7 @@ export async function writeEnv(
   // stable for the app's lifetime — regenerating it orphans existing threads.
   const dest = path.join(targetDir, DEFAULT_ENV_FILE);
   const vars = { ...result.envVars };
-  if (appId) vars.APP_ID = appId;
+  if (appId) vars["APP_ID"] = appId;
   const names = Object.keys(vars);
   if (names.length === 0) {
     if (!result.envStub) return;
