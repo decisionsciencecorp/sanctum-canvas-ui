@@ -3,28 +3,38 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { RepairMessage } from "../src/components/repair-message";
-import { samples } from "../src/lib/samples";
+import type { RepairReport } from "../src/lib/contract";
+import { samples } from "./fixtures";
 
-function renderReport(status: "fixed" | "fix_failed", output: string | null) {
-  return renderToStaticMarkup(createElement(RepairMessage, {
-    isStreaming: false,
-    message: {
-      id: "repair", role: "assistant",
-      content: JSON.stringify({
-        input: { generation: samples[0].generation, context: samples[0].context },
-        completion: {
-          choices: [{ message: { content: output } }],
-          fix_summary: {
-            status, fixed_errors: [],
-            unfixed_errors: [{ code: "unknown-component", message: "Heading is not available." }],
-          },
-        },
-      }),
-    },
-  }));
+function renderReport(status: RepairReport["status"], output: string | null) {
+  return renderToStaticMarkup(
+    createElement(RepairMessage, {
+      isStreaming: false,
+      message: {
+        id: "repair",
+        role: "assistant",
+        content:
+          JSON.stringify({
+            type: "result",
+            report: {
+              generation: samples[0].generation,
+              output,
+              status,
+              fixedErrors: [],
+              remainingErrors: [
+                {
+                  code: "unknown-component",
+                  message: "Heading is not available.",
+                },
+              ],
+            },
+          }) + "\n",
+      },
+    }),
+  );
 }
 
-test("failed repairs preserve the original source and never render a success preview", () => {
+test("failed repairs preserve source and never render an invalid preview", () => {
   const html = renderReport("fix_failed", null);
   assert.match(html, /Repair incomplete/);
   assert.match(html, /Heading is not available/);
@@ -32,8 +42,31 @@ test("failed repairs preserve the original source and never render a success pre
   assert.doesNotMatch(html, /class="repair-preview"|<summary>Repaired code/);
 });
 
-test("a success response with invalid output is blocked by local validation", () => {
+test("invalid success output is blocked by local validation", () => {
   const html = renderReport("fixed", samples[0].generation);
   assert.match(html, /did not pass local validation/);
   assert.doesNotMatch(html, /class="repair-preview"/);
+});
+
+test("valid original output clearly says Autofix was skipped", () => {
+  const html = renderReport("valid", samples[4].generation);
+  assert.match(html, /Autofix skipped/);
+  assert.match(html, /No repair request made/);
+  assert.match(html, /class="repair-preview"/);
+});
+
+test("cancelled or interrupted streams do not display a completed result", () => {
+  const html = renderToStaticMarkup(
+    createElement(RepairMessage, {
+      isStreaming: false,
+      message: {
+        id: "a",
+        role: "assistant",
+        content:
+          JSON.stringify({ type: "delta", text: "root = Card([])" }) + "\n",
+      },
+    }),
+  );
+  assert.match(html, /Generation stopped/);
+  assert.doesNotMatch(html, /class="repair-preview"|Repaired automatically/);
 });

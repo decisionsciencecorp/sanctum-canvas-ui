@@ -11,7 +11,10 @@ export const samples = [
     label: "Unknown component",
     description: "Heading is not in this library. Header is.",
     context,
-    generation: valid.replace('Header("September revenue")', 'Heading("September revenue")'),
+    generation: valid.replace(
+      'Header("September revenue")',
+      'Heading("September revenue")',
+    ),
     expectedError: "unknown-component",
   },
   {
@@ -29,7 +32,8 @@ export const samples = [
   {
     id: "reference",
     label: "Missing reference",
-    description: "The card references note, but its statement was never generated.",
+    description:
+      "The card references note, but its statement was never generated.",
     context,
     generation: valid.split("\n").slice(0, -1).join("\n"),
     expectedError: "unresolved",
@@ -37,18 +41,23 @@ export const samples = [
   {
     id: "fenced",
     label: "Fenced output",
-    description: "The API repairs the program and preserves its Markdown code fence.",
+    description:
+      "The API repairs the program and preserves its Markdown code fence.",
     context,
     generation:
       "```openui\n" +
-      valid.replace('Header("September revenue")', 'Heading("September revenue")') +
+      valid.replace(
+        'Header("September revenue")',
+        'Heading("September revenue")',
+      ) +
       "\n```",
     expectedError: "unknown-component",
   },
   {
     id: "valid",
     label: "Already valid",
-    description: "This program is valid. The API should return it unchanged with already_valid.",
+    description:
+      "This program is valid. The API should return it unchanged with already_valid.",
     context,
     generation: valid,
     expectedError: null,

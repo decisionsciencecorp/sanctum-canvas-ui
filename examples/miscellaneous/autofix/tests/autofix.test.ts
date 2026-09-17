@@ -1,10 +1,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { POST } from "../src/app/api/autofix/route";
+import { POST } from "../src/app/api/chat/route";
 import spec from "../src/generated/spec.json";
-import { AutofixError, buildAutofixRequest, requestAutofix } from "../src/lib/autofix";
-import { inputSchema, MAX_CONTEXT_CHARS, MAX_GENERATION_CHARS } from "../src/lib/contract";
-import { samples } from "../src/lib/samples";
+import {
+  AutofixError,
+  buildAutofixRequest,
+  requestAutofix,
+} from "../src/lib/autofix";
+import {
+  inputSchema,
+  MAX_CONTEXT_CHARS,
+  MAX_GENERATION_CHARS,
+} from "../src/lib/contract";
+import { samples } from "./fixtures";
 import { findErrors } from "../src/lib/validation";
 
 for (const sample of samples) {
@@ -22,12 +30,14 @@ for (const sample of samples) {
 test("sends the generated library as the first config turn and the original generation last", () => {
   const input = inputSchema.parse({
     generation: samples[3].generation,
-    context: "  Show revenue.  ",
+    context: [{ role: "user", content: "Show revenue." }],
   });
   const body = buildAutofixRequest(input);
   assert.equal(body.messages[0].role, "system");
   assert.ok(body.messages[0].content.startsWith("]]>openui:config\n"));
-  const config = JSON.parse(body.messages[0].content.slice("]]>openui:config\n".length));
+  const config = JSON.parse(
+    body.messages[0].content.slice("]]>openui:config\n".length),
+  );
   assert.deepEqual(config.chatLibrary.schema, spec.schema);
   assert.equal(config.chatLibrary.root, "Card");
   assert.equal("libraryVersion" in config, false);
@@ -50,14 +60,17 @@ test("rejects empty, oversized, or client-supplied library requests before trans
   for (const body of [
     { generation: "  " },
     { generation: "x".repeat(MAX_GENERATION_CHARS + 1) },
-    { generation: "root = Card([])", context: "x".repeat(MAX_CONTEXT_CHARS + 1) },
+    {
+      generation: "root = Card([])",
+      context: [{ role: "user", content: "x".repeat(MAX_CONTEXT_CHARS + 1) }],
+    },
     { generation: "root = Card([])", library: {} },
   ])
     assert.equal(inputSchema.safeParse(body).success, false);
   assert.equal(
     inputSchema.safeParse({
       generation: "x".repeat(MAX_GENERATION_CHARS),
-      context: "x".repeat(MAX_CONTEXT_CHARS),
+      context: [{ role: "user", content: "x".repeat(MAX_CONTEXT_CHARS) }],
     }).success,
     true,
   );
@@ -65,12 +78,20 @@ test("rejects empty, oversized, or client-supplied library requests before trans
 
 function completion(status: "fixed" | "already_valid" | "fix_failed") {
   return {
-    choices: [{ message: { content: status === "fix_failed" ? null : samples[4].generation } }],
+    choices: [
+      {
+        message: {
+          content: status === "fix_failed" ? null : samples[4].generation,
+        },
+      },
+    ],
     fix_summary: {
       status,
       fixed_errors: [],
       unfixed_errors:
-        status === "fix_failed" ? [{ code: "unresolved", message: "Missing note." }] : [],
+        status === "fix_failed"
+          ? [{ code: "unresolved", message: "Missing note." }]
+          : [],
     },
     usage: { prompt_tokens: 40, completion_tokens: 10, total_tokens: 50 },
   };
@@ -80,16 +101,22 @@ for (const status of ["fixed", "already_valid", "fix_failed"] as const) {
   test(`preserves the ${status} completion and keeps credentials in the server request`, async () => {
     const controller = new AbortController();
     const result = await requestAutofix(
-      { generation: samples[0].generation, context: "" },
+      { generation: samples[0].generation, context: [] },
       {
         apiKey: "test-server-key",
         signal: controller.signal,
         fetcher: async (url, init) => {
           assert.equal(url, "https://api.thesys.dev/v1/autofix");
-          assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer test-server-key");
+          assert.equal(
+            new Headers(init?.headers).get("Authorization"),
+            "Bearer test-server-key",
+          );
           assert.equal(init?.signal, controller.signal);
           assert.equal(init?.cache, "no-store");
-          assert.equal(JSON.parse(String(init?.body)).messages.at(-1).role, "assistant");
+          assert.equal(
+            JSON.parse(String(init?.body)).messages.at(-1).role,
+            "assistant",
+          );
           return Response.json(completion(status));
         },
       },
@@ -103,10 +130,11 @@ test("maps upstream authentication, limits, unavailable routes, and server failu
   for (const status of [400, 401, 403, 404, 429, 500]) {
     await assert.rejects(
       requestAutofix(
-        { generation: samples[0].generation, context: "" },
+        { generation: samples[0].generation, context: [] },
         {
           apiKey: "test-key",
-          fetcher: async () => new Response("private upstream details", { status }),
+          fetcher: async () =>
+            new Response("private upstream details", { status }),
         },
       ),
       (error: unknown) =>
@@ -121,12 +149,15 @@ test("rejects malformed or inconsistent success responses", async () => {
   for (const value of [
     {},
     { ...completion("fixed"), choices: [{ message: { content: null } }] },
-    { ...completion("fix_failed"), choices: [{ message: { content: "not a repair" } }] },
+    {
+      ...completion("fix_failed"),
+      choices: [{ message: { content: "not a repair" } }],
+    },
     { ...completion("already_valid"), choices: [] },
   ]) {
     await assert.rejects(
       requestAutofix(
-        { generation: samples[0].generation, context: "" },
+        { generation: samples[0].generation, context: [] },
         {
           apiKey: "test-key",
           fetcher: async () => Response.json(value),
@@ -137,7 +168,7 @@ test("rejects malformed or inconsistent success responses", async () => {
   }
   await assert.rejects(
     requestAutofix(
-      { generation: samples[0].generation, context: "" },
+      { generation: samples[0].generation, context: [] },
       {
         apiKey: "test-key",
         fetcher: async () => new Response("not json"),
@@ -150,7 +181,7 @@ test("rejects malformed or inconsistent success responses", async () => {
 test("the Next route rejects invalid JSON and invalid inputs without an API key", async () => {
   for (const body of ["{", JSON.stringify({ generation: " " })]) {
     const response = await POST(
-      new Request("http://localhost/api/autofix", { method: "POST", body }),
+      new Request("http://localhost/api/chat", { method: "POST", body }),
     );
     assert.equal(response.status, 400);
     assert.equal(typeof (await response.json()).error, "string");
@@ -162,9 +193,11 @@ test("missing credentials produce an actionable setup response without contactin
   delete process.env.THESYS_API_KEY;
   try {
     const response = await POST(
-      new Request("http://localhost/api/autofix", {
+      new Request("http://localhost/api/chat", {
         method: "POST",
-        body: JSON.stringify({ generation: samples[0].generation }),
+        body: JSON.stringify({
+          messages: [{ role: "user", content: "Show revenue" }],
+        }),
       }),
     );
     assert.equal(response.status, 503);
@@ -173,4 +206,63 @@ test("missing credentials produce an actionable setup response without contactin
     if (saved === undefined) delete process.env.THESYS_API_KEY;
     else process.env.THESYS_API_KEY = saved;
   }
+});
+
+test("OpenAI failures become actionable stream errors without leaking upstream details", async (t) => {
+  const names = [
+    "OPENAI_API_KEY",
+    "THESYS_API_KEY",
+    "OPENAI_BASE_URL",
+  ] as const;
+  const saved = names.map((name) => process.env[name]);
+  t.after(() =>
+    names.forEach((name, index) => {
+      if (saved[index] === undefined) delete process.env[name];
+      else process.env[name] = saved[index];
+    }),
+  );
+  process.env.OPENAI_API_KEY = "provider-test-key";
+  process.env.THESYS_API_KEY = "repair-test-key";
+  delete process.env.OPENAI_BASE_URL;
+  let status = 429;
+  let calls = 0;
+  t.mock.method(globalThis, "fetch", async (url: string | URL | Request) => {
+    assert.equal(String(url), "https://api.openai.com/v1/chat/completions");
+    calls++;
+    return Response.json(
+      {
+        error: {
+          message: "private upstream details",
+          type: "test_error",
+          code: "test_error",
+        },
+      },
+      { status },
+    );
+  });
+  for (const [code, expected] of [
+    [401, /OPENAI_API_KEY/],
+    [404, /OPENAI_MODEL/],
+    [429, /insufficient credits/],
+    [500, /OpenAI could not complete/],
+  ] as const) {
+    status = code;
+    const response = await POST(
+      new Request("http://localhost/api/chat", {
+        method: "POST",
+        body: JSON.stringify({
+          messages: [{ role: "user", content: "Show revenue" }],
+        }),
+      }),
+    );
+    const body = await response.text();
+    const event = JSON.parse(body.trim());
+    assert.equal(event.type, "error");
+    assert.match(event.message, expected);
+    assert.doesNotMatch(
+      body,
+      /private upstream|provider-test-key|repair-test-key/,
+    );
+  }
+  assert.equal(calls, 4);
 });

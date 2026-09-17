@@ -1,20 +1,27 @@
 "use client";
 
-import { repairMessageSchema } from "@/lib/autofix-chat";
+import { readReply } from "@/lib/autofix-chat";
+import type { RepairReport } from "@/lib/contract";
 import { findErrors, type Diagnostic } from "@/lib/validation";
 import { library } from "@/library";
 import type { AssistantMessage } from "@openuidev/react-headless";
 import { Renderer } from "@openuidev/react-lang";
 import { useMemo, useState } from "react";
-import type { z } from "zod/v4";
 
 const statusLabels = {
-  already_valid: "Already valid",
-  fixed: "Repaired",
+  valid: "Valid UI · Autofix skipped",
+  already_valid: "Validated by Autofix",
+  fixed: "Repaired automatically",
   fix_failed: "Repair incomplete",
 };
 
-function Diagnostics({ errors, empty }: { errors: Diagnostic[]; empty: string }) {
+function Diagnostics({
+  errors,
+  empty,
+}: {
+  errors: Diagnostic[];
+  empty: string;
+}) {
   if (!errors.length) return <p className="repair-muted">{empty}</p>;
   return (
     <ul className="repair-diagnostics">
@@ -29,11 +36,10 @@ function Diagnostics({ errors, empty }: { errors: Diagnostic[]; empty: string })
   );
 }
 
-function RepairResult({ report }: { report: z.infer<typeof repairMessageSchema> }) {
-  const { input, completion } = report;
-  const { status, fixed_errors, unfixed_errors } = completion.fix_summary;
-  const output = completion.choices[0].message.content;
-  const before = useMemo(() => findErrors(input.generation), [input.generation]);
+function RepairResult({ report }: { report: RepairReport }) {
+  const { generation, output, status, fixedErrors, remainingErrors, usage } =
+    report;
+  const before = useMemo(() => findErrors(generation), [generation]);
   const after = useMemo(() => (output ? findErrors(output) : []), [output]);
   const [runtimeErrors, setRuntimeErrors] = useState<Diagnostic[]>([]);
   const [copyState, setCopyState] = useState("");
@@ -51,15 +57,25 @@ function RepairResult({ report }: { report: z.infer<typeof repairMessageSchema> 
   return (
     <article className="repair-message" aria-label="Autofix result">
       <header className="repair-heading">
-        <strong className={`repair-status repair-status--${status}`}>{statusLabels[status]}</strong>
+        <strong className={`repair-status repair-status--${status}`}>
+          {statusLabels[status]}
+        </strong>
         <span className="repair-muted">
-          {fixed_errors.length} {fixed_errors.length === 1 ? "error" : "errors"} fixed
+          {status === "valid"
+            ? "No repair request made"
+            : `${fixedErrors.length} errors fixed`}
         </span>
       </header>
       {status === "fix_failed" ? (
         <div role="status">
-          <p>Autofix could not complete this repair. The original code is preserved below.</p>
-          <Diagnostics errors={unfixed_errors} empty="No further diagnostics were returned." />
+          <p>
+            Autofix could not complete this repair. The original code is
+            preserved below.
+          </p>
+          <Diagnostics
+            errors={remainingErrors}
+            empty="No further diagnostics were returned."
+          />
         </div>
       ) : output && after.length === 0 ? (
         <div className="repair-preview">
@@ -77,21 +93,31 @@ function RepairResult({ report }: { report: z.infer<typeof repairMessageSchema> 
         </div>
       ) : (
         <div role="alert">
-          <p>The returned code did not pass local validation and cannot be previewed.</p>
-          <Diagnostics errors={after} empty="No renderable output was returned." />
+          <p>
+            The returned code did not pass local validation and cannot be
+            previewed.
+          </p>
+          <Diagnostics
+            errors={after}
+            empty="No renderable output was returned."
+          />
         </div>
       )}
       <details className="repair-details" open={status === "fix_failed"}>
-        <summary>Original code and context</summary>
+        <summary>Original model output</summary>
         <pre>
-          <code>{input.generation}</code>
+          <code>{generation}</code>
         </pre>
-        {input.context && <p>{input.context}</p>}
-        <Diagnostics errors={before} empty="The original program passed local validation." />
+        <Diagnostics
+          errors={before}
+          empty="The original program passed local validation."
+        />
       </details>
       {output && (
         <details className="repair-details">
-          <summary>{status === "already_valid" ? "Unchanged code" : "Repaired code"}</summary>
+          <summary>
+            {status === "fixed" ? "Repaired code" : "Final code"}
+          </summary>
           <pre>
             <code>{output}</code>
           </pre>
@@ -106,26 +132,51 @@ function RepairResult({ report }: { report: z.infer<typeof repairMessageSchema> 
       )}
       <details className="repair-details">
         <summary>
-          API diagnostics{completion.usage ? ` · ${completion.usage.total_tokens} tokens` : ""}
+          Repair diagnostics
+          {usage ? ` · ${usage.total_tokens} Autofix tokens` : ""}
         </summary>
         <h4>Fixed</h4>
-        <Diagnostics errors={fixed_errors} empty="No fixed errors reported." />
+        <Diagnostics errors={fixedErrors} empty="No repairs needed." />
         <h4>Remaining</h4>
-        <Diagnostics errors={unfixed_errors} empty="No remaining errors reported by the API." />
+        <Diagnostics errors={remainingErrors} empty="No remaining errors." />
       </details>
     </article>
   );
 }
 
-export function RepairMessage({ message }: { message: AssistantMessage; isStreaming: boolean }) {
-  const report = useMemo(() => {
+export function RepairMessage({
+  message,
+  isStreaming,
+}: {
+  message: AssistantMessage;
+  isStreaming: boolean;
+}) {
+  const reply = useMemo(() => {
     try {
-      const parsed = repairMessageSchema.safeParse(JSON.parse(message.content ?? ""));
-      return parsed.success ? parsed.data : null;
+      return readReply(message.content ?? "");
     } catch {
       return null;
     }
   }, [message.content]);
-  if (!report) return <p role="alert">The repair result could not be displayed.</p>;
-  return <RepairResult key={message.id} report={report} />;
+  if (!reply) return <p role="alert">The generation could not be displayed.</p>;
+  if (reply.report)
+    return <RepairResult key={message.id} report={reply.report} />;
+  if (!isStreaming)
+    return (
+      <p role="status">
+        Generation stopped before a validated result was ready.
+      </p>
+    );
+  return (
+    <article className="repair-message">
+      <p role="status" className="repair-muted">
+        {reply.repairing
+          ? "Repairing the generated interface…"
+          : "Generating your interface…"}
+      </p>
+      {reply.generation && !reply.repairing && (
+        <Renderer response={reply.generation} library={library} isStreaming />
+      )}
+    </article>
+  );
 }

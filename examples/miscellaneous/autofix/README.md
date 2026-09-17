@@ -1,16 +1,8 @@
-# Autofix
+# Autofix with OpenAI
 
-A standalone Next.js **AgentInterface** example of the [OpenUI Autofix API](https://www.openui.com/docs/gateway/api/autofix). Choose a saved broken generation or paste OpenUI Lang into the chat. Each assistant reply contains the repair status, rendered interface, original and repaired code, and diagnostics.
+A standalone Next.js **AgentInterface** example that calls OpenAI directly to generate an interface, then uses the [OpenUI Autofix API](https://www.openui.com/docs/gateway/api/autofix) only when the completed output fails validation.
 
-## What this demonstrates
-
-- `AgentInterface` for the chat shell, conversation starters, in-memory threads, composer, cancellation, and request errors.
-- Local validation with `createParser` against a custom four-component library.
-- A server-side call to `POST /v1/autofix`, using `generateSystemPrompt({ cloud: true, library })` in the **first system message** and the generation in the **last assistant message**.
-- Complete output replacement, error diagnostics, and handling of `fixed`, `already_valid`, and `fix_failed`.
-- Bare and Markdown-fenced generations, optional request context, cancellation of stale requests, and a rendered preview inside the assistant message.
-
-The sample starts with saved model output so you can reproduce a repair without calling a model to generate a broken response first. The repair itself uses the real Autofix API. A provider key is not needed; only `THESYS_API_KEY` is required for repair.
+Ask for a revenue summary, project status, or fitness card. OpenAI streams OpenUI Lang into the assistant reply. Valid output renders without a repair request; invalid output is repaired and replaces the preview in that same reply. Follow-up prompts use the final UI code as conversation context.
 
 ## Getting started
 
@@ -22,78 +14,83 @@ pnpm install --ignore-workspace
 cp .env.example .env.local
 ```
 
-Set `THESYS_API_KEY` in `.env.local` using a key from [the Thesys console](https://console.thesys.dev/keys). You can also run `pnpm generate:apiKey`.
+Set both server-side keys in `.env.local`:
+
+```dotenv
+OPENAI_API_KEY=your-openai-key
+OPENAI_MODEL=gpt-4.1-mini
+THESYS_API_KEY=your-thesys-key
+```
+
+Get the generation key from [OpenAI](https://platform.openai.com/api-keys) and the repair key from [the Thesys console](https://console.thesys.dev/keys). `pnpm generate:apiKey` can also generate the Thesys key. `OPENAI_MODEL` is optional and defaults to `gpt-4.1-mini`.
 
 ```bash
 pnpm dev
 ```
 
-Open [localhost:3000](http://localhost:3000). The chat shell loads without credentials; submitting a sample or program requires a key. With npm or Bun, use the equivalent `install` and `run dev` commands; `--ignore-workspace` is only needed for pnpm inside this repository.
+Open [localhost:3000](http://localhost:3000). The shell loads without credentials; submitting a prompt requires both keys. With npm or Bun, use the equivalent `install` and `run dev` commands; `--ignore-workspace` is only needed for pnpm inside this repository.
 
-### Backend compatibility
+### Try it
 
-This example requires the Autofix contract introduced in [Muse #604](https://github.com/thesysdev/muse/pull/604) and the matching edge update in [Coda #1031](https://github.com/thesysdev/coda/pull/1031) to be deployed. It sends the actual component library in a config message. It does not send the removed top-level `library` field or rely on a default library.
+1. Choose **Revenue summary** or ask: “Show September revenue of $48,200, up 12% from August.”
+2. Watch the interface appear as OpenAI generates it.
+3. Check the final status: **Valid UI · Autofix skipped**, **Repaired automatically**, or **Repair incomplete**.
+4. Ask a follow-up, such as “Change the revenue to $52,000 and add a note about growth.”
+5. Expand the original output, final code, or repair diagnostics to inspect what happened.
 
-`AUTOFIX_API_URL` optionally overrides `https://api.thesys.dev/v1/autofix` for a compatible development/staging backend. Both environment variables remain server-side. This is a local reference app; add your application's authentication and request quotas before making its proxy publicly accessible.
-
-## Try it
-
-1. **Unknown component:** `Heading` is unavailable; the library defines `Header`.
-2. **Missing value:** `Metric` lacks a required value, supplied in the original request context.
-3. **Missing reference:** `note` is referenced but never defined.
-4. **Fenced output:** repair a fenced program while retaining the fence.
-5. **Already valid:** check a valid program and receive it unchanged.
-
-Click a conversation starter to repair its saved output, or paste a bare/fenced OpenUI Lang program into the composer. To include the original request context with custom code, send JSON:
-
-```json
-{
-  "generation": "root = Card([metric])\nmetric = Metric(\"Revenue\")",
-  "context": "Show revenue of $48,200."
-}
-```
-
-The four available components are `Card(children)`, `Header(title)`, `Text(content)`, and `Metric(label, value, detail?)`. This is a repair chat: it accepts completed output, rather than generating a new UI from a natural-language prompt. Every turn is an independent repair; prior chat reports are not forwarded to Autofix.
-
-Repairs are model-generated, so their exact wording may vary. The example always shows the real status and diagnostics returned by the API. `fix_failed` preserves the original source in the message and shows the remaining errors; it never renders a null result as a success. Network and setup errors use AgentInterface's error/retry state.
+The runtime uses real model output. It does not inject mistakes or load saved responses, so a prompt may produce valid output and skip Autofix. Deterministic broken generations live only in the test fixtures.
 
 ## How it works
 
 ```text
-AgentInterface starter or composer → ChatLLM.send
-       ↓ { generation, context }
-Next.js /api/autofix → OpenUI /v1/autofix (stream: false)
-       ↓
-Complete JSON response → message adapter → assistant repair report
-       ↓
-Local validation → Renderer inside AgentInterface
+Natural-language prompt in AgentInterface
+  → Next.js /api/chat
+  → OpenAI Chat Completions (stream: true, OPENAI_API_KEY)
+  → Stream OpenUI Lang into the assistant preview
+  → Validate the completed generation against the component library
+      Valid   → Finalize the reply; skip Autofix
+      Invalid → POST /v1/autofix (stream: false, THESYS_API_KEY)
+                  Success → Validate and replace the preview in the same reply
+                  Failure → Preserve original code and show diagnostics
 ```
 
-The OpenUI CLI generates `src/generated/spec.json` from `src/library.tsx` before `dev`, `build`, and `verify`. That same spec drives the browser parser and server config message, and `Renderer` uses the original library. Generated files are ignored by Git.
+OpenAI receives a full OpenUI Lang system prompt from `generateSystemPrompt({ library })`, followed by recent conversation turns. It is called directly, independently of the OpenUI Gateway. Autofix receives a config message from `generateSystemPrompt({ cloud: true, library })`, the same recent conversation, and the original generated code as the final assistant turn. No top-level `library` field is sent.
 
-The browser sends only `{ generation, context }`. The server validates sizes, constructs the system/user/assistant messages, adds its API key, and makes one non-streaming request. It imposes a 90-second timeout and forwards cancellation. The `ChatLLM` transport forwards AgentInterface's abort signal and checks it before publishing a completed message, so cancelling cannot insert a stale repair result. Backend cancellation and billing follow the gateway's normal behavior; stopping the UI request does not guarantee provider work stops.
+The custom library defines `Card(children)`, `Header(title)`, `Text(content)`, and `Metric(label, value, detail?)`. The OpenUI CLI generates `src/generated/spec.json` from `src/library.tsx` before development, tests, and builds. Generation, validation, and repair use that same spec; `Renderer` uses the original library.
 
-AgentInterface expects a message-event adapter. `src/lib/autofix-chat.ts` adapts the completed JSON into one assistant content event; it does not request or simulate token streaming from Autofix. The `components.AssistantMessage` slot renders the report and uses `Renderer` only after the returned code passes local validation. Threads use AgentInterface's default in-memory storage and reset on refresh.
+Validation happens after the model finishes: incomplete references while streaming are expected. It checks parser diagnostics, unresolved references, orphaned statements, and the root. A disconnected generation stream is an error, not an invitation to repair partial output. A successful repair is validated again before rendering. `fix_failed` preserves the original source and never renders a null result as a success.
 
-The API accepts at most 100,000 generation characters and 20 usable context turns totaling 8,000 characters, excluding config blocks. This example uses one optional user context turn and enforces those character limits. In a real conversation, send relevant preceding turns while preserving the first config turn and final assistant generation. Repair only after generation has finished; incomplete streaming output is expected to contain transient errors.
+### Chat and streaming
 
-The chat intentionally lets you call the API on the valid sample to demonstrate `already_valid`. In a production flow, skip the call when local validation passes. The API also supports OpenUI sentinel frames and preserves their context; this example demonstrates bare/fenced programs and does not implement a separate frame parser.
+`AgentInterface` provides conversation starters, in-memory threads, the composer, cancellation, and request errors. Threads reset on refresh. Completed assistant turns contribute their final code to subsequent requests; reports and diagnostics are never sent as model context. Interrupted replies are excluded. A failed repair contributes its original generation so the user can ask a follow-up.
+
+The server streams newline-delimited events for OpenAI text, repair progress, and the final result. The `ChatLLM` adapter appends these to one assistant message; the custom message renderer switches from the streaming preview to the final result. Autofix itself is a single non-streaming request.
+
+The browser sends only conversation messages. Both API keys stay on the server. The server imposes a 150-second timeout, caps generation at 100,000 characters, and retains up to 20 recent whole context turns totaling 8,000 characters. The latest user prompt must fit within 8,000 characters. Older turns are removed as needed to fit both providers' shared context budget, excluding the system/config prompt.
+
+Cancellation is forwarded to the OpenAI SDK and Autofix fetch. The client also stops its stream reader and prevents stale results from appearing after cancellation. Remote cancellation and billing depend on each service; aborting the browser request does not guarantee that all remote work stops.
+
+### Backend configuration
+
+`AUTOFIX_API_URL` optionally overrides `https://api.thesys.dev/v1/autofix` for a development backend that supports the config-message contract. `OPENAI_BASE_URL` optionally overrides the OpenAI SDK base URL. These settings remain server-side. This is a local reference app; add your application's authentication and request quotas before exposing its proxy publicly.
+
+OpenAI generation and Autofix repair use separate credentials and billing. Valid output makes no Autofix request. The API's `already_valid` result is also handled if its validation differs from the local parser.
 
 ## Key files
 
-| File                                | Purpose                                                              |
-| ----------------------------------- | -------------------------------------------------------------------- |
-| `src/library.tsx`                   | `Card`, `Header`, `Text`, and `Metric` schemas and renderers         |
-| `src/lib/samples.ts`                | Reproducible broken and valid output                                 |
-| `src/lib/validation.ts`             | Parser diagnostics, including unresolved references and missing root |
-| `src/lib/autofix.ts`                | Config-message construction and server transport                     |
-| `src/lib/contract.ts`               | Request limits and response validation                               |
-| `src/app/api/autofix/route.ts`      | Server credentials, timeout, and HTTP errors                         |
-| `src/app/page.tsx`                  | AgentInterface shell, starter prompts, and message slot              |
-| `src/lib/autofix-chat.ts`           | Chat input, cancellable transport, and complete-response adapter     |
-| `src/components/repair-message.tsx` | Status, diagnostics, code, and rendered assistant result             |
-| `tests/autofix.test.ts`             | Real parser fixtures and mocked API/route checks                     |
-| `tests/autofix-chat.test.ts`        | Chat transport, statuses, limits, and stale-result cancellation      |
+| File                                | Purpose                                                                |
+| ----------------------------------- | ---------------------------------------------------------------------- |
+| `src/library.tsx`                   | Component schemas and renderers                                        |
+| `src/lib/provider.ts`               | Direct OpenAI generation and full library prompt                       |
+| `src/lib/generate.ts`               | Stream, validate, repair if needed, and validate the result            |
+| `src/lib/autofix.ts`                | Config-message construction and Autofix transport                      |
+| `src/lib/validation.ts`             | Parser diagnostics and structural checks                               |
+| `src/lib/contract.ts`               | Message schemas, response validation, and context limits               |
+| `src/app/api/chat/route.ts`         | Server credentials, cancellation, timeout, and event stream            |
+| `src/app/page.tsx`                  | AgentInterface shell and natural-language starters                     |
+| `src/lib/autofix-chat.ts`           | Conversation history and cancellable message-event adapter             |
+| `src/components/repair-message.tsx` | Streaming preview, final replacement, and diagnostics                  |
+| `tests/`                            | Provider/repair orchestration, parser, transport, and rendering checks |
 
 ## Verify
 
@@ -101,8 +98,8 @@ The chat intentionally lets you call the API on the valid sample to demonstrate 
 pnpm verify
 ```
 
-This generates the spec, runs ESLint and local tests, and performs a production Next.js build. It requires no API key and makes no model calls. `pnpm test` runs just the local tests. Real endpoint verification requires the compatible backend and an API key; local tests stub only the HTTP transport.
+This generates the spec, runs ESLint and local tests, and performs a production Next.js build. It requires no API keys and makes no live model calls. Tests use the real SDK, parser, and renderer with stubbed network responses. `pnpm test` runs just the tests.
 
 ## Extend it
 
-Replace or extend `src/library.tsx` with your own components, update the samples, and rerun `pnpm generate`. To integrate with a model, send the completed model response and its relevant conversation context through the same server helper, then replace that assistant response with `choices[0].message.content` only on success. Handle runtime/tool failures separately; fixing code cannot restore an unavailable external service.
+Replace or extend `src/library.tsx` and rerun `pnpm generate`. Both model generation and repair will receive the updated component definitions. Handle runtime and tool failures separately; repairing UI code cannot restore an unavailable external service.

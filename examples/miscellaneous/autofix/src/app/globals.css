@@ -30,6 +30,7 @@ body {
   padding: 2px 12px;
 }
 .repair-status--fixed,
+.repair-status--valid,
 .repair-status--already_valid {
   color: #23845d;
 }

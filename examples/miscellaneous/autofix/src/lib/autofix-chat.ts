@@ -1,75 +1,130 @@
-import { EventType, type ChatLLM } from "@openuidev/react-headless";
-import { z } from "zod/v4";
-import { completionSchema, inputSchema, type AutofixInput } from "./contract";
-import { samples } from "./samples";
+import {
+  EventType,
+  type ChatLLM,
+  type Message,
+} from "@openuidev/react-headless";
+import {
+  chatEventSchema,
+  chatInputSchema,
+  recentContext,
+  type ConversationTurn,
+  type RepairReport,
+} from "./contract";
 
-export const repairMessageSchema = z.object({ input: inputSchema, completion: completionSchema });
-
-export function samplePrompt(sample: { label: string }) {
-  return `Try the "${sample.label}" example.`;
+/** The message holds generation events; the final report replaces its preview. */
+export function readReply(content: string) {
+  let generation = "";
+  let repairing = false;
+  let report: RepairReport | undefined;
+  for (const line of content.split("\n").filter(Boolean)) {
+    const event = chatEventSchema.parse(JSON.parse(line));
+    if (event.type === "delta") generation += event.text;
+    if (event.type === "repairing") repairing = true;
+    if (event.type === "result") report = event.report;
+  }
+  return { generation, repairing, report };
 }
 
-/** Starters load saved output; custom messages accept source or { generation, context } JSON. */
-export function inputFromMessage(content: string): AutofixInput {
-  const sample = samples.find((item) => samplePrompt(item) === content.trim());
-  let input: unknown = sample
-    ? { generation: sample.generation, context: sample.context }
-    : { generation: content };
-  if (!sample && content.trimStart().startsWith("{")) {
-    try {
-      input = JSON.parse(content);
-    } catch {
-      throw new Error(
-        "Send valid JSON with generation and optional context, or paste OpenUI Lang directly.",
-      );
+/** Forward conversation text and final programs, never event logs or diagnostics. */
+export function conversationFromMessages(
+  messages: Message[],
+): ConversationTurn[] {
+  const turns: ConversationTurn[] = [];
+  for (const message of messages) {
+    if (typeof message.content !== "string") continue;
+    if (message.role === "user")
+      turns.push({ role: "user", content: message.content });
+    if (message.role === "assistant") {
+      try {
+        const report = readReply(message.content).report;
+        if (report)
+          turns.push({
+            role: "assistant",
+            content: report.output ?? report.generation,
+          });
+      } catch {
+        /* Interrupted or older-format replies are not conversation context. */
+      }
     }
   }
-  const parsed = inputSchema.safeParse(input);
-  if (!parsed.success) throw new Error(parsed.error.issues[0].message);
-  return parsed.data;
+  const input = chatInputSchema.parse({ messages: turns.slice(-100) });
+  return recentContext(input.messages);
 }
 
-/** Adapt one complete Autofix JSON response to AgentInterface's message lifecycle. */
 export function createAutofixChat(fetcher: typeof fetch = fetch): ChatLLM {
-  const requests = new WeakMap<Response, { input: AutofixInput; signal: AbortSignal }>();
+  const requests = new WeakMap<Response, AbortSignal>();
   return {
     async send({ messages, signal }) {
       signal.throwIfAborted();
-      const message = messages.findLast((item) => item.role === "user");
-      if (typeof message?.content !== "string") throw new Error("Enter an OpenUI Lang program.");
-      // Each repair is independent. Earlier assistant reports are never sent as generations.
-      const input = inputFromMessage(message.content);
-      const response = await fetcher("/api/autofix", {
+      const response = await fetcher("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input),
+        body: JSON.stringify({ messages: conversationFromMessages(messages) }),
         signal,
       });
       signal.throwIfAborted();
-      requests.set(response, { input, signal });
+      requests.set(response, signal);
       return response;
     },
     streamProtocol: {
       async *parse(response) {
-        const request = requests.get(response);
-        if (!request) throw new Error("No Autofix request is associated with this response.");
+        const signal = requests.get(response);
+        if (!signal || !response.body)
+          throw new Error("No generation stream is available.");
+        signal.throwIfAborted();
+        const reader = response.body.getReader();
+        const cancel = () => {
+          void reader.cancel(signal.reason).catch(() => {});
+        };
+        signal.addEventListener("abort", cancel, { once: true });
+        const decoder = new TextDecoder();
+        const messageId = crypto.randomUUID();
+        let pending = "";
+        let finished = false;
         try {
-          request.signal.throwIfAborted();
-          const parsed = completionSchema.safeParse(await response.json());
-          request.signal.throwIfAborted();
-          if (!parsed.success)
-            throw new Error("Autofix returned an unexpected response. Try again.");
-          const messageId = crypto.randomUUID();
-          // The API is non-streaming: publish the completed report in one content event.
-          yield { type: EventType.TEXT_MESSAGE_START, messageId, role: "assistant" };
-          request.signal.throwIfAborted();
           yield {
-            type: EventType.TEXT_MESSAGE_CONTENT,
+            type: EventType.TEXT_MESSAGE_START,
             messageId,
-            delta: JSON.stringify({ input: request.input, completion: parsed.data }),
+            role: "assistant",
           };
+          while (!finished) {
+            signal.throwIfAborted();
+            const { value, done } = await reader.read();
+            signal.throwIfAborted();
+            pending += done
+              ? decoder.decode()
+              : decoder.decode(value, { stream: true });
+            const lines = pending.split("\n");
+            pending = lines.pop() ?? "";
+            for (const line of lines) {
+              if (!line.trim()) continue;
+              signal.throwIfAborted();
+              const event = chatEventSchema.parse(JSON.parse(line));
+              if (event.type === "error") {
+                yield { type: EventType.RUN_ERROR, message: event.message };
+                return;
+              }
+              yield {
+                type: EventType.TEXT_MESSAGE_CONTENT,
+                messageId,
+                delta: JSON.stringify(event) + "\n",
+              };
+              if (event.type === "result") {
+                finished = true;
+                break;
+              }
+            }
+            if (done && !finished)
+              throw new Error(
+                "Generation ended before a final result arrived. Try again.",
+              );
+          }
+          signal.throwIfAborted();
           yield { type: EventType.TEXT_MESSAGE_END, messageId };
         } finally {
+          signal.removeEventListener("abort", cancel);
+          await reader.cancel().catch(() => {});
+          reader.releaseLock();
           requests.delete(response);
         }
       },

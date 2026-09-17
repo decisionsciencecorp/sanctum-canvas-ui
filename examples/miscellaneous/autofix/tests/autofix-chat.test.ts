@@ -1,147 +1,197 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { EventType, type ChatLLM, type AGUIEvent } from "@openuidev/react-headless";
-import { createAutofixChat, inputFromMessage, samplePrompt } from "../src/lib/autofix-chat";
-import { samples } from "../src/lib/samples";
-import { MAX_CONTEXT_CHARS, MAX_GENERATION_CHARS } from "../src/lib/contract";
+import {
+  EventType,
+  type ChatLLM,
+  type AGUIEvent,
+} from "@openuidev/react-headless";
+import {
+  createAutofixChat,
+  conversationFromMessages,
+  readReply,
+} from "../src/lib/autofix-chat";
+import {
+  recentContext,
+  type ChatEvent,
+  type RepairReport,
+} from "../src/lib/contract";
+import { samples } from "./fixtures";
 
+const report: RepairReport = {
+  generation: samples[0].generation,
+  output: samples[4].generation,
+  status: "fixed",
+  fixedErrors: [],
+  remainingErrors: [],
+};
+const result: ChatEvent = { type: "result", report };
+const args = () => ({
+  threadId: "test",
+  signal: new AbortController().signal,
+  messages: [
+    { id: "user", role: "user" as const, content: "Show September revenue." },
+  ],
+});
+const wire = (events: ChatEvent[]) =>
+  events.map((event) => JSON.stringify(event) + "\n").join("");
 async function collect(llm: ChatLLM, response: Response) {
   const events: AGUIEvent[] = [];
-  for await (const event of llm.streamProtocol.parse(response)) events.push(event);
+  for await (const event of llm.streamProtocol.parse(response))
+    events.push(event);
   return events;
 }
 
-function completion(status: "fixed" | "already_valid" | "fix_failed") {
-  return {
-    choices: [{ message: { content: status === "fix_failed" ? null : samples[4].generation } }],
-    fix_summary: {
-      status,
-      fixed_errors: [],
-      unfixed_errors:
-        status === "fix_failed" ? [{ code: "unresolved", message: "Missing note." }] : [],
-    },
-  };
-}
-
-test("chat starters preserve each sample's source and repair context", () => {
-  for (const sample of samples) {
-    assert.deepEqual(inputFromMessage(samplePrompt(sample)), {
-      generation: sample.generation,
-      context: sample.context,
-    });
-  }
-  assert.deepEqual(inputFromMessage(samples[3].generation), {
-    generation: samples[3].generation,
-    context: "",
-  });
-  assert.deepEqual(
-    inputFromMessage(
-      JSON.stringify({ generation: samples[0].generation, context: "  Fix the title.  " }),
-    ),
+test("follow-up turns carry the final repaired UI, not report metadata or incomplete generations", () => {
+  const messages = conversationFromMessages([
+    ...args().messages,
     {
-      generation: samples[0].generation,
-      context: "Fix the title.",
+      id: "assistant",
+      role: "assistant",
+      content: wire([{ type: "delta", text: report.generation }, result]),
     },
+    {
+      id: "partial",
+      role: "assistant",
+      content: wire([{ type: "delta", text: "root = " }]),
+    },
+    { id: "next", role: "user", content: "Change the revenue to $50,000." },
+  ]);
+  assert.deepEqual(messages, [
+    { role: "user", content: "Show September revenue." },
+    { role: "assistant", content: samples[4].generation },
+    { role: "user", content: "Change the revenue to $50,000." },
+  ]);
+});
+
+test("history trimming retains whole recent turns and the latest request within both limits", () => {
+  assert.equal(
+    recentContext(
+      Array.from({ length: 25 }, (_, i) => ({
+        role: "user" as const,
+        content: String(i),
+      })),
+    ).length,
+    20,
+  );
+  assert.deepEqual(
+    recentContext([
+      { role: "user", content: "old request" },
+      { role: "assistant", content: "x".repeat(8000) },
+      { role: "user", content: "latest request" },
+    ]),
+    [{ role: "user", content: "latest request" }],
   );
 });
 
-test("chat rejects invalid or oversized input before making a request", async () => {
-  const llm = createAutofixChat(async () => {
-    assert.fail("must not contact the server");
+test("normal prompts go to the generation route without browser credentials", async () => {
+  const request = args();
+  const llm = createAutofixChat(async (url, init) => {
+    assert.equal(url, "/api/chat");
+    assert.equal(new Headers(init?.headers).has("Authorization"), false);
+    assert.equal(init?.signal, request.signal);
+    assert.deepEqual(JSON.parse(String(init?.body)), {
+      messages: [{ role: "user", content: "Show September revenue." }],
+    });
+    return new Response(wire([result]));
   });
-  for (const content of [
-    " ",
-    "{",
-    "x".repeat(MAX_GENERATION_CHARS + 1),
-    JSON.stringify({ generation: "root = Card([])", context: "x".repeat(MAX_CONTEXT_CHARS + 1) }),
-  ]) {
-    await assert.rejects(
-      llm.send({
-        threadId: "test",
-        messages: [{ id: "user", role: "user", content }],
-        signal: new AbortController().signal,
-      }),
-    );
-  }
+  await llm.send(request);
 });
 
-for (const status of ["fixed", "already_valid", "fix_failed"] as const) {
-  test(`chat delivers a complete ${status} result with the original code preserved`, async () => {
-    const controller = new AbortController();
-    const llm = createAutofixChat(async (url, init) => {
-      assert.equal(url, "/api/autofix");
-      assert.equal(init?.signal, controller.signal);
-      assert.equal(new Headers(init?.headers).has("Authorization"), false);
-      assert.deepEqual(JSON.parse(String(init?.body)), {
-        generation: samples[0].generation,
-        context: samples[0].context,
-      });
-      return Response.json(completion(status));
-    });
-    const response = await llm.send({
-      threadId: "test",
-      signal: controller.signal,
-      messages: [
-        { id: "old-user", role: "user", content: "old input" },
-        { id: "old-assistant", role: "assistant", content: "old repair report" },
-        { id: "user", role: "user", content: samplePrompt(samples[0]) },
-      ],
-    });
-    const events = await collect(llm, response);
-    assert.deepEqual(
-      events.map((event) => event.type),
-      [EventType.TEXT_MESSAGE_START, EventType.TEXT_MESSAGE_CONTENT, EventType.TEXT_MESSAGE_END],
+test("empty or oversized user prompts are rejected before transport", async () => {
+  const llm = createAutofixChat(async () =>
+    assert.fail("invalid input must not call the server"),
+  );
+  for (const content of [" ", "x".repeat(8001)])
+    await assert.rejects(
+      llm.send({ ...args(), messages: [{ id: "u", role: "user", content }] }),
     );
-    const content = events[1];
-    assert.equal(content.type, EventType.TEXT_MESSAGE_CONTENT);
-    if (content.type !== EventType.TEXT_MESSAGE_CONTENT) assert.fail("missing content event");
-    assert.deepEqual(JSON.parse(content.delta), {
-      input: { generation: samples[0].generation, context: samples[0].context },
-      completion: completion(status),
-    });
-  });
-}
+});
 
-test("chat retains HTTP errors for AgentInterface's retry state and rejects malformed completions", async () => {
-  const args = {
-    threadId: "test",
-    signal: new AbortController().signal,
-    messages: [{ id: "user", role: "user" as const, content: samples[0].generation }],
-  };
+test("fragmented UTF-8 stream updates one reply through generation, repair, and replacement", async () => {
+  const content = wire([
+    { type: "delta", text: "root = Card([]) // café" },
+    { type: "repairing" },
+    result,
+  ]);
+  const bytes = new TextEncoder().encode(content);
+  const response = new Response(
+    new ReadableStream({
+      start(controller) {
+        for (let i = 0; i < bytes.length; i += 3)
+          controller.enqueue(bytes.slice(i, i + 3));
+        controller.close();
+      },
+    }),
+  );
+  const llm = createAutofixChat(async () => response);
+  const events = await collect(llm, await llm.send(args()));
+  assert.equal(
+    events.filter((e) => e.type === EventType.TEXT_MESSAGE_START).length,
+    1,
+  );
+  assert.equal(
+    events.filter((e) => e.type === EventType.TEXT_MESSAGE_END).length,
+    1,
+  );
+  const deltas = events.flatMap((e) =>
+    e.type === EventType.TEXT_MESSAGE_CONTENT ? [e.delta] : [],
+  );
+  assert.equal(readReply(deltas[0]).generation, "root = Card([]) // café");
+  assert.equal(readReply(deltas.slice(0, 2).join("")).repairing, true);
+  assert.deepEqual(readReply(deltas.join("")).report, report);
+});
+
+test("HTTP errors, error events, and prematurely ended streams remain failures", async () => {
   const failed = createAutofixChat(async () =>
     Response.json({ error: "Configure your API key." }, { status: 503 }),
   );
-  const response = await failed.send(args);
-  assert.equal(response.status, 503);
-  assert.equal((await response.json()).error, "Configure your API key.");
-  const malformed = createAutofixChat(async () => Response.json({ choices: [] }));
-  await assert.rejects(collect(malformed, await malformed.send(args)), /unexpected response/);
+  assert.equal((await failed.send(args())).status, 503);
+  const errored = createAutofixChat(
+    async () =>
+      new Response(wire([{ type: "error", message: "Provider unavailable" }])),
+  );
+  assert.deepEqual(
+    (await collect(errored, await errored.send(args()))).at(-1),
+    { type: EventType.RUN_ERROR, message: "Provider unavailable" },
+  );
+  const truncated = createAutofixChat(
+    async () => new Response(wire([{ type: "delta", text: "root = " }])),
+  );
+  await assert.rejects(
+    collect(truncated, await truncated.send(args())),
+    /before a final result/,
+  );
 });
 
-test("cancelled requests cannot publish stale repair messages, even when transport ignores abort", async () => {
+test("cancellation prevents late events and closes a pending response reader", async () => {
   const controller = new AbortController();
   const llm = createAutofixChat(async () => {
     controller.abort();
-    return Response.json(completion("fixed"));
+    return new Response(wire([result]));
   });
-  await assert.rejects(
-    llm.send({
-      threadId: "test",
-      signal: controller.signal,
-      messages: [{ id: "user", role: "user", content: samples[0].generation }],
-    }),
-    { name: "AbortError" },
-  );
+  await assert.rejects(llm.send({ ...args(), signal: controller.signal }), {
+    name: "AbortError",
+  });
 
   const pending = new AbortController();
-  const delayed = createAutofixChat(async () => Response.json(completion("fixed")));
-  const response = await delayed.send({
-    threadId: "test",
-    signal: pending.signal,
-    messages: [{ id: "user", role: "user", content: samples[0].generation }],
-  });
-  const iterator = delayed.streamProtocol.parse(response)[Symbol.asyncIterator]();
-  assert.equal((await iterator.next()).value.type, EventType.TEXT_MESSAGE_START);
+  let cancelled = false;
+  const waiting = createAutofixChat(
+    async () =>
+      new Response(
+        new ReadableStream({
+          cancel() {
+            cancelled = true;
+          },
+        }),
+      ),
+  );
+  const response = await waiting.send({ ...args(), signal: pending.signal });
+  const iterator = waiting.streamProtocol
+    .parse(response)
+    [Symbol.asyncIterator]();
+  await iterator.next();
+  const next = iterator.next();
   pending.abort();
-  await assert.rejects(iterator.next(), { name: "AbortError" });
+  await assert.rejects(next, { name: "AbortError" });
+  assert.equal(cancelled, true);
 });

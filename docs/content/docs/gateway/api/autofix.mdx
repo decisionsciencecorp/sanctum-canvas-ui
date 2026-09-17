@@ -11,7 +11,7 @@ The Autofix API repairs invalid OpenUI Lang after a model has generated it. Send
 
 [Try the runnable Autofix example →](https://github.com/thesysdev/openui/tree/main/examples/miscellaneous/autofix)
 
-The example uses AgentInterface with saved broken programs and a composer for custom OpenUI Lang. Assistant replies show the repair status, code, diagnostics, and rendered result. Its API key stays in a Next.js server route.
+The example uses AgentInterface to stream UI generated directly by OpenAI and automatically repair invalid output. Assistant replies show the final interface, original code, and repair diagnostics. Both API keys stay in a Next.js server route.
 
 <Mermaid
   chart={`

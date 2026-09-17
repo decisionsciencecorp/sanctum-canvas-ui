@@ -19,8 +19,11 @@ export function buildAutofixRequest(input: AutofixInput) {
     stream: false,
     messages: [
       // Autofix requires the actual library in the FIRST system/developer turn.
-      { role: "system", content: generateSystemPrompt({ cloud: true, library: spec }) },
-      ...(input.context ? [{ role: "user", content: input.context }] : []),
+      {
+        role: "system",
+        content: generateSystemPrompt({ cloud: true, library: spec }),
+      },
+      ...input.context,
       { role: "assistant", content: input.generation },
     ],
   };
@@ -36,13 +39,19 @@ export async function requestAutofix(
     fetcher?: typeof fetch;
   },
 ) {
-  const response = await (options.fetcher ?? fetch)(options.url ?? DEFAULT_AUTOFIX_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${options.apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify(buildAutofixRequest(input)),
-    signal: options.signal,
-    cache: "no-store",
-  });
+  const response = await (options.fetcher ?? fetch)(
+    options.url ?? DEFAULT_AUTOFIX_URL,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${options.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(buildAutofixRequest(input)),
+      signal: options.signal,
+      cache: "no-store",
+    },
+  );
   if (!response.ok) {
     const messages: Record<number, string> = {
       400: "Autofix rejected the request. Check the program and context limits, and use a backend with config-message support.",
@@ -64,6 +73,7 @@ export async function requestAutofix(
     throw new AutofixError("Autofix returned an unexpected response.", 502);
   }
   const data = completionSchema.safeParse(body);
-  if (!data.success) throw new AutofixError("Autofix returned an unexpected response.", 502);
+  if (!data.success)
+    throw new AutofixError("Autofix returned an unexpected response.", 502);
   return data.data;
 }

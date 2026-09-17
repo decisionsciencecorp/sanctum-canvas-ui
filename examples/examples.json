@@ -80,9 +80,8 @@
     },
     {
       "title": "Autofix",
-      "description": "An AgentInterface chat that repairs invalid OpenUI Lang with the Autofix API and renders the result.",
-      "path": "miscellaneous/autofix",
-      "envKey": "THESYS_API_KEY"
+      "description": "Direct OpenAI generation with automatic OpenUI Lang repair in AgentInterface.",
+      "path": "miscellaneous/autofix"
     },
     {
       "title": "Handsontable",
