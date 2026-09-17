@@ -1,5 +1,8 @@
 import {
   EventType,
+  agUIAdapter,
+  fetchLLM,
+  identityMessageFormat,
   type ChatLLM,
   type Message,
 } from "@openuidev/react-headless";
@@ -53,81 +56,43 @@ export function conversationFromMessages(
 
 export function createAutofixChat(fetcher: typeof fetch = fetch): ChatLLM {
   const requests = new WeakMap<Response, AbortSignal>();
-  return {
-    async send({ messages, signal }) {
-      signal.throwIfAborted();
-      const response = await fetcher("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: conversationFromMessages(messages) }),
-        signal,
-      });
-      signal.throwIfAborted();
-      requests.set(response, signal);
+  const adapter = agUIAdapter();
+  return fetchLLM({
+    url: "/api/chat",
+    messageFormat: {
+      ...identityMessageFormat,
+      toApi: conversationFromMessages,
+    },
+    // Keep each response tied to its own signal, including buffered events after cancellation.
+    async fetch(url, init) {
+      const signal = init?.signal;
+      signal?.throwIfAborted();
+      const response = await fetcher(url, init);
+      signal?.throwIfAborted();
+      if (signal) requests.set(response, signal);
       return response;
     },
-    streamProtocol: {
+    streamAdapter: {
       async *parse(response) {
         const signal = requests.get(response);
-        if (!signal || !response.body)
-          throw new Error("No generation stream is available.");
-        signal.throwIfAborted();
-        const reader = response.body.getReader();
-        const cancel = () => {
-          void reader.cancel(signal.reason).catch(() => {});
-        };
-        signal.addEventListener("abort", cancel, { once: true });
-        const decoder = new TextDecoder();
-        const messageId = crypto.randomUUID();
-        let pending = "";
         let finished = false;
         try {
-          yield {
-            type: EventType.TEXT_MESSAGE_START,
-            messageId,
-            role: "assistant",
-          };
-          while (!finished) {
-            signal.throwIfAborted();
-            const { value, done } = await reader.read();
-            signal.throwIfAborted();
-            pending += done
-              ? decoder.decode()
-              : decoder.decode(value, { stream: true });
-            const lines = pending.split("\n");
-            pending = lines.pop() ?? "";
-            for (const line of lines) {
-              if (!line.trim()) continue;
-              signal.throwIfAborted();
-              const event = chatEventSchema.parse(JSON.parse(line));
-              if (event.type === "error") {
-                yield { type: EventType.RUN_ERROR, message: event.message };
-                return;
-              }
-              yield {
-                type: EventType.TEXT_MESSAGE_CONTENT,
-                messageId,
-                delta: JSON.stringify(event) + "\n",
-              };
-              if (event.type === "result") {
-                finished = true;
-                break;
-              }
-            }
-            if (done && !finished)
-              throw new Error(
-                "Generation ended before a final result arrived. Try again.",
-              );
+          signal?.throwIfAborted();
+          for await (const event of adapter.parse(response)) {
+            signal?.throwIfAborted();
+            if (event.type === EventType.TEXT_MESSAGE_END) finished = true;
+            yield event;
+            if (event.type === EventType.RUN_ERROR) return;
           }
-          signal.throwIfAborted();
-          yield { type: EventType.TEXT_MESSAGE_END, messageId };
+          signal?.throwIfAborted();
+          if (!finished)
+            throw new Error(
+              "Generation ended before a final result arrived. Try again.",
+            );
         } finally {
-          signal.removeEventListener("abort", cancel);
-          await reader.cancel().catch(() => {});
-          reader.releaseLock();
           requests.delete(response);
         }
       },
     },
-  };
+  });
 }

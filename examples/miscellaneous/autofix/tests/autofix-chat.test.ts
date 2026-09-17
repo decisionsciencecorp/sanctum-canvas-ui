@@ -16,6 +16,7 @@ import {
   type RepairReport,
 } from "../src/lib/contract";
 import { samples } from "./fixtures";
+import { toAGUIEvents } from "../src/lib/chat-stream";
 
 const report: RepairReport = {
   generation: samples[0].generation,
@@ -34,6 +35,15 @@ const args = () => ({
 });
 const wire = (events: ChatEvent[]) =>
   events.map((event) => JSON.stringify(event) + "\n").join("");
+async function sse(events: ChatEvent[]) {
+  const source = async function* () {
+    yield* events;
+  };
+  let body = "";
+  for await (const event of toAGUIEvents(source()))
+    body += `data: ${JSON.stringify(event)}\n\n`;
+  return body + "data: [DONE]\n\n";
+}
 async function collect(llm: ChatLLM, response: Response) {
   const events: AGUIEvent[] = [];
   for await (const event of llm.streamProtocol.parse(response))
@@ -89,10 +99,16 @@ test("normal prompts go to the generation route without browser credentials", as
     assert.equal(url, "/api/chat");
     assert.equal(new Headers(init?.headers).has("Authorization"), false);
     assert.equal(init?.signal, request.signal);
-    assert.deepEqual(JSON.parse(String(init?.body)), {
+    const body = JSON.parse(String(init?.body));
+    assert.equal(typeof body.runId, "string");
+    assert.deepEqual(body, {
       messages: [{ role: "user", content: "Show September revenue." }],
+      threadId: request.threadId,
+      runId: body.runId,
+      tools: [],
+      context: [],
     });
-    return new Response(wire([result]));
+    return new Response(await sse([result]));
   });
   await llm.send(request);
 });
@@ -102,13 +118,13 @@ test("empty or oversized user prompts are rejected before transport", async () =
     assert.fail("invalid input must not call the server"),
   );
   for (const content of [" ", "x".repeat(8001)])
-    await assert.rejects(
+    await assert.rejects(async () =>
       llm.send({ ...args(), messages: [{ id: "u", role: "user", content }] }),
     );
 });
 
 test("fragmented UTF-8 stream updates one reply through generation, repair, and replacement", async () => {
-  const content = wire([
+  const content = await sse([
     { type: "delta", text: "root = Card([]) // café" },
     { type: "repairing" },
     result,
@@ -148,14 +164,23 @@ test("HTTP errors, error events, and prematurely ended streams remain failures",
   assert.equal((await failed.send(args())).status, 503);
   const errored = createAutofixChat(
     async () =>
-      new Response(wire([{ type: "error", message: "Provider unavailable" }])),
+      new Response(
+        await sse([{ type: "error", message: "Provider unavailable" }]),
+      ),
   );
   assert.deepEqual(
     (await collect(errored, await errored.send(args()))).at(-1),
     { type: EventType.RUN_ERROR, message: "Provider unavailable" },
   );
   const truncated = createAutofixChat(
-    async () => new Response(wire([{ type: "delta", text: "root = " }])),
+    async () =>
+      new Response(
+        `data: ${JSON.stringify({
+          type: EventType.TEXT_MESSAGE_CONTENT,
+          messageId: "partial",
+          delta: wire([{ type: "delta", text: "root = " }]),
+        })}\n\n`,
+      ),
   );
   await assert.rejects(
     collect(truncated, await truncated.send(args())),
@@ -163,11 +188,11 @@ test("HTTP errors, error events, and prematurely ended streams remain failures",
   );
 });
 
-test("cancellation prevents late events and closes a pending response reader", async () => {
+test("cancellation prevents late events and aborts a pending fetch response", async () => {
   const controller = new AbortController();
   const llm = createAutofixChat(async () => {
     controller.abort();
-    return new Response(wire([result]));
+    return new Response(await sse([result]));
   });
   await assert.rejects(llm.send({ ...args(), signal: controller.signal }), {
     name: "AbortError",
@@ -176,11 +201,24 @@ test("cancellation prevents late events and closes a pending response reader", a
   const pending = new AbortController();
   let cancelled = false;
   const waiting = createAutofixChat(
-    async () =>
+    async (_url, init) =>
       new Response(
         new ReadableStream({
-          cancel() {
-            cancelled = true;
+          start(stream) {
+            stream.enqueue(
+              new TextEncoder().encode(
+                `data: ${JSON.stringify({ type: EventType.TEXT_MESSAGE_START, messageId: "pending", role: "assistant" })}\n\n`,
+              ),
+            );
+            // Model native fetch: aborting its signal errors a pending body read.
+            init?.signal?.addEventListener(
+              "abort",
+              () => {
+                cancelled = true;
+                stream.error(init.signal?.reason);
+              },
+              { once: true },
+            );
           },
         }),
       ),
@@ -194,4 +232,17 @@ test("cancellation prevents late events and closes a pending response reader", a
   pending.abort();
   await assert.rejects(next, { name: "AbortError" });
   assert.equal(cancelled, true);
+});
+
+test("cancellation also rejects result events already buffered by the built-in adapter", async () => {
+  const controller = new AbortController();
+  const llm = createAutofixChat(async () => new Response(await sse([result])));
+  const response = await llm.send({ ...args(), signal: controller.signal });
+  const iterator = llm.streamProtocol.parse(response)[Symbol.asyncIterator]();
+  assert.equal(
+    (await iterator.next()).value?.type,
+    EventType.TEXT_MESSAGE_START,
+  );
+  controller.abort();
+  await assert.rejects(iterator.next(), { name: "AbortError" });
 });

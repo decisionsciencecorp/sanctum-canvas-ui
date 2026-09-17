@@ -64,11 +64,13 @@ Validation happens after the model finishes: incomplete references while streami
 
 `AgentInterface` provides conversation starters, in-memory threads, the composer, cancellation, and request errors. Threads reset on refresh. Completed assistant turns contribute their final code to subsequent requests; reports and diagnostics are never sent as model context. Interrupted replies are excluded. A failed repair contributes its original generation so the user can ask a follow-up.
 
-The server streams newline-delimited events for OpenAI text, repair progress, and the final result. The `ChatLLM` adapter appends these to one assistant message; the custom message renderer switches from the streaming preview to the final result. Autofix itself is a single non-streaming request.
+The server maps generation and repair progress to standard AG-UI events over Server-Sent Events (SSE). The client uses `fetchLLM()` for requests and `agUIAdapter()` for stream decoding, with a small wrapper that checks cancellation and rejects streams missing their final message-end event. The custom message format forwards only conversation text and final UI code to the model.
 
-The browser sends only conversation messages. Both API keys stay on the server. The server imposes a 150-second timeout, caps generation at 100,000 characters, and retains up to 20 recent whole context turns totaling 8,000 characters. The latest user prompt must fit within 8,000 characters. Older turns are removed as needed to fit both providers' shared context budget, excluding the system/config prompt.
+Message content carries the repair report so the custom assistant renderer can switch from the streaming preview to the final result in the same reply. This payload is specific to the example: AgentInterface's text stream appends content, so the report handles complete replacement and diagnostics. Autofix itself is a single non-streaming request.
 
-Cancellation is forwarded to the OpenAI SDK and Autofix fetch. The client also stops its stream reader and prevents stale results from appearing after cancellation. Remote cancellation and billing depend on each service; aborting the browser request does not guarantee that all remote work stops.
+The browser sends conversation messages and the standard AG-UI run fields. Both API keys stay on the server. The server imposes a 150-second timeout, caps generation at 100,000 characters, and retains up to 20 recent whole context turns totaling 8,000 characters. The latest user prompt must fit within 8,000 characters. Older turns are removed as needed to fit both providers' shared context budget, excluding the system/config prompt.
+
+Cancellation uses `fetchLLM`'s abort signal and is forwarded to the OpenAI SDK and Autofix fetch. The client also checks that signal before publishing buffered events, preventing stale results after cancellation. Remote cancellation and billing depend on each service; aborting the browser request does not guarantee that all remote work stops.
 
 ### Backend configuration
 
@@ -88,7 +90,8 @@ OpenAI generation and Autofix repair use separate credentials and billing. Valid
 | `src/lib/contract.ts`               | Message schemas, response validation, and context limits               |
 | `src/app/api/chat/route.ts`         | Server credentials, cancellation, timeout, and event stream            |
 | `src/app/page.tsx`                  | AgentInterface shell and natural-language starters                     |
-| `src/lib/autofix-chat.ts`           | Conversation history and cancellable message-event adapter             |
+| `src/lib/autofix-chat.ts`           | Built-in transport/adapter setup, cancellation guards, and history     |
+| `src/lib/chat-stream.ts`            | Map generation/repair progress to standard AG-UI events                |
 | `src/components/repair-message.tsx` | Streaming preview, final replacement, and diagnostics                  |
 | `tests/`                            | Provider/repair orchestration, parser, transport, and rendering checks |
 

@@ -14,6 +14,8 @@ import {
 } from "../src/lib/contract";
 import { samples } from "./fixtures";
 import { findErrors } from "../src/lib/validation";
+import { createAutofixChat, readReply } from "../src/lib/autofix-chat";
+import { EventType, type AGUIEvent } from "@openuidev/react-headless";
 
 for (const sample of samples) {
   test(`the real parser validates the ${sample.id} fixture`, () => {
@@ -247,22 +249,97 @@ test("OpenAI failures become actionable stream errors without leaking upstream d
     [500, /OpenAI could not complete/],
   ] as const) {
     status = code;
-    const response = await POST(
-      new Request("http://localhost/api/chat", {
-        method: "POST",
-        body: JSON.stringify({
-          messages: [{ role: "user", content: "Show revenue" }],
-        }),
-      }),
+    const llm = createAutofixChat(async (url, init) =>
+      POST(new Request(new URL(String(url), "http://localhost"), init)),
     );
-    const body = await response.text();
-    const event = JSON.parse(body.trim());
-    assert.equal(event.type, "error");
+    const response = await llm.send({
+      threadId: "test",
+      signal: new AbortController().signal,
+      messages: [{ id: "u", role: "user", content: "Show revenue" }],
+    });
+    assert.equal(response.headers.get("Content-Type"), "text/event-stream");
+    const events: AGUIEvent[] = [];
+    for await (const event of llm.streamProtocol.parse(response))
+      events.push(event);
+    const event = events.at(-1);
+    if (event?.type !== EventType.RUN_ERROR)
+      assert.fail("expected a standard AG-UI error");
     assert.match(event.message, expected);
     assert.doesNotMatch(
-      body,
+      JSON.stringify(events),
       /private upstream|provider-test-key|repair-test-key/,
     );
   }
   assert.equal(calls, 4);
+});
+
+test("fetchLLM and the Next route stream valid and repaired replies through the built-in AG-UI decoder", async (t) => {
+  const names = [
+    "OPENAI_API_KEY",
+    "THESYS_API_KEY",
+    "OPENAI_BASE_URL",
+    "AUTOFIX_API_URL",
+  ] as const;
+  const saved = names.map((name) => process.env[name]);
+  t.after(() =>
+    names.forEach((name, index) => {
+      if (saved[index] === undefined) delete process.env[name];
+      else process.env[name] = saved[index];
+    }),
+  );
+  process.env.OPENAI_API_KEY = "provider-test-key";
+  process.env.THESYS_API_KEY = "repair-test-key";
+  delete process.env.OPENAI_BASE_URL;
+  delete process.env.AUTOFIX_API_URL;
+  let generation: string = samples[4].generation;
+  let repairs = 0;
+  t.mock.method(
+    globalThis,
+    "fetch",
+    async (url: string | URL | Request, init?: RequestInit) => {
+      if (String(url) === "https://api.openai.com/v1/chat/completions") {
+        const chunk = {
+          choices: [{ delta: { content: generation }, finish_reason: "stop" }],
+        };
+        return new Response(
+          `data: ${JSON.stringify(chunk)}\n\ndata: [DONE]\n\n`,
+          { headers: { "Content-Type": "text/event-stream" } },
+        );
+      }
+      assert.equal(String(url), "https://api.thesys.dev/v1/autofix");
+      assert.equal(
+        JSON.parse(String(init?.body)).messages.at(-1).content,
+        generation,
+      );
+      repairs++;
+      return Response.json(completion("fixed"));
+    },
+  );
+  const llm = createAutofixChat(async (url, init) =>
+    POST(new Request(new URL(String(url), "http://localhost"), init)),
+  );
+  for (const expected of ["valid", "fixed"]) {
+    generation =
+      expected === "valid" ? samples[4].generation : samples[0].generation;
+    const response = await llm.send({
+      threadId: "test",
+      signal: new AbortController().signal,
+      messages: [{ id: "u", role: "user", content: "Show revenue" }],
+    });
+    assert.equal(response.status, 200);
+    const events: AGUIEvent[] = [];
+    for await (const event of llm.streamProtocol.parse(response))
+      events.push(event);
+    assert.equal(events.at(-1)?.type, EventType.TEXT_MESSAGE_END);
+    const content = events
+      .flatMap((event) =>
+        event.type === EventType.TEXT_MESSAGE_CONTENT ? [event.delta] : [],
+      )
+      .join("");
+    const reply = readReply(content);
+    assert.equal(reply.report?.status, expected);
+    assert.equal(reply.report?.generation, generation);
+    assert.equal(findErrors(reply.report?.output ?? "").length, 0);
+  }
+  assert.equal(repairs, 1);
 });

@@ -13,6 +13,11 @@ export type ConversationTurn = z.infer<typeof conversationTurnSchema>;
 export const chatInputSchema = z
   .object({
     messages: z.array(conversationTurnSchema).min(1).max(100),
+    // fetchLLM sends the standard AG-UI run fields alongside messages.
+    threadId: z.string().optional(),
+    runId: z.string().optional(),
+    tools: z.array(z.unknown()).optional(),
+    context: z.array(z.unknown()).optional(),
   })
   .strict()
   .refine(({ messages }) => {

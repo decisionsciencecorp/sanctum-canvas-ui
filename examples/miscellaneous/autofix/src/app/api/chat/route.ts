@@ -1,6 +1,8 @@
 import { AutofixError } from "@/lib/autofix";
-import { chatInputSchema, type ChatEvent } from "@/lib/contract";
+import { chatInputSchema } from "@/lib/contract";
+import { toAGUIEvents } from "@/lib/chat-stream";
 import { generateAndRepair } from "@/lib/generate";
+import { EventType, type AGUIEvent } from "@openuidev/react-headless";
 import OpenAI from "openai";
 
 export const runtime = "nodejs";
@@ -52,24 +54,28 @@ export async function POST(request: Request) {
     cancellation.signal,
     AbortSignal.timeout(150_000),
   ]);
-  const events = generateAndRepair(input.data.messages, {
-    apiKey,
-    autofixKey,
-    signal,
-    model: process.env.OPENAI_MODEL ?? "gpt-4.1-mini",
-    baseURL: process.env.OPENAI_BASE_URL,
-    autofixURL: process.env.AUTOFIX_API_URL,
-  });
+  const events = toAGUIEvents(
+    generateAndRepair(input.data.messages, {
+      apiKey,
+      autofixKey,
+      signal,
+      model: process.env.OPENAI_MODEL ?? "gpt-4.1-mini",
+      baseURL: process.env.OPENAI_BASE_URL,
+      autofixURL: process.env.AUTOFIX_API_URL,
+    }),
+  );
   const encoder = new TextEncoder();
-  const encode = (event: ChatEvent) =>
-    encoder.encode(JSON.stringify(event) + "\n");
+  const encode = (event: AGUIEvent) =>
+    encoder.encode(`data: ${JSON.stringify(event)}\n\n`);
   const stream = new ReadableStream<Uint8Array>({
     async pull(controller) {
       try {
         const next = await events.next();
         if (cancellation.signal.aborted) return;
-        if (next.done) controller.close();
-        else controller.enqueue(encode(next.value));
+        if (next.done) {
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          controller.close();
+        } else controller.enqueue(encode(next.value));
       } catch (error) {
         if (cancellation.signal.aborted) return;
         const message =
@@ -81,7 +87,7 @@ export async function POST(request: Request) {
                 ? (providerErrors[error.status ?? 0] ??
                   "OpenAI could not complete this request. Try again.")
                 : "Could not complete generation. Check the provider configuration and try again.";
-        controller.enqueue(encode({ type: "error", message }));
+        controller.enqueue(encode({ type: EventType.RUN_ERROR, message }));
         controller.close();
       }
     },
@@ -92,8 +98,8 @@ export async function POST(request: Request) {
   });
   return new Response(stream, {
     headers: {
-      "Content-Type": "application/x-ndjson",
-      "Cache-Control": "no-store",
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-store, no-transform",
       "X-Accel-Buffering": "no",
     },
   });
