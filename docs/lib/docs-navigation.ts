@@ -94,7 +94,6 @@ export const GLOBAL_DOCS_TREE: PageTree.Root = {
       url: NESTED_DOCS_SECTIONS["build-agents"].entryUrl,
     },
     { type: "separator", name: "Production" },
-    { type: "page", name: "Deploy your app", url: "/docs/deploy" },
     {
       type: "page",
       name: NESTED_DOCS_SECTIONS.gateway.title,
@@ -105,6 +104,7 @@ export const GLOBAL_DOCS_TREE: PageTree.Root = {
       name: NESTED_DOCS_SECTIONS.observability.title,
       url: NESTED_DOCS_SECTIONS.observability.entryUrl,
     },
+    { type: "page", name: "Deploy your app", url: "/docs/deploy" },
     { type: "separator", name: "Reference" },
     {
       type: "page",
