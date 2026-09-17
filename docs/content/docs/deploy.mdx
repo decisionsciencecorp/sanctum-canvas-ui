@@ -9,15 +9,15 @@ Deploy a working OpenUI app from your project folder:
 npx @openuidev/cli@latest deploy
 ```
 
-The command uses the Vercel CLI to sign you in, link a project, and upload and build your app in your Vercel account.
+The command defaults to Vercel as the deployment platform. The CLI will prompt you to authenticate and connect the project to your Vercel organization and suitable project.
 
 ## Before you start
 
-- Have a working OpenUI web app with a `package.json` and an `@openuidev/*` dependency.
+- Have a working OpenUI web app.
 - Run your app's build command and try a prompt locally.
 - Have a Vercel account and the API keys your app needs.
 
-Your app must be compatible with Vercel. If it uses a separately hosted backend, deploy that backend separately and configure a reachable URL, not `localhost`.
+Your app must be compatible with Vercel. If it uses a separately hosted backend, deploy that backend separately and configure a reachable URL.
 
 ## Deploy
 
@@ -56,15 +56,5 @@ npx @openuidev/cli@latest deploy --skip-env
 ```
 
 Only supported keys are forwarded automatically; configure other application variables in Vercel. Keep server API keys out of browser-exposed variables such as `NEXT_PUBLIC_*`.
-
-## Check and share
-
-Open the deployment URL and run a prompt. Check that streaming, the rendered response, and any backend tools work. A successful build does not guarantee a correct AI response.
-
-Review access settings before sharing. Deployment does not add authentication or usage limits; protect model endpoints and replace demo identities before public use.
-
-If the build fails, rerun with `--verbose` to see full logs. If the page loads but requests fail, check runtime logs, API keys, and backend URLs.
-
-After changing your app, rerun the deploy command with the same directory and environment flags.
 
 See the [CLI reference](/docs/api-reference/cli#deploy) for all options.
