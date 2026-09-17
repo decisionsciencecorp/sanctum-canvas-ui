@@ -56,6 +56,7 @@ describe("global docs navigation", () => {
         children: undefined,
       },
       { type: "separator", name: "Production", url: undefined, children: undefined },
+      { type: "page", name: "Deploy your app", url: "/docs/deploy", children: undefined },
       { type: "page", name: "Gateway", url: "/docs/gateway", children: undefined },
       {
         type: "page",

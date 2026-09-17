@@ -60,6 +60,7 @@ const promotedGlobalUrls = new Set([
   "/docs/architecture",
   "/docs/openui-lang/comparison",
   "/docs/mcp",
+  "/docs/deploy",
 ]);
 
 export const GLOBAL_DOCS_TREE: PageTree.Root = {
@@ -93,6 +94,7 @@ export const GLOBAL_DOCS_TREE: PageTree.Root = {
       url: NESTED_DOCS_SECTIONS["build-agents"].entryUrl,
     },
     { type: "separator", name: "Production" },
+    { type: "page", name: "Deploy your app", url: "/docs/deploy" },
     {
       type: "page",
       name: NESTED_DOCS_SECTIONS.gateway.title,
