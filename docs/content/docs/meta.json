@@ -7,9 +7,9 @@
     "openui-lang",
     "build-agents",
     "agent",
-    "deploy",
     "gateway",
     "observability",
+    "deploy",
     "api-reference"
   ]
 }
