@@ -11,6 +11,8 @@
       "lru-cache": "^11.2.6"
     },
     "scripts": {
+      "build": "node scripts/eve-next.mjs build",
+      "start": "node scripts/eve-next.mjs start",
       "eve:dev": "eve dev",
       "eve:build": "eve build",
       "eve:start": "eve start"
@@ -25,5 +27,5 @@
       "src/lib/tool-loop.ts"
     ]
   },
-  "gettingStarted": "The generated Vercel Eve agent uses OpenUI Cloud as its model provider. `{{packageManager}} run dev` starts Next.js with Eve embedded via withEve(). Share a preview with `{{packageManager}} run deploy`.\nAsk \"What's the weather in Berlin?\" to exercise the included Eve tool."
+  "gettingStarted": "The generated Vercel Eve agent uses OpenUI Cloud as its model provider. `{{packageManager}} run dev` starts Next.js with Eve embedded via withEve(). For a local production run, use `{{packageManager}} run build` followed by `{{packageManager}} start`; both the Eve and Next.js servers are started for you. Share a preview with `{{packageManager}} run deploy`.\nAsk \"What's the weather in Berlin?\" to exercise the included Eve tool."
 }

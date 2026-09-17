@@ -116,16 +116,16 @@ export function createEveLLM(storage: KVStorage = getClientStorage()): ChatLLM {
       onEvent: (event) => {
         if (!active) return;
         const { threadId, state } = active;
-        // A completed session is spent: reset so the next message starts a
-        // fresh one. Waiting/failed keep the cursor for a resumable read.
-        if (event.type === "session.completed") {
+        // Completed and failed sessions are terminal: reset so the next
+        // message starts a fresh one. Waiting keeps the resumable cursor.
+        if (event.type === "session.completed" || event.type === "session.failed") {
           active = null;
           saveSession(storage, threadId, { streamIndex: 0 });
           return;
         }
         active.state = { ...state, streamIndex: state.streamIndex + 1 };
         saveSession(storage, threadId, active.state);
-        if (event.type === "session.waiting" || event.type === "session.failed") {
+        if (event.type === "session.waiting") {
           active = null;
         }
       },
