@@ -221,10 +221,7 @@ export const createChatStore = (configRef: React.RefObject<CreateChatStoreConfig
               set((s) => ({
                 messages: s.messages.map((m) => (m.id === msg.id ? msg : m)),
               })),
-            replaceMessageId: (previousId, serverId) =>
-              set((s) => ({
-                messages: s.messages.map((m) => (m.id === previousId ? { ...m, id: serverId } : m)),
-              })),
+            existingMessageIds: get().messages.map((m) => m.id),
             // A tool's args have closed (TOOL_CALL_END) → it is now executing.
             markToolExecuting: (id) =>
               set((s) =>

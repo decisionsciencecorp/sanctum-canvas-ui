@@ -161,7 +161,7 @@ Omit `storage` entirely and `AgentInterface` uses an internal in-memory store â€
 
 ### `ThreadStorage`
 
-Implements methods that back thread and message management. Implement the method and the default sidebar's thread list, "New chat" button, thread switching, deletion and message interactions all operate against your backend.
+These methods back thread and message management. Implement them to connect the default sidebar's thread list, "New chat" button, thread switching, and deletion to your backend. The optional `updateMessage` method persists in-message edits.
 
 ```ts
 interface ThreadStorage {
@@ -289,6 +289,10 @@ Each `ThreadStorage` operation maps to exactly one HTTP call under `baseUrl`. Th
 With `baseUrl: "/api/threads"` the concrete paths are `/api/threads/get`, `/api/threads/create`, `/api/threads/get/{threadId}`, `/api/threads/update/{thread.id}`, `/api/threads/delete/{id}`, and `/api/threads/messages/{threadId}/{message.id}`.
 
 `updateMessage` is fire-and-forget on the client: a 404 from a backend that hasn't added this route yet is swallowed and does not surface as a thread error.
+
+Message updates use `message.id` to identify the stored message. Your backend and storage message format must preserve the IDs emitted by the stream. OpenAI Chat Completions streams use the completion ID, but `openAIMessageFormat.fromApi` generates IDs because the standard message format has none; use a custom storage format that restores your saved IDs. Vercel streams use `start.messageId` when available, with `-segment-N` suffixes for additional rendered segments, matching `vercelAIMessageFormat`. LangGraph adds `#N` when a wire ID is reused across segments. Backends storing a whole message must map those segments to the original message. Streams without message IDs, including Eve, use client-generated IDs and require backend coordination for persistence.
+
+OpenUI Cloud storage implements `updateMessage` through its conversation-item endpoint. The default in-memory storage updates messages already held in memory.
 
 ### Message format application
 

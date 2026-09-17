@@ -88,10 +88,13 @@ export function restStorage({
       async updateMessage(threadId: string, message: Message): Promise<void> {
         // Send the full toApi conversion. One AG-UI message can map to several
         // wire items (e.g. OpenAI Responses flattens text + tool calls).
-        await request(`${baseUrl}/messages/${threadId}/${message.id}`, {
-          method: "PATCH",
-          body: JSON.stringify({ messages: messageFormat.toApi([message]) }),
-        });
+        await request(
+          `${baseUrl}/messages/${encodeURIComponent(threadId)}/${encodeURIComponent(message.id)}`,
+          {
+            method: "PATCH",
+            body: JSON.stringify({ messages: messageFormat.toApi([message]) }),
+          },
+        );
       },
     },
   };

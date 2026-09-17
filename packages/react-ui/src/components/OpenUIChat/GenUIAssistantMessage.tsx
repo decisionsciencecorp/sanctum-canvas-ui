@@ -54,8 +54,7 @@ export const GenUIAssistantMessage = ({
   // Persist form state into the inline-wrapped message content. The original
   // header line (which may include `libraryVersion` and telemetry tags emitted
   // by the backend) is reused so attrs survive the persist round-trip.
-
-  const lastPersistedContentRef = useRef<string | null>(null);
+  const lastStateUpdateRef = useRef<{ message: AssistantMessage; content: string } | null>(null);
   const handleStateUpdate = useCallback(
     (state: Record<string, any>) => {
       const hasState = Object.keys(state).length > 0;
@@ -63,10 +62,14 @@ export const GenUIAssistantMessage = ({
       const fullMessage = hasState
         ? contentPart + wrapContext(JSON.stringify([state]))
         : contentPart;
-      if (fullMessage === lastPersistedContentRef.current || fullMessage === message.content) {
+      if (
+        fullMessage === message.content ||
+        (lastStateUpdateRef.current?.message === message &&
+          lastStateUpdateRef.current.content === fullMessage)
+      ) {
         return;
       }
-      lastPersistedContentRef.current = fullMessage;
+      lastStateUpdateRef.current = { message, content: fullMessage };
       updateMessage({ ...message, content: fullMessage });
     },
     [updateMessage, message, content, contentHeader],

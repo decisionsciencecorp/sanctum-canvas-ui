@@ -10,8 +10,8 @@ interface Parameters {
   createMessage: (message: Message) => void;
   /** A function that updates an existing message in the thread (matched by id). */
   updateMessage: (message: Message) => void;
-  /** Relabels an existing message in place (same position, new id) */
-  replaceMessageId?: (previousId: string, serverId: string) => void;
+  /** IDs already in the thread, so reused stream-local IDs cannot overwrite history. */
+  existingMessageIds?: string[];
   /**
    * Marks a tool call as executing (args closed, awaiting result). Wired to the
    * store's `executingToolCallIds` set so `pairToolActivity` can report the
@@ -31,7 +31,7 @@ export const processStreamedMessage = async ({
   response,
   createMessage,
   updateMessage,
-  replaceMessageId,
+  existingMessageIds = [],
   markToolExecuting = () => {},
   clearToolExecuting = () => {},
   adapter = agUIAdapter(),
@@ -44,6 +44,14 @@ export const processStreamedMessage = async ({
   };
 
   let isFirst = true;
+  const usedMessageIds = new Set(existingMessageIds);
+
+  // Adopt wire IDs before publishing; repeated IDs still need distinct segments.
+  const adoptMessageId = (id?: string | null) => {
+    if (isFirst && id && !usedMessageIds.has(id)) {
+      currentMessage = { ...currentMessage, id };
+    }
+  };
 
   // The wire message-item id whose text currently streams into currentMessage.
   let currentTextItemId: string | null = null;
@@ -89,6 +97,7 @@ export const processStreamedMessage = async ({
   const commitCurrentMessage = () => {
     if (isFirst) {
       if (!messageHasBody(currentMessage)) return;
+      usedMessageIds.add(currentMessage.id);
       createMessage(currentMessage);
       isFirst = false;
     } else {
@@ -114,6 +123,7 @@ export const processStreamedMessage = async ({
         if ((currentMessage.toolCalls?.length ?? 0) > 0) {
           startNewAssistantSegment();
         }
+        adoptMessageId(event.messageId);
         currentMessage = {
           ...currentMessage,
           content: (currentMessage.content || "") + event.delta,
@@ -122,6 +132,7 @@ export const processStreamedMessage = async ({
       }
 
       case EventType.TOOL_CALL_START:
+        adoptMessageId(event.parentMessageId);
         inFlightToolCallIds.add(event.toolCallId);
         currentMessage = {
           ...currentMessage,
@@ -168,6 +179,7 @@ export const processStreamedMessage = async ({
         break;
 
       case EventType.TOOL_CALL_CHUNK: {
+        adoptMessageId(event.parentMessageId);
         // Combined convenience form of START + ARGS (AG-UI). Some servers emit
         // only chunks instead of the explicit START/ARGS/END triad; without
         // this case their tool calls would be silently dropped. Lazily START on
@@ -205,7 +217,9 @@ export const processStreamedMessage = async ({
       case EventType.TEXT_MESSAGE_START: {
         // A DIFFERENT item id after content/tool calls have accumulated means
         // the model opened a new output message item — interleaving prose with
-        // tool calls (several sections in one run).
+        // tool calls (several sections in one run). Split into a fresh assistant
+        // message so the live structure matches what reload reconstructs from
+        // storage
         const startId = (event as { messageId?: string }).messageId ?? null;
         const hasBody =
           (currentMessage.content?.length ?? 0) > 0 || (currentMessage.toolCalls?.length ?? 0) > 0;
@@ -213,6 +227,7 @@ export const processStreamedMessage = async ({
           startNewAssistantSegment();
         }
         currentTextItemId = startId;
+        adoptMessageId(startId);
         break;
       }
 
@@ -247,13 +262,17 @@ export const processStreamedMessage = async ({
           updateMessage(updated);
         } else {
           const toolMessage: ToolMessage = {
-            id: crypto.randomUUID(),
+            id:
+              event.messageId && !usedMessageIds.has(event.messageId)
+                ? event.messageId
+                : crypto.randomUUID(),
             role: "tool",
             toolCallId: event.toolCallId,
             content: event.content,
             ...(errorText ? { error: errorText } : {}),
           };
           toolMessagesByCallId.set(event.toolCallId, toolMessage);
+          usedMessageIds.add(toolMessage.id);
           createMessage(toolMessage);
         }
         continue; // skip the trailing isFirst/update logic — this event doesn't touch currentMessage
