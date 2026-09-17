@@ -10,9 +10,12 @@
       "eve": "^0.52.2",
       "lru-cache": "^11.2.6"
     },
+    "devDependencies": {
+      "concurrently": "^9.2.4"
+    },
     "scripts": {
-      "build": "node scripts/eve-next.mjs build",
-      "start": "node scripts/eve-next.mjs start",
+      "build": "eve build && next build",
+      "start": "concurrently --kill-others --names eve,next \"eve start --host 127.0.0.1 --port 4274\" \"next start\"",
       "eve:dev": "eve dev",
       "eve:build": "eve build",
       "eve:start": "eve start"
