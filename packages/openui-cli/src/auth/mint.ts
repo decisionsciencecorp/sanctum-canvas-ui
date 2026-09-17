@@ -9,6 +9,20 @@ const THESYS_ISSUER_URL = "https://api.app.thesys.dev/oidc";
 const THESYS_CLIENT_ID = "create-c1-app"; // public PKCE client (no secret)
 export const THESYS_KEYS_URL = "https://console.thesys.dev/keys";
 
+/** Words of [A-Za-z0-9_], hyphen-separated. */
+const API_KEY_NAME = /^[A-Za-z][\w]*(?:-[\w]+)*$/;
+
+export function assertValidApiKeyName(name: string): void {
+  if (!API_KEY_NAME.test(name)) {
+    throw new CreateError(
+      "args_resolution",
+      `Invalid --name "${name}". Use letters, digits, underscores, and hyphens, and start with a letter.`,
+      "invalid_input",
+      "INVALID_API_KEY_NAME",
+    );
+  }
+}
+
 export type CloudAuthMethod = "oauth" | "manual" | "skip";
 /** How the cloud key was obtained (for telemetry) — auth method + the `--api-key` flag case. */
 export type ResolvedAuthMethod = CloudAuthMethod | "apikey-flag";
@@ -185,7 +199,7 @@ export async function resolveCloudApiKey(opts: {
 
   if (method === "manual") {
     console.warn(
-      "⚠ --auth manual is deprecated. Use browser sign-in or pass --api-key for scripted setup.",
+      "[!] --auth manual is deprecated. Use browser sign-in or pass --api-key for scripted setup.",
     );
     const { password } = await import("@inquirer/prompts");
     const key = await cloudAuthPrompt("manual_key_prompt", "MANUAL_KEY_PROMPT_FAILED", () =>

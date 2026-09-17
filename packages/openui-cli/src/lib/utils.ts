@@ -1,6 +1,7 @@
 import type { CloudAuthMethod } from "../auth/mint";
 import { createFunnelProps } from "./create-telemetry";
 import type { TemplateName } from "./create-types";
+import { OverlayName } from "./create-types";
 import type { CommandResult } from "./process-runner";
 import {
   CliCancelledError,
@@ -197,6 +198,26 @@ export function processErrorProperties(
   return { failure_stage: failureStage, ...fallback, ...metadata };
 }
 
+const DEFAULT_PROCESS_FALLBACK: Pick<CliErrorProperties, "error_class" | "error_code"> = {
+  error_class: "process",
+  error_code: "NONZERO_EXIT",
+};
+
+/** Throw a typed CLI error (or cancellation) from a failed child process. */
+export function throwCommandFailure(
+  result: CommandResult,
+  stage: string,
+  message: string,
+  fallback: Pick<CliErrorProperties, "error_class" | "error_code"> = DEFAULT_PROCESS_FALLBACK,
+): never {
+  const properties = processErrorProperties(result, stage, fallback);
+  if (properties.error_class === "user_cancelled") {
+    throw new CliCancelledError(stage, properties.cancellation_exit_code ?? 0, properties);
+  }
+  const { failure_stage, error_class, error_code, ...metadata } = properties;
+  throw new CreateError(failure_stage, message, error_class, error_code, metadata);
+}
+
 export function handleCliError(
   e: unknown,
   event: string,
@@ -227,12 +248,7 @@ export function normalizeTemplate(t?: string): TemplateName | undefined {
   const v = t.toLowerCase();
   if (v === "self-hosted" || v === "openui-self-hosted") return "openui-self-hosted";
   if (v === "cloud" || v === "openui-cloud") return "openui-cloud";
-  throw new CreateError(
-    "args_resolution",
-    `unknown template "${t}". Use: openui-self-hosted | openui-cloud.`,
-    "invalid_input",
-    "INVALID_TEMPLATE",
-  );
+  return v;
 }
 
 export function normalizeAuth(a?: string): CloudAuthMethod | undefined {
@@ -245,4 +261,26 @@ export function normalizeAuth(a?: string): CloudAuthMethod | undefined {
     "invalid_input",
     "INVALID_AUTH",
   );
+}
+
+export function normalizeBackendFramework(framework?: string): OverlayName | undefined {
+  if (!framework) return undefined;
+  switch (framework.toLowerCase()) {
+    case "default":
+    case "none":
+    case "no-framework":
+      return "default";
+    case "langgraph":
+    case "lang-graph":
+      return "langgraph";
+    case "vercel":
+    case "vercel-ai-sdk":
+    case "ai-sdk":
+      return "vercel-ai-sdk";
+    case "eve":
+    case "vercel-eve":
+      return "vercel-eve";
+    default:
+      return framework.toLowerCase();
+  }
 }

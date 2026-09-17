@@ -23,7 +23,6 @@ export interface IntegrationCategory {
   title: string;
   shortTitle: string;
   description: string;
-  accent: "blue" | "green" | "orange" | "purple" | "rose" | "teal" | "slate";
 }
 
 export const integrationCategories: IntegrationCategory[] = [
@@ -33,7 +32,6 @@ export const integrationCategories: IntegrationCategory[] = [
     shortTitle: "AI stack",
     description:
       "Connect OpenUI to the agent framework, AI SDK, or protocol your application already uses.",
-    accent: "purple",
   },
   {
     id: "design-systems",
@@ -41,7 +39,6 @@ export const integrationCategories: IntegrationCategory[] = [
     shortTitle: "Design systems",
     description:
       "Use OpenUI's built-in components or connect the UI library your product already uses.",
-    accent: "orange",
   },
   {
     id: "frontend-platforms",
@@ -49,7 +46,6 @@ export const integrationCategories: IntegrationCategory[] = [
     shortTitle: "Frontend",
     description:
       "Run OpenUI in an alternative web, mobile, chat framework, or AI application platform.",
-    accent: "blue",
   },
 ];
 
@@ -90,7 +86,11 @@ const integrationCatalog: Integration[] = [
     howItWorks:
       "Each shadcn component is registered with defineComponent and a Zod prop schema. createLibrary produces both the prompt vocabulary and the renderer mapping used by the example chat app.",
     links: [
-      { label: "Integration guide", href: "/docs/openui-lang/examples/shadcn-chat", kind: "Guide" },
+      {
+        label: "Integration guide",
+        href: "/docs/openui-lang/examples/design-systems/shadcn",
+        kind: "Guide",
+      },
       exampleLink("shadcn-chat"),
       { label: "shadcn/ui", href: "https://ui.shadcn.com", kind: "Website" },
     ],
@@ -167,6 +167,11 @@ const integrationCatalog: Integration[] = [
         href: "/docs/agent/reference/adapters-and-formats#langgraphadapter",
         kind: "Docs",
       },
+      {
+        label: "Integration guide",
+        href: "/docs/agent/agent-runtimes/langgraph-platform",
+        kind: "Guide",
+      },
       exampleLink("langchain-chat"),
     ],
   },
@@ -186,6 +191,11 @@ const integrationCatalog: Integration[] = [
         label: "Vercel AI adapter",
         href: "/docs/agent/reference/adapters-and-formats#vercelaiadapter",
         kind: "Docs",
+      },
+      {
+        label: "Integration guide",
+        href: "/docs/agent/agent-runtimes/vercel-ai-sdk",
+        kind: "Guide",
       },
       ...packageLinks("@openuidev/react-headless", "react-headless"),
       exampleLink("vercel-ai-chat"),
@@ -300,7 +310,7 @@ const integrationCatalog: Integration[] = [
     links: [
       {
         label: "Integration guide",
-        href: "/docs/openui-lang/examples/harnesses/vercel-eve",
+        href: "/docs/agent/agent-runtimes/vercel-eve",
         kind: "Guide",
       },
       exampleLink("harnesses/vercel-eve", "OpenUI harness"),
@@ -320,7 +330,7 @@ const integrationCatalog: Integration[] = [
     links: [
       {
         label: "Integration guide",
-        href: "/docs/openui-lang/examples/harnesses/pi-agent-harness",
+        href: "/docs/agent/agent-runtimes/pi",
         kind: "Guide",
       },
       exampleLink("harnesses/pi-agent-harness", "OpenUI harness"),
@@ -356,6 +366,36 @@ const integrationCatalog: Integration[] = [
 
   // Frontend frameworks and platforms.
   {
+    slug: "lynx",
+    name: "Lynx",
+    logo: "/integration-logos/lynx.svg",
+    category: "frontend-platforms",
+    type: "Cross-platform runtime",
+    summary:
+      "Render streaming OpenUI Lang as cross-platform interfaces through Lynx's native rendering pipeline.",
+    howItWorks:
+      "@lynx-js/genui/openui incrementally parses OpenUI Lang, maps registered expressions to ReactLynx components, and renders them through Lynx's native pipeline while the host application owns its component definitions, tools, and actions.",
+    install: "npm install @lynx-js/genui @lynx-js/react @lynx-js/lynx-ui",
+    links: [
+      {
+        label: "OpenUI integration guide",
+        href: "https://lynxjs.org/next/react/genui/openui.html",
+        kind: "Guide",
+      },
+      {
+        label: "npm package",
+        href: "https://www.npmjs.com/package/@lynx-js/genui",
+        kind: "npm",
+      },
+      {
+        label: "Source code",
+        href: "https://github.com/lynx-family/lynx-stack/tree/main/packages/genui/openui",
+        kind: "GitHub",
+      },
+      { label: "Lynx", href: "https://lynxjs.org", kind: "Website" },
+    ],
+  },
+  {
     slug: "vue",
     name: "Vue 3",
     logo: "/integration-logos/vue.svg",
@@ -385,7 +425,7 @@ const integrationCatalog: Integration[] = [
     links: [
       {
         label: "Integration guide",
-        href: "/docs/openui-lang/examples/react-native",
+        href: "/docs/openui-lang/examples/app-frameworks/react-native",
         kind: "Guide",
       },
       exampleLink("openui-react-native"),
@@ -425,7 +465,7 @@ const popularityOrder: Record<IntegrationCategoryId, string[]> = {
     "google-adk",
   ],
   "design-systems": ["shadcn-ui", "material-ui", "handsontable", "react-email"],
-  "frontend-platforms": ["vue", "svelte", "react-native", "assistant-ui", "open-webui"],
+  "frontend-platforms": ["vue", "svelte", "react-native", "lynx", "assistant-ui", "open-webui"],
 };
 
 export const integrationBySlug = new Map(integrations.map((item) => [item.slug, item]));
