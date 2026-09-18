@@ -1,0 +1,120 @@
+{
+  "family": "tool-activity",
+  "phase": "A6.11",
+  "transitions": [
+    {
+      "id": "args-streaming",
+      "event": "TOOL_CALL_ARGS",
+      "props": {
+        "status": "streaming",
+        "toolName": "search",
+        "id": "tc-1",
+        "rawArgs": "{\"q\":\"hel",
+        "isPartial": true
+      },
+      "expect": { "status": "streaming", "partial": true, "ariaLive": "polite" }
+    },
+    {
+      "id": "args-streaming-to-executing",
+      "event": "TOOL_CALL_END",
+      "props": {
+        "status": "executing",
+        "toolName": "search",
+        "id": "tc-1",
+        "rawArgs": "{\"q\":\"hello\"}",
+        "input": { "q": "hello" }
+      },
+      "expect": { "status": "executing", "partial": false }
+    },
+    {
+      "id": "executing-to-complete",
+      "event": "TOOL_CALL_RESULT",
+      "props": {
+        "status": "complete",
+        "toolName": "search",
+        "id": "tc-1",
+        "input": { "q": "hello" },
+        "result": "{\"hits\":2}"
+      },
+      "expect": { "status": "complete", "hasResult": true }
+    },
+    {
+      "id": "result-panel",
+      "event": "TOOL_RESULT_VIEW",
+      "props": {
+        "status": "result",
+        "toolName": "search",
+        "id": "tc-1",
+        "result": "{\"hits\":2,\"token\":\"sk-secret-should-redact-xxxxxxxxxxxxxxxx\"}"
+      },
+      "expect": { "status": "result", "redacts": true }
+    },
+    {
+      "id": "tool-error",
+      "event": "TOOL_CALL_RESULT_ERROR",
+      "props": {
+        "status": "error",
+        "toolName": "search",
+        "id": "tc-1",
+        "errorText": "upstream timeout",
+        "result": "",
+        "isError": true
+      },
+      "expect": { "status": "error", "hasError": true }
+    },
+    {
+      "id": "malformed-partial-json",
+      "event": "TOOL_CALL_ARGS",
+      "props": {
+        "status": "streaming",
+        "toolName": "write",
+        "rawArgs": "{not-json::::",
+        "isPartial": true
+      },
+      "expect": { "status": "streaming", "partial": true, "renders": true }
+    },
+    {
+      "id": "sensitive-args-redaction",
+      "event": "TOOL_CALL_END",
+      "props": {
+        "status": "executing",
+        "toolName": "auth",
+        "input": { "username": "ada", "password": "hunter2", "api_key": "abc" }
+      },
+      "expect": { "redactsKeys": ["password", "api_key"] }
+    },
+    {
+      "id": "run-start",
+      "event": "RUN_STARTED",
+      "component": "RunStatus",
+      "props": { "phase": "start", "runId": "run-9" },
+      "expect": { "phase": "start", "ariaLive": "polite" }
+    },
+    {
+      "id": "run-finish",
+      "event": "RUN_FINISHED",
+      "component": "RunStatus",
+      "props": { "phase": "finish", "runId": "run-9" },
+      "expect": { "phase": "finish" }
+    },
+    {
+      "id": "run-error",
+      "event": "RUN_ERROR",
+      "component": "RunStatus",
+      "props": { "phase": "error", "runId": "run-9", "message": "provider down", "detail": "ECONNRESET" },
+      "expect": { "phase": "error" }
+    },
+    {
+      "id": "reduced-motion",
+      "event": "TOOL_CALL_ARGS",
+      "props": {
+        "status": "streaming",
+        "toolName": "search",
+        "rawArgs": "{\"q\":\"x\"}",
+        "reducedMotion": true,
+        "running": true
+      },
+      "expect": { "reducedMotion": true }
+    }
+  ]
+}

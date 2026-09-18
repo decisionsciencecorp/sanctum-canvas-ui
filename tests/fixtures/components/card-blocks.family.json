@@ -1,0 +1,156 @@
+{
+  "family": "card-blocks",
+  "phase": "A6.10",
+  "cases": [
+    {
+      "id": "snippet-grid-homogeneous",
+      "description": "Two matching snippet cards render in a 2-col grid",
+      "props": {
+        "layout": "grid",
+        "items": [
+          {
+            "id": "a",
+            "lhs": { "type": "IconText", "props": { "icon": "star", "title": "Alpha" } },
+            "rhs": { "type": "BoldText", "props": { "text": "1" } }
+          },
+          {
+            "id": "b",
+            "lhs": { "type": "IconText", "props": { "icon": "bolt", "title": "Beta" } },
+            "rhs": { "type": "BoldText", "props": { "text": "2" } }
+          }
+        ]
+      },
+      "expect": { "count": 2, "layout": "grid", "homogeneous": "ok" }
+    },
+    {
+      "id": "snippet-heterogeneous-drop",
+      "description": "Mixed structure keeps majority signature; drops mismatched",
+      "props": {
+        "items": [
+          {
+            "lhs": { "type": "IconText", "props": { "title": "A" } },
+            "rhs": { "type": "Text", "props": { "text": "1" } }
+          },
+          {
+            "lhs": { "type": "IconText", "props": { "title": "B" } },
+            "rhs": { "type": "Text", "props": { "text": "2" } }
+          },
+          {
+            "lhs": { "type": "ImageText", "props": { "src": "https://example.com/x.png", "title": "C" } }
+          }
+        ]
+      },
+      "expect": { "minCount": 2, "dropped": 1 }
+    },
+    {
+      "id": "overview-with-metric",
+      "props": {
+        "layout": "carousel",
+        "items": [
+          {
+            "top": { "type": "Text", "props": { "text": "Revenue" } },
+            "bottom": { "type": "MetricIndicatorInline", "props": { "value": "$12k", "trend": { "direction": "up", "value": 4 } } }
+          },
+          {
+            "top": { "type": "Text", "props": { "text": "Users" } },
+            "bottom": { "type": "MetricIndicatorInline", "props": { "value": "820", "trend": { "direction": "down", "value": 2 } } }
+          }
+        ]
+      },
+      "expect": { "count": 2, "layout": "carousel" }
+    },
+    {
+      "id": "context-bg-url-policy",
+      "props": {
+        "items": [
+          {
+            "title": "Safe",
+            "body": "Hello **world**",
+            "bgImageSrc": "https://cdn.example.com/bg.jpg",
+            "bgImageAlt": "Background"
+          },
+          {
+            "title": "Blocked",
+            "body": "No script",
+            "bgImageSrc": "javascript:alert(1)"
+          }
+        ]
+      },
+      "expect": { "count": 2 }
+    },
+    {
+      "id": "visual-clickable",
+      "props": {
+        "clickable": true,
+        "items": [
+          {
+            "body": { "type": "BoldText", "props": { "text": "Trail" } },
+            "bgImageSrc": "https://cdn.example.com/trail.jpg",
+            "bgImageAlt": "Trail"
+          },
+          {
+            "body": { "type": "BoldText", "props": { "text": "Lake" } },
+            "bgImageSrc": "https://cdn.example.com/lake.jpg",
+            "bgImageAlt": "Lake"
+          }
+        ]
+      },
+      "expect": { "count": 2, "clickable": true }
+    },
+    {
+      "id": "composite-header-body-footer",
+      "props": {
+        "items": [
+          {
+            "header": { "type": "IconText", "props": { "icon": "box", "title": "Kit" } },
+            "body": [
+              { "type": "Text", "props": { "text": "Includes tools" } },
+              { "type": "TagBlock", "props": { "tags": [{ "text": "new" }] } }
+            ],
+            "footer": {
+              "price": { "type": "BoldText", "props": { "text": "$40" } }
+            }
+          },
+          {
+            "header": { "type": "IconText", "props": { "icon": "box", "title": "Pro" } },
+            "body": [
+              { "type": "Text", "props": { "text": "Includes more" } },
+              { "type": "TagBlock", "props": { "tags": [{ "text": "pro" }] } }
+            ],
+            "footer": {
+              "price": { "type": "BoldText", "props": { "text": "$90" } }
+            }
+          }
+        ]
+      },
+      "expect": { "count": 2 }
+    },
+    {
+      "id": "gallery-five-plus",
+      "props": {
+        "images": [
+          { "src": "https://cdn.example.com/1.jpg", "alt": "One" },
+          { "src": "https://cdn.example.com/2.jpg", "alt": "Two" },
+          { "src": "javascript:evil", "alt": "Bad" },
+          { "src": "https://cdn.example.com/4.jpg", "alt": "Four" },
+          { "src": "https://cdn.example.com/5.jpg", "alt": "Five" },
+          { "src": "https://cdn.example.com/6.jpg", "alt": "Six" },
+          { "src": "https://cdn.example.com/7.jpg", "alt": "Seven" }
+        ]
+      },
+      "expect": { "visible": 5, "showAll": true, "blocked": 1 }
+    },
+    {
+      "id": "below-min-invalid",
+      "props": {
+        "items": [
+          {
+            "lhs": { "type": "IconText", "props": { "title": "Only" } },
+            "rhs": { "type": "Text", "props": { "text": "1" } }
+          }
+        ]
+      },
+      "expect": { "status": "invalid", "reason": "below-min" }
+    }
+  ]
+}

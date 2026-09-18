@@ -1,0 +1,117 @@
+/**
+ * A6.11 — Tool activity + run status (lab presentation).
+ */
+
+.canvas-tool-activity,
+.canvas-run-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-s, 0.5rem);
+  padding: var(--canvas-space-m, 0.75rem);
+  border: 1px solid var(--canvas-border-default, #e5e5e5);
+  border-radius: var(--canvas-radius-l, 0.75rem);
+  background: var(--canvas-surface-foreground, #fff);
+  font-family: var(--canvas-font-mono, ui-monospace, monospace);
+  font-size: var(--canvas-font-size-sm, 0.875rem);
+  color: var(--canvas-text-primary, #111);
+}
+
+.canvas-tool-activity__live,
+.canvas-run-status__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.canvas-tool-activity,
+.canvas-run-status {
+  position: relative;
+}
+
+.canvas-tool-activity__header,
+.canvas-run-status__row {
+  display: flex;
+  align-items: center;
+  gap: var(--canvas-space-s, 0.5rem);
+}
+
+.canvas-tool-activity__icon,
+.canvas-run-status__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: var(--canvas-surface-sunk, #eee);
+  flex-shrink: 0;
+}
+
+.canvas-tool-activity--busy .canvas-tool-activity__icon[data-spin="1"] {
+  animation: canvas-tool-spin 1s linear infinite;
+}
+
+.canvas-tool-activity--reduced-motion .canvas-tool-activity__icon,
+.canvas-run-status--reduced-motion .canvas-run-status__icon {
+  animation: none !important;
+}
+
+@keyframes canvas-tool-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas-tool-activity__icon,
+  .canvas-run-status__icon {
+    animation: none !important;
+  }
+}
+
+.canvas-tool-activity--error,
+.canvas-run-status--error {
+  border-color: color-mix(in srgb, var(--canvas-tone-danger, #ef4444) 50%, #e5e5e5);
+}
+
+.canvas-tool-activity--complete,
+.canvas-tool-activity--result,
+.canvas-run-status--finish {
+  border-color: color-mix(in srgb, var(--canvas-tone-success, #22c55e) 40%, #e5e5e5);
+}
+
+.canvas-tool-activity--partial .canvas-tool-activity__request {
+  opacity: 0.85;
+  border-style: dashed;
+}
+
+.canvas-tool-activity__request,
+.canvas-tool-activity__result,
+.canvas-run-status__detail {
+  margin: 0;
+  padding: var(--canvas-space-s, 0.5rem);
+  background: var(--canvas-surface-sunk, #f7f7f7);
+  border-radius: var(--canvas-radius-m, 0.5rem);
+  overflow: auto;
+  max-height: 16rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.canvas-tool-activity__error {
+  color: var(--canvas-tone-danger, #b91c1c);
+  font-weight: 600;
+}
+
+.canvas-tool-activity--streaming {
+  border-style: dashed;
+}
