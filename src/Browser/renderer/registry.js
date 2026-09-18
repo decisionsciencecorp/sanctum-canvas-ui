@@ -1,10 +1,24 @@
 /**
- * A4 — Component type → render function registry.
- * Unknown types render a safe fallback element (`data-openui-unknown`).
+ * A4.1 — Component type → lifecycle registry.
+ *
+ * Components register as `{ create, update?, destroy? }` or as a simple
+ * `renderFn(props, ctx) → Element` (wrapped into create + no-op update/destroy).
+ * Unknown types fail closed: `data-openui-unknown`, no scripts / handlers.
  */
 
 /**
  * @typedef {(props: Record<string, unknown>, ctx: Record<string, unknown>) => Element} RenderFn
+ * @typedef {{
+ *   create: RenderFn,
+ *   update?: (el: Element, props: Record<string, unknown>, ctx: Record<string, unknown>) => void,
+ *   destroy?: (el: Element, ctx: Record<string, unknown>) => void,
+ * }} ComponentLifecycle
+ * @typedef {RenderFn | ComponentLifecycle} ComponentEntry
+ * @typedef {{
+ *   create: RenderFn,
+ *   update: (el: Element, props: Record<string, unknown>, ctx: Record<string, unknown>) => void,
+ *   destroy: (el: Element, ctx: Record<string, unknown>) => void,
+ * }} NormalizedLifecycle
  */
 
 /**
@@ -20,43 +34,103 @@ function createUnknownFallback(doc, type) {
 }
 
 /**
- * @param {Record<string, RenderFn>} [initial]
+ * @param {string} type
+ * @returns {NormalizedLifecycle}
+ */
+function unknownLifecycle(type) {
+  return {
+    create(_props, ctx = {}) {
+      const doc = ctx.document ?? globalThis.document;
+      if (!doc?.createElement) {
+        throw new Error("registry fallback: ctx.document required");
+      }
+      return createUnknownFallback(doc, type);
+    },
+    update() {},
+    destroy() {},
+  };
+}
+
+/**
+ * @param {RenderFn} renderFn
+ * @returns {NormalizedLifecycle}
+ */
+function wrapRenderFn(renderFn) {
+  return {
+    create(props, ctx) {
+      return renderFn(props, ctx);
+    },
+    update() {},
+    destroy() {},
+  };
+}
+
+/**
+ * @param {ComponentEntry} entry
+ * @param {string} type
+ * @returns {NormalizedLifecycle}
+ */
+function normalizeEntry(entry, type) {
+  if (typeof entry === "function") {
+    return wrapRenderFn(entry);
+  }
+  if (entry && typeof entry === "object" && typeof entry.create === "function") {
+    return {
+      create: entry.create,
+      update:
+        typeof entry.update === "function"
+          ? entry.update
+          : () => {},
+      destroy:
+        typeof entry.destroy === "function"
+          ? entry.destroy
+          : () => {},
+    };
+  }
+  throw new Error(
+    `register: expected render function or { create } lifecycle for ${type}`,
+  );
+}
+
+/**
+ * @param {Record<string, ComponentEntry>} [initial]
  */
 export function createComponentRegistry(initial = {}) {
-  /** @type {Map<string, RenderFn>} */
-  const map = new Map(Object.entries(initial));
+  /** @type {Map<string, NormalizedLifecycle>} */
+  const map = new Map();
+
+  for (const [type, entry] of Object.entries(initial)) {
+    map.set(type, normalizeEntry(entry, type));
+  }
 
   return {
     /**
      * @param {string} type
-     * @param {RenderFn} renderFn
+     * @param {ComponentEntry} entry
      */
-    register(type, renderFn) {
+    register(type, entry) {
       if (typeof type !== "string" || !type) {
         throw new Error("register: type must be a non-empty string");
       }
-      if (typeof renderFn !== "function") {
-        throw new Error(`register: render function required for ${type}`);
-      }
-      map.set(type, renderFn);
+      map.set(type, normalizeEntry(entry, type));
     },
 
     /**
-     * Returns the registered render function, or a fallback that emits
-     * `data-openui-unknown` when the type is not registered.
+     * Normalized lifecycle for `type`, or fail-closed unknown fallback.
      * @param {string} type
-     * @returns {RenderFn}
+     * @returns {NormalizedLifecycle}
+     */
+    resolve(type) {
+      return map.get(type) ?? unknownLifecycle(type);
+    },
+
+    /**
+     * Alias for {@link resolve} — always returns `{ create, update, destroy }`.
+     * @param {string} type
+     * @returns {NormalizedLifecycle}
      */
     get(type) {
-      const fn = map.get(type);
-      if (fn) return fn;
-      return (_props, ctx = {}) => {
-        const doc = ctx.document ?? globalThis.document;
-        if (!doc?.createElement) {
-          throw new Error("registry fallback: ctx.document required");
-        }
-        return createUnknownFallback(doc, type);
-      };
+      return this.resolve(type);
     },
 
     /**
@@ -75,14 +149,14 @@ export function createComponentRegistry(initial = {}) {
     },
 
     /**
-     * Render a component type (registered or unknown fallback).
+     * Mount via `create` (registered or unknown fallback).
      * @param {string} type
      * @param {Record<string, unknown>} [props]
      * @param {Record<string, unknown>} [ctx]
      * @returns {Element}
      */
     render(type, props = {}, ctx = {}) {
-      return this.get(type)(props, ctx);
+      return this.resolve(type).create(props, ctx);
     },
   };
 }

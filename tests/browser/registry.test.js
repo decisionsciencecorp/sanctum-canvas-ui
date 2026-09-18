@@ -15,7 +15,9 @@ describe("renderer registry", () => {
     reg.register("Box", box);
     assert.equal(reg.has("Box"), true);
     assert.equal(reg.has("Missing"), false);
-    assert.equal(reg.get("Box"), box);
+    const life = reg.get("Box");
+    assert.equal(typeof life.create, "function");
+    assert.equal(life.create, reg.resolve("Box").create);
     assert.deepEqual(reg.list(), ["Box"]);
     const el = reg.render("Box", { id: "1" }, { document });
     assert.equal(el.getAttribute("data-box"), "1");
@@ -49,6 +51,6 @@ describe("renderer registry", () => {
   it("register rejects bad args", () => {
     const reg = createComponentRegistry();
     assert.throws(() => reg.register("", () => {}), /non-empty/);
-    assert.throws(() => reg.register("X", null), /render function/);
+    assert.throws(() => reg.register("X", null), /create/);
   });
 });

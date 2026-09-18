@@ -1,5 +1,6 @@
 /**
  * Minimal Document/Element stub for Node reconciler tests (no jsdom dependency).
+ * Supports focus / value / selection / scrollTop / open for A4.2 preserve tests.
  */
 
 let nodeId = 0;
@@ -77,6 +78,12 @@ class FakeElement extends FakeNode {
     this.nodeName = this.tagName;
     /** @type {Map<string, string>} */
     this._attrs = new Map();
+    this._value = "";
+    this.selectionStart = 0;
+    this.selectionEnd = 0;
+    this.scrollTop = 0;
+    this.scrollLeft = 0;
+    this.open = false;
   }
 
   get attributes() {
@@ -84,7 +91,10 @@ class FakeElement extends FakeNode {
   }
 
   setAttribute(name, value) {
-    this._attrs.set(String(name).toLowerCase(), String(value));
+    const key = String(name).toLowerCase();
+    this._attrs.set(key, String(value));
+    if (key === "value") this._value = String(value);
+    if (key === "open") this.open = true;
   }
 
   getAttribute(name) {
@@ -97,7 +107,35 @@ class FakeElement extends FakeNode {
   }
 
   removeAttribute(name) {
-    this._attrs.delete(String(name).toLowerCase());
+    const key = String(name).toLowerCase();
+    this._attrs.delete(key);
+    if (key === "open") this.open = false;
+  }
+
+  get value() {
+    return this._value;
+  }
+
+  set value(v) {
+    this._value = String(v);
+    this._attrs.set("value", this._value);
+  }
+
+  setSelectionRange(start, end) {
+    this.selectionStart = start;
+    this.selectionEnd = end;
+  }
+
+  focus() {
+    if (this.ownerDocument) {
+      this.ownerDocument.activeElement = this;
+    }
+  }
+
+  blur() {
+    if (this.ownerDocument && this.ownerDocument.activeElement === this) {
+      this.ownerDocument.activeElement = this.ownerDocument.body ?? null;
+    }
   }
 
   get textContent() {
@@ -116,12 +154,32 @@ class FakeElement extends FakeNode {
   get children() {
     return this.childNodes.filter((c) => c.nodeType === 1);
   }
+
+  /** Detect accidental whole-tree wipes in tests. */
+  get innerHTML() {
+    return this.childNodes
+      .map((c) => (c.nodeType === 3 ? c.textContent : `<${c.tagName}>`))
+      .join("");
+  }
+
+  set innerHTML(_v) {
+    throw new Error("miniDom: innerHTML assignment forbidden (A4.2)");
+  }
 }
 
 class FakeDocument {
+  constructor() {
+    this.body = null;
+    /** @type {FakeElement | null} */
+    this.activeElement = null;
+  }
+
   createElement(tag) {
     const el = new FakeElement(tag);
     el.ownerDocument = this;
+    if (String(tag).toLowerCase() === "body" && !this.body) {
+      this.body = el;
+    }
     return el;
   }
 
@@ -138,5 +196,9 @@ class FakeDocument {
 export function createTestDom() {
   const document = new FakeDocument();
   const root = document.createElement("div");
+  if (!document.body) {
+    document.body = document.createElement("body");
+  }
+  document.activeElement = document.body;
   return { document, root };
 }
