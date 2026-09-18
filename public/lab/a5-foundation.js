@@ -370,7 +370,7 @@ const status = document.getElementById("status");
 // Modal may defer showModal until after reconciler insert (microtask).
 queueMicrotask(() => {
   if (status) {
-    status.textContent = "Mounted A5 foundation families.";
+    status.textContent = "Ready. Tabs, accordion, arrows, and step titles respond. The dialog stays closed until you open it.";
     status.setAttribute("data-lab-ready", "1");
   }
 });

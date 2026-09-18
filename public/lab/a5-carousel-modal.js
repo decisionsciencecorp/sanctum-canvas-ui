@@ -88,4 +88,4 @@ openBtn?.addEventListener("click", () => {
   renderModal();
 });
 
-if (status) status.textContent = "Mounted Carousel + Modal fixtures.";
+if (status) status.textContent = "Ready. The arrows move the slides. The dialog stays closed until you open it.";
