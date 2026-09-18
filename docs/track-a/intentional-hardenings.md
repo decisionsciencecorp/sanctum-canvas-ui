@@ -6,6 +6,8 @@ Parity fixtures mark `parity: exact` or `parity: sanctum_hardening` with an `H*`
 
 This list is the **complete A2–A7 intentional hardening inventory** for the A8.1 parity audit. Visual “intentional” presentation choices (native `<select>` / `<dialog>`, copy wording) are recorded in A5/A6 visual-parity docs and summarized under **UI presentation** — they are not language-kernel `H*` ids.
 
+**A8.1 audit (2026-09-18):** Full browser suite **800/800** green; core modules `parser.js` / `validation.js` / `evaluator.js` / `urlPolicy.js` remain **100% line** coverage. No unexplained upstream mismatch — every delta maps to an H* row below (or A5/A6 visual notes). Evidence: `docs/track-a/A8.1-evidence.md`.
+
 ---
 
 ## Language & contracts (A0–A2)
@@ -80,3 +82,6 @@ This list is the **complete A2–A7 intentional hardening inventory** for the A8
 | Partial side-effects fixture | `resources/fixtures/runtime/no-side-effects-while-partial.json` (H7) |
 | Visual notes | `docs/track-a/A5-visual-parity.md`, `A6-visual-parity.md` |
 | Security regression scaffold | `tests/security/` |
+| A8.1 language/runtime audit | `docs/track-a/A8.1-evidence.md` |
+| A8.2 component checklist | `docs/track-a/A8-parity-checklist.md` |
+| A8.3 security audit | `docs/track-a/A8.3-evidence.md` |

@@ -3,7 +3,7 @@
 **Source:** [Doc #1380](https://tasks.decisionsciencecorp.com/admin/doc.php?id=1380) component inventory  
 **Registry:** `src/Browser/components/**/register*.js` + `registerFoundation.js`  
 **Libraries:** chat + dashboard share renderers; active contract decides membership (Doc #1380 §3).  
-**Date:** 2026-09-18 · A8.1/A8.2 progress (phase not closed)
+**Date:** 2026-09-18 · **A8.2 CLOSED** (task [#4170](https://tasks.decisionsciencecorp.com/admin/view.php?id=4170))
 
 ## Legend
 
@@ -181,10 +181,24 @@
 | missing | 0 |
 | **Doc #1380 names checked** | **86** |
 
-## Gaps to close before A8 parity accept
+## Cross-check — `register*` vs libraries (A8.2)
 
-1. **Library JSON manifests** (`resources/libraries/{chat,dashboard}/library.v1.json`) remain intentionally slim (H21) — registry presence ≠ prompt/schema contract completeness.
-2. Chart **Series / Slice / Point / ScatterSeries** stay data-contracts unless A8 decides to promote them to registerable item types.
+| Check | Result |
+|-------|--------|
+| Every Doc #1380 visual name in a `register*` map | **Yes** (81 present), including **`Icon`** via `CONTENT_COMPONENTS` / `registerContent` |
+| `MarkDownRenderer` | present (module) — `security/markdown.js`, not a PascalCase registry type |
+| `Series` / `Slice` / `ScatterSeries` / `Point` | data-contract only — consumed by chart normalize (not silent placeholders) |
+| Silent / static placeholders for Doc #1380 names | **None** — form `placeholder=` attrs and Stack partial skeleton are intentional UX, not missing components |
+| `resources/libraries/{chat,dashboard}/library.v1.json` | Intentionally slim (H21) — few prompt-facing roots; **renderer registry is the parity surface** for Doc #1380 |
+
+### Slim library keys (prompt/schema, not full inventory)
+
+| Library | Components in `library.v1.json` |
+|---------|----------------------------------|
+| chat | `Card`, `Stack`, `TextContent`, `Button`, `Input`, `BarChart` |
+| dashboard | `Stack`, `TextContent`, `Button`, `Input`, `BarChart` |
+
+Registry capability exceeds these manifests by design (H21). Expanding manifests is Track B / later library work — not an A8.2 missing-component failure.
 
 ## Extra registry names (not in Doc #1380 §2–3 list)
 
@@ -201,5 +215,16 @@
 | `Reset` | Sanctum/extra registration beyond §2 list |
 
 ---
+
+## A8.2 acceptance
+
+| Gate | Result |
+|------|--------|
+| Doc #1380 names checked | **86** (81 present + 1 module + 4 data-contract) |
+| missing | **0** |
+| Icon | **present** |
+| No silent placeholders | **confirmed** |
+
+**Status:** **GREEN** — A8.2 closed.
 
 *Generated from live `register*` imports — re-run when registrations change.*

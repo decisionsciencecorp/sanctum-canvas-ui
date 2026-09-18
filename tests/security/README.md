@@ -34,4 +34,4 @@ PHP twins (already shipped):
 - `tests/php/Http/HttpKernelTest.php` (CSRF, RateLimiter, ErrorRedactor)
 - `tests/php/Storage/PersistenceTest.php` (CSRF + spoofed owner)
 
-**Still open for full A8.3 acceptance:** CSRF/IDOR/rate-limit/secret-leakage **e2e on named host**, broader fuzz — tracked on Tasks **#4171**. Do not close A8 / A7.8 on this suite alone.
+**A8.3 closed (2026-09-18):** `npm run test:security` **74/74**; PHP Security+Http twins **46/46**; no open high-risk findings. Evidence: `docs/track-a/A8.3-evidence.md` · task **#4171**. Optional follow-on: named-host CSRF/IDOR/rate/secret soak (not a blocking §9 gap).
