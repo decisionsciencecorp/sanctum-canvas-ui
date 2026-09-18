@@ -1,0 +1,9 @@
+{
+  "id": "hostile-markdown-table-xss",
+  "kind": "markdown",
+  "description": "Script and onerror payloads inside GFM table cells must be inert.",
+  "input": "| h | x |\n| --- | --- |\n| <img src=x onerror=alert(1)> | a |\n| <script>alert(2)</script> | b |",
+  "mustNotMatch": ["<script\\b", "<img\\b"],
+  "mustMatch": ["<table>", "&lt;script", "&lt;img"],
+  "expectedRejection": "Table cells use text nodes; HTML escaped on serialize; on* may be scrubbed from serialized text by sanitizeHtml"
+}

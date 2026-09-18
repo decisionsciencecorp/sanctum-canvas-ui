@@ -1,0 +1,9 @@
+{
+  "id": "hostile-markdown-iframe-math",
+  "kind": "markdown",
+  "description": "iframe and math tags in markdown must stay escaped text.",
+  "input": "Embed <iframe src=\"javascript:alert(1)\"></iframe> and <math>x</math>",
+  "mustNotMatch": ["<iframe\\b", "<math\\b", "<script"],
+  "mustMatch": ["&lt;iframe", "&lt;math"],
+  "expectedRejection": "Raw HTML escaped to inert text; no live iframe/math elements (scheme text may remain escaped)"
+}

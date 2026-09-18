@@ -9,6 +9,7 @@ import {
   toCssUrl,
   mergeNoopenerFeatures,
   relForTarget,
+  isHostAllowed,
 } from "../../src/Browser/security/urlPolicy.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -67,6 +68,74 @@ describe("urlPolicy.safeUrl", () => {
 
   it("rejects path that looks like disallowed scheme", () => {
     assert.equal(safeUrl("custom:opaque"), undefined);
+  });
+});
+
+describe("urlPolicy.host allowlist", () => {
+  const allow = { allowedHosts: ["example.com", ".trusted.org", "*.cdn.ok"] };
+
+  it("isHostAllowed matches exact and suffix patterns", () => {
+    assert.equal(isHostAllowed("example.com", allow.allowedHosts), true);
+    assert.equal(isHostAllowed("www.example.com", allow.allowedHosts), false);
+    assert.equal(isHostAllowed("trusted.org", allow.allowedHosts), true);
+    assert.equal(isHostAllowed("a.trusted.org", allow.allowedHosts), true);
+    assert.equal(isHostAllowed("cdn.ok", allow.allowedHosts), true);
+    assert.equal(isHostAllowed("x.cdn.ok", allow.allowedHosts), true);
+    assert.equal(isHostAllowed("evil.com", allow.allowedHosts), false);
+    assert.equal(isHostAllowed("", allow.allowedHosts), false);
+    assert.equal(isHostAllowed("example.com", []), true);
+  });
+
+  it("safeUrl without allowedHosts is unrestricted (scheme-only)", () => {
+    assert.equal(safeUrl("https://anywhere.example/x"), "https://anywhere.example/x");
+  });
+
+  it("safeUrl with allowedHosts accepts matching hosts", () => {
+    assert.equal(safeUrl("https://example.com/a", allow), "https://example.com/a");
+    assert.equal(safeUrl("https://sub.trusted.org/p", allow), "https://sub.trusted.org/p");
+    assert.equal(safeUrl("HTTP://Example.COM/x", allow), "HTTP://Example.COM/x");
+  });
+
+  it("safeUrl with allowedHosts rejects non-matching hosts", () => {
+    assert.equal(safeUrl("https://evil.com/phish", allow), undefined);
+    assert.equal(safeUrl("https://notexample.com/", allow), undefined);
+  });
+
+  it("host allowlist still allows relative and mailto", () => {
+    assert.equal(safeUrl("/local/path", allow), "/local/path");
+    assert.equal(safeUrl("#frag", allow), "#frag");
+    assert.equal(safeUrl("mailto:a@b.com", allow), "mailto:a@b.com");
+  });
+
+  it("host allowlist rejects protocol-relative and malformed absolute", () => {
+    assert.equal(safeUrl("//example.com/x", allow), undefined);
+    assert.equal(safeUrl("https://", allow), undefined);
+    assert.equal(safeUrl("https://[not-a-host", allow), undefined);
+  });
+
+  it("isHostAllowed skips blank and non-string allowlist entries", () => {
+    assert.equal(isHostAllowed("example.com", ["", null, 3, "example.com"]), true);
+    assert.equal(isHostAllowed("nope.com", ["", "other.com"]), false);
+  });
+
+  it("safeOpenUrl and toCssUrl honor allowedHosts", () => {
+    const prev = globalThis.window;
+    let opened;
+    globalThis.window = {
+      open(url) {
+        opened = url;
+        return {};
+      },
+    };
+    try {
+      assert.equal(safeOpenUrl("https://evil.com", "_blank", "", allow), null);
+      assert.ok(safeOpenUrl("https://example.com", "_blank", "", allow));
+      assert.equal(opened, "https://example.com");
+      assert.equal(toCssUrl("https://evil.com", allow), undefined);
+      assert.match(toCssUrl("https://example.com/a", allow), /^url\("/);
+    } finally {
+      globalThis.window = prev;
+    }
   });
 });
 

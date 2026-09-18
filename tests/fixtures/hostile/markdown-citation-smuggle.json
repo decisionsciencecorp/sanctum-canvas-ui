@@ -1,0 +1,9 @@
+{
+  "id": "hostile-markdown-citation-smuggle",
+  "kind": "markdown",
+  "description": "Citation markers must not allow attribute breakout or javascript links disguised as cites.",
+  "input": "Ref [1] and [2](javascript:alert(1)) plus <cite onclick=alert(1)>9</cite>",
+  "mustNotMatch": ["javascript:", "onclick", "<a\\b"],
+  "mustMatch": ["data-citation=\"1\"", "&lt;cite"],
+  "expectedRejection": "Numeric [n] → cite[data-citation]; raw cite HTML escaped; js link dropped"
+}
