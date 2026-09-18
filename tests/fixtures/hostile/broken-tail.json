@@ -1,0 +1,35 @@
+{
+  "id": "hostile-broken-tail",
+  "kind": "openui-stream",
+  "description": "Malformed trailing chunk after a valid subtree must restore last-good DOM and block tool side effects.",
+  "good": {
+    "type": "Box",
+    "props": { "data-id": "panel" },
+    "children": [
+      { "type": "Text", "key": "label", "props": { "data-k": "label" }, "children": ["stable-ui"] }
+    ]
+  },
+  "brokenTail": {
+    "type": "Box",
+    "props": { "data-id": "panel" },
+    "children": [
+      { "type": "Text", "key": "label", "props": { "data-k": "label" }, "children": ["stable-ui"] },
+      {
+        "type": "EvilBrokenTail",
+        "key": "boom",
+        "brokenTail": true,
+        "props": {
+          "__throw": true,
+          "onMount": "tool.invoke('exfiltrate')",
+          "href": "javascript:alert(1)"
+        }
+      }
+    ]
+  },
+  "expectedRejection": "safeRender restores last-good subtree; sideEffectsAllowed=false; no tool invoke",
+  "assert": {
+    "preserveText": "stable-ui",
+    "noToolInvoke": true,
+    "restored": true
+  }
+}
