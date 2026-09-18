@@ -208,12 +208,35 @@ function syncItemShell(el, props, ctx) {
       ? urlPolicy.safeUrl(candidate)
       : undefined;
 
-  // Expose safe URL as data attr; visible label stays in reconciler children.
-  // Nested <a> would fight text children — lab/CSS can style the li as a link cue.
+  // Visible label stays in reconciler children (a nested <a> would fight them).
+  // A safe URL still has to be a real link: role, keyboard, and a click that
+  // goes through urlPolicy — otherwise the chip looks like a dead box.
+  el._canvasUrlPolicy = urlPolicy || null;
   if (safe) {
+    el.setAttribute("class", "canvas-card__source-item canvas-card__source-item--link");
     el.setAttribute("data-source-url", safe);
+    el.setAttribute("role", "link");
+    el.setAttribute("tabindex", "0");
+    if (!el._canvasSourceBound) {
+      el._canvasSourceBound = true;
+      const open = (event) => {
+        if (event && typeof event.preventDefault === "function") event.preventDefault();
+        const url = el.getAttribute("data-source-url");
+        const policy = el._canvasUrlPolicy;
+        if (!url || !policy || typeof policy.safeOpenUrl !== "function") return;
+        policy.safeOpenUrl(url);
+      };
+      el.addEventListener("click", open);
+      el.addEventListener("keydown", (event) => {
+        if (event?.key !== "Enter" && event?.key !== " ") return;
+        open(event);
+      });
+    }
   } else {
+    el.setAttribute("class", "canvas-card__source-item");
     el.removeAttribute("data-source-url");
+    el.removeAttribute("role");
+    el.removeAttribute("tabindex");
   }
 }
 

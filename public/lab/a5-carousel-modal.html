@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="sanctum">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sanctum Canvas — A5.6 / A5.7 Carousel + Modal lab</title>
+    <title>Sanctum Canvas — Carousel and Modal</title>
     <meta
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
@@ -14,21 +14,35 @@
     <link rel="stylesheet" href="../assets/css/a11y.css" />
     <link rel="stylesheet" href="../assets/css/components/carousel.css" />
     <link rel="stylesheet" href="../assets/css/components/modal.css" />
+    <link rel="stylesheet" href="./gallery.css" />
   </head>
-  <body>
-    <main class="canvas-root" id="canvas-root">
-      <h1>A5.6 Carousel + A5.7 Modal</h1>
-      <p>Fixture mounts for keyboard / focus checks (A5.8 Playwright later).</p>
-      <section aria-label="Carousel fixture">
+  <body class="gal-body">
+    <header class="gal-top">
+      <a href="/index.php">&larr; Home</a>
+      <span class="gal-top__title">Carousel and Modal</span>
+      <span class="gal-top__sub">Slides and a dialog</span>
+    </header>
+    <main class="gal-main" id="canvas-root">
+      <h1>Carousel and Modal</h1>
+      <p class="gal-lede">
+        The arrows move the slides. Open dialog shows a window that keeps
+        the keyboard inside it until you press Escape or the close mark.
+      </p>
+
+      <section class="gal-section" aria-label="Carousel">
         <h2>Carousel</h2>
+        <p class="gal-note">Use the arrows, or the left and right arrow keys while a slide is focused.</p>
         <div id="mount-carousel"></div>
       </section>
-      <section aria-label="Modal fixture">
+
+      <section class="gal-section" aria-label="Modal">
         <h2>Modal</h2>
-        <button type="button" id="open-modal">Open modal</button>
+        <p class="gal-note">The dialog stays closed until you ask for it, so it does not cover the rest of the page.</p>
+        <button type="button" class="gal-btn" id="open-modal">Open dialog</button>
         <div id="mount-modal"></div>
       </section>
-      <p id="status" role="status">Loading…</p>
+
+      <p id="status" class="gal-note" role="status">Loading…</p>
     </main>
     <script type="module" src="./a5-carousel-modal.js"></script>
   </body>

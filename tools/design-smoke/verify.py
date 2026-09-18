@@ -85,8 +85,9 @@ def capture_page(page, base_url: str, path: str, ready_sel: str, prefix: str) ->
     written: list[str] = []
     page.goto(f"{base_url}{path}", wait_until="networkidle", timeout=30000)
     page.wait_for_selector(ready_sel, timeout=15000)
-    # Modal open: dialog or openui modal content visible
+    # Modal starts closed so the gallery is usable. Open it for the shot.
     if "foundation" in path:
+        page.click("#open-lab-modal")
         page.wait_for_selector(
             "#family-modal dialog[open], #family-modal .canvas-modal[open], "
             "#family-modal [data-canvas-component='Modal']",

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="sanctum">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sanctum Canvas — A5.1 Stack / Card lab</title>
+    <title>Sanctum Canvas — Stack and Card</title>
     <meta
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
@@ -14,14 +14,35 @@
     <link rel="stylesheet" href="../assets/css/a11y.css" />
     <link rel="stylesheet" href="../assets/css/components/stack.css" />
     <link rel="stylesheet" href="../assets/css/components/card.css" />
+    <link rel="stylesheet" href="./gallery.css" />
   </head>
-  <body>
-    <main class="canvas-root" id="canvas-root">
-      <h1>A5.1 Stack + Card</h1>
-      <p>Fixture mounts for later Playwright (A5.8). CSP-safe modules only.</p>
-      <div id="mount-stack" aria-label="Stack fixture"></div>
-      <div id="mount-card" aria-label="Card fixture"></div>
-      <p id="status" role="status">Loading…</p>
+  <body class="gal-body">
+    <header class="gal-top">
+      <a href="/index.php">&larr; Home</a>
+      <span class="gal-top__title">Stack and Card</span>
+      <span class="gal-top__sub">The two boxes a reply lands in</span>
+    </header>
+    <main class="gal-main" id="canvas-root">
+      <h1>Stack and Card</h1>
+      <p class="gal-lede">
+        A model reply is a Stack (things in a row or a column) or a Card (a
+        title, a body, and where the numbers came from). The words in the
+        stack are labels, not buttons. The source under the card is a link.
+      </p>
+
+      <section class="gal-section" aria-label="Stack">
+        <h2>Stack</h2>
+        <p class="gal-note">Three labels in a row. Narrow the window and they wrap. Nothing here is a control.</p>
+        <div id="mount-stack" aria-label="Stack sample"></div>
+      </section>
+
+      <section class="gal-section" aria-label="Card">
+        <h2>Card</h2>
+        <p class="gal-note">Click “Example source”. It opens example.com in a new tab. That is the only control on this page.</p>
+        <div id="mount-card" aria-label="Card sample"></div>
+      </section>
+
+      <p id="status" class="gal-note" role="status">Loading…</p>
     </main>
     <script type="module" src="./a5-stack-card.js"></script>
   </body>

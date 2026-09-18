@@ -47,7 +47,7 @@ $tiles = [
         'kicker' => 'Components',
         'title' => 'Text, cards, and layout',
         'what' => 'Stack, Card, headers, paragraphs, callouts, tags, metrics, lists, code, images, plus Tabs, Accordion, Section, Steps, Carousel, and an open Modal.',
-        'expect' => 'One static sample of each, stacked on a single page. Nothing to click except the tabs and accordion.',
+        'expect' => 'One sample of each. Tabs, accordion, carousel arrows, and step titles respond. The dialog stays closed until you open it.',
         'tag' => 'Gallery',
     ],
     [
@@ -63,7 +63,7 @@ $tiles = [
         'kicker' => 'Components',
         'title' => 'Stack and Card roots',
         'what' => 'Just the two root layouts a model reply lands in.',
-        'expect' => 'Two small samples. Useful for spacing and skin checks.',
+        'expect' => 'Labels in a row, and a card whose source is a link you can open.',
         'tag' => 'Gallery',
     ],
     [

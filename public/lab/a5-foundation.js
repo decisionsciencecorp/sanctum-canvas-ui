@@ -331,8 +331,8 @@ mount("mount-carousel", {
   },
 });
 
-/** Modal stays open for the open-state screenshot. */
-let modalOpen = true;
+/** Modal stays closed so the rest of the gallery can be used. */
+let modalOpen = false;
 
 function renderModal() {
   mount("mount-modal", {
@@ -360,6 +360,11 @@ function renderModal() {
 }
 
 renderModal();
+
+document.getElementById("open-lab-modal")?.addEventListener("click", () => {
+  modalOpen = true;
+  renderModal();
+});
 
 const status = document.getElementById("status");
 // Modal may defer showModal until after reconciler insert (microtask).

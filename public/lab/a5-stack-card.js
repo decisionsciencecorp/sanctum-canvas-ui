@@ -38,8 +38,9 @@ render(
     id: "lab-stack",
     props: { direction: "row", gap: "l", align: "center", wrap: true },
     children: [
-      { type: "Text", id: "a", children: ["Stack A"] },
-      { type: "Text", id: "b", children: ["Stack B"] },
+      { type: "Text", id: "a", children: ["Monday"] },
+      { type: "Text", id: "b", children: ["Tuesday"] },
+      { type: "Text", id: "c", children: ["Wednesday"] },
     ],
   },
   ctx,
@@ -56,7 +57,7 @@ render(
         type: "CardContent",
         id: "body",
         children: [
-          { type: "Text", id: "line", children: ["Card body line"] },
+          { type: "Text", id: "line", children: ["Sales this week, with the system they came from."] },
         ],
       },
       {
@@ -65,7 +66,7 @@ render(
         props: {
           sources: [
             {
-              title: "Example",
+              title: "Example source",
               sourceName: "example.com",
               url: "https://example.com/",
             },
@@ -77,12 +78,12 @@ render(
             type: "CardSourceItem",
             key: "src-0",
             props: {
-              title: "Example",
+              title: "Example source",
               sourceName: "example.com",
               url: "https://example.com/",
               index: 0,
             },
-            children: ["Example"],
+            children: ["Example source"],
           },
         ],
       },
@@ -91,4 +92,4 @@ render(
   ctx,
 );
 
-if (status) status.textContent = "Mounted Stack + Card fixtures.";
+if (status) status.textContent = "Ready. The source under the card is a link.";

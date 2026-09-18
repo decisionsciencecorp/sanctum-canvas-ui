@@ -30,13 +30,20 @@
     <link rel="stylesheet" href="../assets/css/components/carousel.css" />
     <link rel="stylesheet" href="../assets/css/components/modal.css" />
     <link rel="stylesheet" href="./a5-foundation.css" />
+    <link rel="stylesheet" href="./gallery.css" />
   </head>
-  <body>
-    <main class="canvas-root lab-page" id="canvas-root">
-      <h1>A5 foundation components</h1>
-      <p class="lab-lede">
-        Playwright visual-parity target (A5.8). One mount per component family.
-        Modal opens on load for the open-state shot.
+  <body class="gal-body">
+    <header class="gal-top">
+      <a href="/index.php">&larr; Home</a>
+      <span class="gal-top__title">Text, cards, and layout</span>
+      <span class="gal-top__sub">One sample of each</span>
+    </header>
+    <main class="gal-main canvas-root lab-page" id="canvas-root">
+      <h1>Text, cards, and layout</h1>
+      <p class="gal-lede">
+        Tabs, the accordion, the carousel arrows, and step titles respond.
+        The dialog stays closed until you open it, so it does not sit on top
+        of everything else.
       </p>
 
       <section class="lab-family" id="family-stack" data-family="stack" aria-label="Stack">
@@ -110,7 +117,9 @@
       </section>
 
       <section class="lab-family" id="family-modal" data-family="modal" aria-label="Modal">
-        <h2>Modal (open)</h2>
+        <h2>Modal</h2>
+        <p class="gal-note">Closed until you open it. Escape or the close mark dismisses it.</p>
+        <button type="button" class="gal-btn" id="open-lab-modal">Open dialog</button>
         <div class="lab-mount" id="mount-modal"></div>
       </section>
 

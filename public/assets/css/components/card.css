@@ -196,6 +196,18 @@
   max-width: 100%;
 }
 
+.canvas-card__source-item--link {
+  cursor: pointer;
+  color: var(--canvas-interactive-default, #3b6ced);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.canvas-card__source-item--link:hover,
+.canvas-card__source-item--link:focus-visible {
+  border-color: var(--canvas-interactive-default, #3b6ced);
+}
+
 .canvas-card__source-label {
   color: var(--canvas-text-primary);
   font-size: var(--canvas-font-size-sm);
