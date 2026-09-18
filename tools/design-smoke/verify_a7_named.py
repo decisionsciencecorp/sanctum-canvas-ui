@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "docs" / "track-a" / "screenshots" / "a7"
 OUT.mkdir(parents=True, exist_ok=True)
 
-DEFAULT_URL = "http://canvas-lab.decisionsciencecorp.com/index.php"
+DEFAULT_URL = "https://canvas-lab.decisionsciencecorp.com/index.php"
 
 _COMPANION_VENV = Path(
     "/root/projects/sanctum-companion-shell/tools/design-smoke/.venv/bin/python"
