@@ -1,0 +1,83 @@
+{
+  "family": "Carousel",
+  "library": "dashboard",
+  "root": "Carousel",
+  "cases": [
+    {
+      "id": "carousel-three-slides",
+      "description": "Homogeneous three-slide carousel",
+      "vnode": {
+        "type": "Carousel",
+        "id": "c1",
+        "props": {
+          "variant": "card",
+          "children": [
+            [
+              { "type": "Text", "id": "t1a", "children": ["Slide 1 title"] },
+              { "type": "Text", "id": "t1b", "children": ["Slide 1 body"] }
+            ],
+            [
+              { "type": "Text", "id": "t2a", "children": ["Slide 2 title"] },
+              { "type": "Text", "id": "t2b", "children": ["Slide 2 body"] }
+            ],
+            [
+              { "type": "Text", "id": "t3a", "children": ["Slide 3 title"] },
+              { "type": "Text", "id": "t3b", "children": ["Slide 3 body"] }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "carousel-structure-mismatch",
+      "description": "Third slide differs — should be dropped",
+      "props": {
+        "variant": "sunk",
+        "children": [
+          [
+            { "type": "Text", "id": "a", "children": ["A"] },
+            { "type": "Text", "id": "b", "children": ["B"] }
+          ],
+          [
+            { "type": "Text", "id": "c", "children": ["C"] },
+            { "type": "Text", "id": "d", "children": ["D"] }
+          ],
+          [
+            { "type": "Text", "id": "e", "children": ["E"] }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "carousel-stream-append",
+      "description": "Keyed stream append preserves index",
+      "chunks": [
+        {
+          "type": "Carousel",
+          "id": "stream-c",
+          "props": {
+            "children": [
+              [
+                { "type": "Text", "id": "s1", "children": ["One"] }
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Carousel",
+          "id": "stream-c",
+          "props": {
+            "children": [
+              [
+                { "type": "Text", "id": "s1", "children": ["One"] }
+              ],
+              [
+                { "type": "Text", "id": "s2", "children": ["Two"] }
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "family": "Modal",
+  "library": "dashboard",
+  "root": "Modal",
+  "cases": [
+    {
+      "id": "modal-closed-default",
+      "description": "Modal mounts closed with title",
+      "vnode": {
+        "type": "Modal",
+        "id": "m1",
+        "props": {
+          "title": "Edit item",
+          "open": false,
+          "size": "md",
+          "children": [
+            { "type": "Text", "id": "body", "children": ["Modal body"] }
+          ]
+        }
+      }
+    },
+    {
+      "id": "modal-open-sm",
+      "description": "Open small modal",
+      "vnode": {
+        "type": "Modal",
+        "id": "m2",
+        "props": {
+          "title": "Confirm",
+          "open": true,
+          "size": "sm",
+          "children": [
+            { "type": "Text", "id": "q", "children": ["Are you sure?"] }
+          ]
+        }
+      }
+    },
+    {
+      "id": "modal-stream-body-update",
+      "description": "Stream updates body while open — must stay open",
+      "chunks": [
+        {
+          "type": "Modal",
+          "id": "m-stream",
+          "props": {
+            "title": "Streaming",
+            "open": true,
+            "children": [
+              { "type": "Text", "id": "line1", "children": ["First"] }
+            ]
+          }
+        },
+        {
+          "type": "Modal",
+          "id": "m-stream",
+          "props": {
+            "title": "Streaming",
+            "open": true,
+            "children": [
+              { "type": "Text", "id": "line1", "children": ["First"] },
+              { "type": "Text", "id": "line2", "children": ["Second"] }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="sanctum">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sanctum Canvas — A5.6 / A5.7 Carousel + Modal lab</title>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+    />
+    <link rel="stylesheet" href="../assets/css/tokens.css" />
+    <link rel="stylesheet" href="../assets/css/skins.css" />
+    <link rel="stylesheet" href="../assets/css/layout.css" />
+    <link rel="stylesheet" href="../assets/css/a11y.css" />
+    <link rel="stylesheet" href="../assets/css/components/carousel.css" />
+    <link rel="stylesheet" href="../assets/css/components/modal.css" />
+  </head>
+  <body>
+    <main class="canvas-root" id="canvas-root">
+      <h1>A5.6 Carousel + A5.7 Modal</h1>
+      <p>Fixture mounts for keyboard / focus checks (A5.8 Playwright later).</p>
+      <section aria-label="Carousel fixture">
+        <h2>Carousel</h2>
+        <div id="mount-carousel"></div>
+      </section>
+      <section aria-label="Modal fixture">
+        <h2>Modal</h2>
+        <button type="button" id="open-modal">Open modal</button>
+        <div id="mount-modal"></div>
+      </section>
+      <p id="status" role="status">Loading…</p>
+    </main>
+    <script type="module" src="./a5-carousel-modal.js"></script>
+  </body>
+</html>

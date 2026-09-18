@@ -1,0 +1,91 @@
+/**
+ * A5.7 — Modal (plain CSS, --canvas-* tokens).
+ * Native <dialog>; sizes sm/md/lg; reduced-motion via a11y.css.
+ */
+
+.canvas-modal {
+  box-sizing: border-box;
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--canvas-border-default);
+  border-radius: var(--canvas-radius-xl);
+  background: var(--canvas-surface-raised, var(--canvas-surface-background));
+  color: var(--canvas-text-primary);
+  box-shadow: var(--canvas-shadow-l, 0 16px 48px oklch(0 0 0 / 0.2));
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.canvas-modal::backdrop {
+  background: var(--canvas-surface-overlay);
+}
+
+.canvas-modal--sm {
+  width: min(400px, 90vw);
+}
+
+.canvas-modal--md {
+  width: min(560px, 90vw);
+}
+
+.canvas-modal--lg {
+  width: min(720px, 90vw);
+}
+
+.canvas-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--canvas-space-m);
+  padding: var(--canvas-space-m);
+  border-bottom: 1px solid var(--canvas-border-default);
+}
+
+.canvas-modal__title {
+  margin: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--canvas-text-primary);
+}
+
+.canvas-modal__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--canvas-touch-target-min, 44px);
+  min-height: var(--canvas-touch-target-min, 44px);
+  border: none;
+  border-radius: var(--canvas-radius-s);
+  background: transparent;
+  color: var(--canvas-text-secondary);
+  cursor: pointer;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.canvas-modal__close:hover {
+  color: var(--canvas-text-primary);
+}
+
+.canvas-modal__body {
+  padding: var(--canvas-space-m);
+  overflow-y: auto;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-m);
+}
+
+body[data-canvas-scroll-lock="1"] {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas-modal,
+  .canvas-modal::backdrop {
+    transition: none;
+    animation: none;
+  }
+}
