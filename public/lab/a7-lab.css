@@ -78,11 +78,8 @@
   color: var(--canvas-text-muted, #5a6270);
 }
 
-.a7-lab-hint {
-  margin: -0.2rem 0 0.55rem;
-  font-size: 0.78rem;
-  line-height: 1.35;
-  color: var(--canvas-text-muted, #5a6270);
+.a7-lab-hint a {
+  color: var(--canvas-accent, #3b6ced);
 }
 
 .a7-lab-panel h2 {

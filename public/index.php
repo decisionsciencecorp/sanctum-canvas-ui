@@ -77,6 +77,12 @@ function canvas_lab_tip(string $what, string $text): string
           The middle of the page is the canvas. The left side drives it.
           Hover or tap a <strong>?</strong> if a control is still unclear.
         </p>
+        <p class="a7-hint">
+          This page only replays streams. The components themselves are on
+          <a href="/lab/a5-foundation.html">text, cards, tabs, and layout</a>
+          and
+          <a href="/lab/a6-library.html">forms, tables, charts, and buttons</a>.
+        </p>
       </div>
 
       <section class="a7-lab-panel" aria-label="Saved examples">
