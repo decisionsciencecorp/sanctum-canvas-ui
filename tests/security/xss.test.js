@@ -1,6 +1,5 @@
 /**
- * A8.3 — XSS / markdown hostile regression (no named URL required).
- * Reuses tests/fixtures/hostile/* markdown cases.
+ * A8.3 — XSS / markdown hostile regression (Doc #1379 §9.1 / H12).
  */
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
@@ -9,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
   markdownToSafeHtml,
+  markdownToSafeDom,
   sanitizeHtml,
 } from "../../src/Browser/security/markdown.js";
 import { createComponentRegistry } from "../../src/Browser/renderer/registry.js";
@@ -43,6 +43,56 @@ describe("security/xss — hostile markdown fixtures", () => {
     assert.doesNotMatch(clean, /onclick/i);
     assert.doesNotMatch(clean, /<script/i);
     assert.doesNotMatch(clean, /onerror/i);
+  });
+});
+
+describe("security/xss — allowlisted markdown features", () => {
+  it("renders headings, emphasis, lists, fence, blockquote, table, safe link", () => {
+    const md = [
+      "# Title",
+      "",
+      "Hello **bold** and *em* and `code`",
+      "",
+      "> quote [ok](https://example.com) [bad](javascript:alert(1))",
+      "",
+      "- one",
+      "- two",
+      "",
+      "1. a",
+      "2. b",
+      "",
+      "```",
+      "no <script>",
+      "```",
+      "",
+      "| H | I |",
+      "|---|---|",
+      "| 1 | 2 |",
+      "",
+      "See [1] and [2][3]",
+    ].join("\n");
+    const html = markdownToSafeHtml(md);
+    assert.match(html, /<h1/i);
+    assert.match(html, /<strong/i);
+    assert.match(html, /<em/i);
+    assert.match(html, /<code/i);
+    assert.match(html, /<blockquote/i);
+    assert.match(html, /<ul/i);
+    assert.match(html, /<ol/i);
+    assert.match(html, /<pre/i);
+    assert.match(html, /<table/i);
+    assert.match(html, /href="https:\/\/example\.com"/i);
+    assert.doesNotMatch(html, /javascript:/i);
+    assert.match(html, /data-citation="1"/i);
+    assert.doesNotMatch(html, /<script/i);
+  });
+
+  it("markdownToSafeDom empty / null is empty container", () => {
+    const { document } = createTestDom();
+    const a = markdownToSafeDom(null, document);
+    const b = markdownToSafeDom("", document);
+    assert.equal(a.childNodes.length, 0);
+    assert.equal(b.childNodes.length, 0);
   });
 });
 

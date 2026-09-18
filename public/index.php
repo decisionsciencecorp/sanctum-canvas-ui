@@ -26,6 +26,11 @@ header('Referrer-Policy: no-referrer');
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Defense-in-depth CSP meta (matches header above; A8.3 / Doc #1379 §9.4). -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+    />
     <title>Sanctum Canvas — standalone laboratory</title>
     <link rel="stylesheet" href="/assets/css/tokens.css" />
     <link rel="stylesheet" href="/assets/css/skins.css" />

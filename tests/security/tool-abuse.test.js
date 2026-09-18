@@ -1,5 +1,5 @@
 /**
- * A8.3 — Tool-abuse / partial-gate / incomplete-program regressions.
+ * A8.3 — Tool-abuse / partial-gate / incomplete-program (Doc #1379 §9.5–§9.6).
  */
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
@@ -55,6 +55,26 @@ describe("security/tool-abuse — incomplete program gate", () => {
     assert.equal(opened, null);
   });
 
+  it("OpenUrl blocked without user gesture when complete", async () => {
+    let opened = null;
+    const runner = createActionRunner({
+      store: memoryStore(),
+      host: { openUrl: (u) => { opened = u; } },
+      isProgramComplete: () => true,
+    });
+    const result = await runner.run(
+      { steps: [{ type: ACTION_STEPS.OpenUrl, url: "https://example.com" }] },
+      { userGesture: false },
+    );
+    assert.equal(result.ok, false);
+    assert.ok(
+      result.reason === "gesture-required" ||
+        result.reason === "user-gesture-required" ||
+        /gesture/i.test(String(result.reason)),
+    );
+    assert.equal(opened, null);
+  });
+
   it("guardedToolInvoke blocks partial ctx", () => {
     let invoked = false;
     const r = guardedToolInvoke({ partial: true }, () => {
@@ -71,19 +91,18 @@ describe("security/tool-abuse — TOOL_CALL_ARGS never imply execution", () => {
     let state = createInitialState();
     for (const ev of toolLife.events) {
       if (ev.type === EventType.TOOL_CALL_RESULT || ev.type === "TOOL_CALL_RESULT") {
-        // Stop before result — after END status should be executing
         break;
       }
       state = reduceEvent(state, ev);
       if (ev.type === EventType.TOOL_CALL_ARGS || ev.type === "TOOL_CALL_ARGS") {
-        const tool = state.tools.find((t) => t.id === ev.toolCallId || t.toolCallId === ev.toolCallId);
-        // Args streaming must not flip to complete
+        const tool = state.tools.find(
+          (t) => t.id === ev.toolCallId || t.toolCallId === ev.toolCallId,
+        );
         assert.notEqual(tool?.status, "complete");
       }
     }
     const afterEnd = toolLife.events.find((e) => e.type === "TOOL_CALL_END");
     assert.ok(afterEnd);
-    // Replay through END
     state = createInitialState();
     for (const ev of toolLife.events) {
       state = reduceEvent(state, ev);
@@ -103,6 +122,15 @@ describe("security/tool-abuse — hostile name corpus documented", () => {
     assert.ok(boundary.rejectNames.length >= 5);
     assert.ok(boundary.rejectNames.includes("system"));
     assert.ok(boundary.rejectNames.includes("eval"));
-    // PHP coverage: tests/php/Security/ToolSecurityTest.php
+  });
+
+  it("PHP ToolSecurityTest covers hostileNames data provider", () => {
+    const php = readFileSync(
+      join(root, "tests/php/Security/ToolSecurityTest.php"),
+      "utf8",
+    );
+    assert.match(php, /hostileNames/);
+    assert.match(php, /unknown_tool|hostile_tool_name|invalid_tool_name/);
+    assert.match(php, /mcp:\/\/|shell_exec|PDO::query/);
   });
 });
