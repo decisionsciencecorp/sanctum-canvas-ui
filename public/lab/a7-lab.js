@@ -336,7 +336,10 @@ async function ensureCsrf() {
     method: "GET",
     headers: await authHeaders(),
   });
-  if (!res.ok) throw new Error(`csrf failed: ${res.status}`);
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`csrf failed: ${res.status} ${detail.slice(0, 180)}`);
+  }
   const data = await res.json();
   csrfToken = data.csrfToken || data.token || null;
   return csrfToken;

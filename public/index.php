@@ -61,8 +61,11 @@ header('Referrer-Policy: no-referrer');
       <div class="a7-lab-chrome__brand">
         <h1>Sanctum Canvas lab</h1>
         <p class="a7-lab-lede">
-          A7.7 standalone laboratory — fixture replay offline; live stream via
-          <code>/api/chat.php</code> (fake provider when Venice unset).
+          This page is a review bench for the canvas renderer. It is not connected
+          to Broca, chat, or a real model. Use <strong>Fixture replay</strong>:
+          pick <strong>lab-canvas-textcontent</strong> and press Replay. You should
+          see “Hello from lab fixture” in the canvas below. <strong>Live prompt</strong>
+          only plays a canned reply (the “fake” provider). Venice is not set up here.
         </p>
       </div>
 

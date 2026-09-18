@@ -61,21 +61,54 @@ final class Env
         return strtolower(self::get('CANVAS_STORAGE_DRIVER', 'sqlite') ?? 'sqlite');
     }
 
+    /** Parent of the public/ docroot (repo root in dev, vhost dir on multihost). */
+    public static function appRoot(): string
+    {
+        return dirname(__DIR__, 4);
+    }
+
+    /** The deployed document root (public/ or html/). */
+    public static function webRoot(): string
+    {
+        return dirname(__DIR__, 3);
+    }
+
     public static function storagePath(): string
     {
-        $default = dirname(__DIR__, 3) . '/var/storage';
-        return self::get('CANVAS_STORAGE_PATH', $default) ?? $default;
+        $explicit = self::get('CANVAS_STORAGE_PATH');
+        if ($explicit !== null) {
+            return $explicit;
+        }
+        $db = self::appRoot() . '/db';
+        if (is_dir($db) && is_writable($db)) {
+            return $db . '/canvas';
+        }
+        return self::appRoot() . '/var/storage';
     }
 
     public static function librariesPath(): string
     {
-        $default = dirname(__DIR__, 3) . '/resources/libraries';
-        return self::get('CANVAS_LIBRARIES_PATH', $default) ?? $default;
+        $explicit = self::get('CANVAS_LIBRARIES_PATH');
+        if ($explicit !== null) {
+            return $explicit;
+        }
+        $repo = self::appRoot() . '/resources/libraries';
+        if (is_dir($repo)) {
+            return $repo;
+        }
+        return self::webRoot() . '/assets/libraries';
     }
 
     public static function fixturesPath(): string
     {
-        $default = dirname(__DIR__, 3) . '/resources/fixtures';
-        return self::get('CANVAS_FIXTURES_PATH', $default) ?? $default;
+        $explicit = self::get('CANVAS_FIXTURES_PATH');
+        if ($explicit !== null) {
+            return $explicit;
+        }
+        $repo = self::appRoot() . '/resources/fixtures';
+        if (is_dir($repo)) {
+            return $repo;
+        }
+        return self::webRoot() . '/fixtures';
     }
 }

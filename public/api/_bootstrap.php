@@ -6,13 +6,22 @@ declare(strict_types=1);
  */
 
 $autoload = dirname(__DIR__, 2) . '/vendor/autoload.php';
-if (!is_file($autoload)) {
-    http_response_code(500);
-    header('Content-Type: application/json');
-    echo '{"error":{"code":"autoload_missing","message":"Run composer install"}}';
-    exit(1);
+if (is_file($autoload)) {
+    require_once $autoload;
 }
-require_once $autoload;
+
+$canvasSrc = dirname(__DIR__) . '/includes/Php';
+spl_autoload_register(static function (string $class) use ($canvasSrc): void {
+    $prefix = 'Sanctum\\Canvas\\Php\\';
+    if (!str_starts_with($class, $prefix)) {
+        return;
+    }
+    $rel = str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
+    $file = $canvasSrc . '/' . $rel;
+    if (is_file($file)) {
+        require_once $file;
+    }
+});
 
 use Sanctum\Canvas\Php\Config\Env;
 use Sanctum\Canvas\Php\Http\Authenticator;

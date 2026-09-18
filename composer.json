@@ -10,7 +10,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Sanctum\\Canvas\\Php\\": "src/Php/"
+      "Sanctum\\Canvas\\Php\\": "public/includes/Php/"
     }
   },
   "autoload-dev": {
