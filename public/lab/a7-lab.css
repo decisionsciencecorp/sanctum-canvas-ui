@@ -15,6 +15,41 @@
   font-family: var(--canvas-font-sans, system-ui, sans-serif);
 }
 
+/* WCAG 2.4.1 — skip past dense lab chrome */
+.a7-lab-skip {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  z-index: 1000;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  background: var(--canvas-accent, #3b6ced);
+  color: #fff;
+  font-size: 0.85rem;
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform 0.12s ease;
+}
+
+.a7-lab-skip:focus,
+.a7-lab-skip:focus-visible {
+  transform: translateY(0);
+  outline: 3px solid var(--canvas-focus-ring, #1a4fd8);
+  outline-offset: 2px;
+}
+
+/* WCAG 2.4.7 — lab chrome is outside .canvas-root, so a11y.css does not cover it */
+.a7-lab-chrome :focus,
+.a7-lab-debug :focus {
+  outline: none;
+}
+
+.a7-lab-chrome :focus-visible,
+.a7-lab-debug :focus-visible {
+  outline: 2px solid var(--canvas-focus-ring, #3b6ced);
+  outline-offset: 2px;
+}
+
 .a7-lab-chrome,
 .a7-lab-debug {
   padding: 1rem 1.1rem;

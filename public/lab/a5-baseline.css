@@ -480,3 +480,10 @@
 .openui-modal-body {
   padding: 0.5rem 1rem 1.25rem;
 }
+
+/* A8.4 — visible keyboard focus on static baseline pages */
+.baseline-root :focus { outline: none; }
+.baseline-root :focus-visible {
+  outline: 2px solid var(--openui-text-brand, #3b6ced);
+  outline-offset: 2px;
+}

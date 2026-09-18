@@ -55,6 +55,7 @@ header('Referrer-Policy: no-referrer');
     <link rel="stylesheet" href="/lab/a7-lab.css" />
   </head>
   <body class="a7-lab-body">
+    <a class="a7-lab-skip" href="#sanctum-canvas-root">Skip to canvas output</a>
     <!-- Lab chrome — OUTSIDE #sanctum-canvas-root (Track B must not import this). -->
     <header class="a7-lab-chrome" id="lab-chrome" data-lab-chrome="1">
       <div class="a7-lab-chrome__brand">

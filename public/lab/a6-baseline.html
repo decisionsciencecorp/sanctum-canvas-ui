@@ -25,25 +25,48 @@
         <h2>Forms</h2>
         <form class="openui-form" name="lab-contact">
           <div class="openui-form-control">
-            <label class="openui-form-control-label">Full name *</label>
-            <input class="openui-input openui-input-medium" type="text" value="Ada Lovelace" />
+            <label class="openui-form-control-label" for="a6-bl-fullname">Full name *</label>
+            <input
+              id="a6-bl-fullname"
+              class="openui-input openui-input-medium"
+              type="text"
+              value="Ada Lovelace"
+            />
             <p class="openui-form-control-hint">As on your badge</p>
           </div>
           <div class="openui-form-control">
-            <label class="openui-form-control-label">Email *</label>
-            <input class="openui-input openui-input-medium" type="email" value="ada@example.com" />
+            <label class="openui-form-control-label" for="a6-bl-email">Email *</label>
+            <input
+              id="a6-bl-email"
+              class="openui-input openui-input-medium"
+              type="email"
+              value="ada@example.com"
+            />
           </div>
           <div class="openui-form-control">
-            <label class="openui-form-control-label">Notes</label>
-            <textarea class="openui-textarea openui-textarea-medium">Lab parity notes.</textarea>
+            <label class="openui-form-control-label" for="a6-bl-notes">Notes</label>
+            <textarea id="a6-bl-notes" class="openui-textarea openui-textarea-medium">Lab parity notes.</textarea>
           </div>
           <div class="openui-form-control">
-            <label class="openui-form-control-label">Start date</label>
-            <input class="openui-input openui-input-medium" type="date" value="2026-09-18" />
+            <label class="openui-form-control-label" for="a6-bl-start">Start date</label>
+            <input
+              id="a6-bl-start"
+              class="openui-input openui-input-medium"
+              type="date"
+              value="2026-09-18"
+            />
           </div>
           <div class="openui-form-control">
-            <label class="openui-form-control-label">Priority</label>
-            <div class="openui-slider">
+            <label class="openui-form-control-label" id="a6-bl-priority-label">Priority</label>
+            <div
+              class="openui-slider"
+              role="slider"
+              aria-labelledby="a6-bl-priority-label"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="60"
+              tabindex="0"
+            >
               <div class="openui-slider-track">
                 <div class="openui-slider-range" style="width: 60%"></div>
                 <div class="openui-slider-thumb" style="left: 60%"></div>
@@ -51,8 +74,12 @@
             </div>
           </div>
           <div class="openui-form-control">
-            <label class="openui-form-control-label">Region</label>
-            <button type="button" class="openui-select-trigger openui-select-trigger-medium">
+            <label class="openui-form-control-label" id="a6-bl-region-label">Region</label>
+            <button
+              type="button"
+              class="openui-select-trigger openui-select-trigger-medium"
+              aria-labelledby="a6-bl-region-label"
+            >
               United States
             </button>
           </div>

@@ -1,0 +1,158 @@
+{
+  "base": "https://canvas-lab.decisionsciencecorp.com",
+  "pages": [
+    {
+      "label": "lab-main",
+      "title": "Sanctum Canvas \u2014 standalone laboratory",
+      "lang": "en",
+      "issueCount": 0,
+      "issues": [],
+      "notes": [
+        "no skip-to-canvas link (2.4.1 nicety for dense lab chrome)"
+      ],
+      "controlCount": 13
+    },
+    {
+      "path": "/lab/a5-baseline.html",
+      "status": 200,
+      "label": "lab-a5-baseline",
+      "title": "OpenUI upstream baseline \u2014 A5 foundation (static)",
+      "lang": "en",
+      "issueCount": 1,
+      "issues": [
+        {
+          "id": "focus-css",
+          "level": "AA",
+          "criterion": "2.4.7",
+          "detail": "no :focus / :focus-visible rules found in stylesheets"
+        }
+      ],
+      "notes": [],
+      "controlCount": 10
+    },
+    {
+      "path": "/lab/a5-foundation.html",
+      "status": 200,
+      "label": "lab-a5-foundation",
+      "title": "Sanctum Canvas \u2014 A5 foundation lab",
+      "lang": "en",
+      "issueCount": 0,
+      "issues": [],
+      "notes": [],
+      "controlCount": 14
+    },
+    {
+      "path": "/lab/a5-stack-card.html",
+      "status": 200,
+      "label": "lab-a5-stack-card",
+      "title": "Sanctum Canvas \u2014 A5.1 Stack / Card lab",
+      "lang": "en",
+      "issueCount": 0,
+      "issues": [],
+      "notes": [],
+      "controlCount": 0
+    },
+    {
+      "path": "/lab/a5-carousel-modal.html",
+      "status": 200,
+      "label": "lab-a5-carousel-modal",
+      "title": "Sanctum Canvas \u2014 A5.6 / A5.7 Carousel + Modal lab",
+      "lang": "en",
+      "issueCount": 0,
+      "issues": [],
+      "notes": [],
+      "controlCount": 4
+    },
+    {
+      "path": "/lab/a6-baseline.html",
+      "status": 200,
+      "label": "lab-a6-baseline",
+      "title": "OpenUI upstream baseline \u2014 A6 library (static)",
+      "lang": "en",
+      "issueCount": 2,
+      "issues": [
+        {
+          "id": "control-name",
+          "level": "A",
+          "criterion": "4.1.2",
+          "detail": "3 interactive control(s) without accessible name"
+        },
+        {
+          "id": "focus-css",
+          "level": "AA",
+          "criterion": "2.4.7",
+          "detail": "no :focus / :focus-visible rules found in stylesheets"
+        }
+      ],
+      "notes": [],
+      "controlCount": 17
+    },
+    {
+      "path": "/lab/a6-library.html",
+      "status": 200,
+      "label": "lab-a6-library",
+      "title": "Sanctum Canvas \u2014 A6 library lab",
+      "lang": "en",
+      "issueCount": 0,
+      "issues": [],
+      "notes": [],
+      "controlCount": 24
+    }
+  ],
+  "keyboard": {
+    "lab-main": {
+      "first": {
+        "ok": true,
+        "tag": "select",
+        "id": "lab-fixture",
+        "outline": "auto 1px rgb(16, 16, 16)",
+        "boxShadow": "none",
+        "ringOk": true,
+        "text": "lab-canvas-textcontent\ntext-message-basic\ntool-call-lifecycl"
+      },
+      "visitedIds": [
+        "lab-fixture",
+        "lab-replay",
+        "lab-reset",
+        "lab-prompt",
+        "lab-format",
+        "lab-provider",
+        "lab-start",
+        "lab-patch",
+        "lab-patch-source",
+        "lab-tool-echo",
+        "lab-tool-note-get",
+        "lab-tool-note-set"
+      ],
+      "tabStops": 12
+    }
+  },
+  "blockers": [
+    "/lab/a6-baseline.html: 4.1.2 control-name: 3 interactive control(s) without accessible name"
+  ],
+  "warnings": [
+    "no skip-to-canvas link (2.4.1 nicety for dense lab chrome)",
+    "/lab/a5-baseline.html: 2.4.7 focus-css: no :focus / :focus-visible rules found in stylesheets",
+    "/lab/a6-baseline.html: 2.4.7 focus-css: no :focus / :focus-visible rules found in stylesheets"
+  ],
+  "screenshots": [
+    "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-main-desktop-1280x800.png",
+    "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-main-keyboard-focus.png",
+    "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-main-mobile-390x844.png",
+    "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-main-fixture-desktop.png",
+    "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-main-fixture-mobile.png",
+    "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-a5-baseline-desktop-1280x800.png",
+    "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-a5-baseline-mobile-390x844.png",
+    "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-a5-foundation-desktop-1280x800.png",
+    "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-a5-foundation-mobile-390x844.png",
+    "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-a5-stack-card-desktop-1280x800.png",
+    "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-a5-stack-card-mobile-390x844.png",
+    "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-a5-carousel-modal-desktop-1280x800.png",
+    "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-a5-carousel-modal-mobile-390x844.png",
+    "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-a6-baseline-desktop-1280x800.png",
+    "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-a6-baseline-mobile-390x844.png",
+    "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-a6-library-desktop-1280x800.png",
+    "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-a6-library-mobile-390x844.png"
+  ],
+  "blockerCount": 1
+}
