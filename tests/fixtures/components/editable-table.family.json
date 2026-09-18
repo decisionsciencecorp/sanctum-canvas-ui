@@ -1,0 +1,70 @@
+{
+  "family": "EditableTable",
+  "library": "dashboard",
+  "root": "EditableTable",
+  "cases": [
+    {
+      "id": "editable-basic",
+      "description": "Text/number/date/select/url columns with stable row ids",
+      "vnode": {
+        "type": "EditableTable",
+        "id": "et1",
+        "props": {
+          "name": "people",
+          "columns": [
+            { "type": "text", "key": "name", "header": "Name" },
+            { "type": "number", "key": "age", "header": "Age" },
+            { "type": "date-single", "key": "joined", "header": "Joined" },
+            {
+              "type": "select",
+              "key": "role",
+              "header": "Role",
+              "options": [
+                { "value": "eng", "label": "Engineer" },
+                { "value": "ops", "label": "Ops" }
+              ]
+            },
+            { "type": "url", "key": "site", "header": "Site" }
+          ],
+          "data": [
+            {
+              "id": "r1",
+              "values": ["Ada", 36, "2020-01-15", "eng", "https://example.com"]
+            },
+            {
+              "id": "r2",
+              "values": ["Otto", 1, "2024-06-01", "ops", "https://example.org"]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "editable-empty",
+      "description": "Empty data shows empty status",
+      "vnode": {
+        "type": "EditableTable",
+        "id": "et2",
+        "props": {
+          "name": "empty",
+          "columns": [{ "type": "text", "key": "a", "header": "A" }],
+          "data": []
+        }
+      }
+    },
+    {
+      "id": "editable-loading",
+      "description": "Loading status",
+      "vnode": {
+        "type": "EditableTable",
+        "id": "et3",
+        "props": {
+          "status": "loading",
+          "name": "load",
+          "columns": [{ "type": "text", "key": "a", "header": "A" }],
+          "data": [{ "id": "x", "values": ["y"] }]
+        }
+      }
+    }
+  ]
+}

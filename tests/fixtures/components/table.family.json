@@ -1,0 +1,104 @@
+{
+  "family": "Table",
+  "library": "dashboard",
+  "root": "Table",
+  "viewports": ["mobile", "compact", "desktop"],
+  "cases": [
+    {
+      "id": "table-column-oriented-basic",
+      "description": "Column-oriented Col props render semantic thead/tbody",
+      "vnode": {
+        "type": "Table",
+        "id": "t1",
+        "props": {
+          "columns": [
+            { "label": "Name", "data": ["Ada", "Otto", "Mark"], "type": "string" },
+            { "label": "Score", "data": [12, 9, 15], "type": "number", "align": "right" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "table-uneven-columns",
+      "description": "Shorter columns pad empty cells",
+      "vnode": {
+        "type": "Table",
+        "id": "t2",
+        "props": {
+          "columns": [
+            { "label": "A", "data": ["1", "2", "3"] },
+            { "label": "B", "data": ["x"] }
+          ]
+        }
+      }
+    },
+    {
+      "id": "table-loading",
+      "description": "Loading status",
+      "vnode": {
+        "type": "Table",
+        "id": "t3",
+        "props": {
+          "status": "loading",
+          "columns": [{ "label": "A", "data": [] }]
+        }
+      }
+    },
+    {
+      "id": "table-error",
+      "description": "Error status",
+      "vnode": {
+        "type": "Table",
+        "id": "t4",
+        "props": {
+          "status": "error",
+          "errorMessage": "Query failed",
+          "columns": [{ "label": "A", "data": ["1"] }]
+        }
+      }
+    },
+    {
+      "id": "table-empty",
+      "description": "Empty columns / zero rows",
+      "vnode": {
+        "type": "Table",
+        "id": "t5",
+        "props": {
+          "columns": [{ "label": "A", "data": [] }]
+        }
+      }
+    },
+    {
+      "id": "table-pagination-12",
+      "description": "12 rows paginate at default page size 10",
+      "vnode": {
+        "type": "Table",
+        "id": "t6",
+        "props": {
+          "columns": [
+            {
+              "label": "N",
+              "data": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+              "type": "number",
+              "sortable": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "table-refetching",
+      "description": "Refetch keeps rows under busy cue",
+      "vnode": {
+        "type": "Table",
+        "id": "t7",
+        "props": {
+          "status": "refetching",
+          "columns": [
+            { "label": "Name", "data": ["Kept"] }
+          ]
+        }
+      }
+    }
+  ]
+}

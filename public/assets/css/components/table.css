@@ -1,0 +1,276 @@
+/**
+ * A6.5 / A6.6 — Table + EditableTable. Load after tokens.css.
+ */
+
+.canvas-table,
+.canvas-editable-table {
+  box-sizing: border-box;
+  width: 100%;
+  font-family: var(--canvas-font-body);
+  color: var(--canvas-text-primary);
+}
+
+.canvas-table__status {
+  min-height: 0;
+}
+
+.canvas-table__status .canvas-status-text {
+  display: block;
+  padding: var(--canvas-space-s) var(--canvas-space-m);
+  color: var(--canvas-text-secondary);
+  font-size: var(--canvas-font-size-s, 0.875rem);
+}
+
+.canvas-table__scroll,
+.canvas-editable-table__scroll {
+  position: relative;
+  width: 100%;
+  overflow: auto;
+  border: 1px solid var(--canvas-border-default);
+  border-radius: var(--canvas-radius-l, 0.75rem);
+  outline: none;
+}
+
+.canvas-table__scroll:focus-visible,
+.canvas-editable-table__scroll:focus-visible,
+.canvas-editable-table:focus-visible {
+  outline: 2px solid var(--canvas-focus-ring, var(--canvas-border-strong, #555));
+  outline-offset: 2px;
+}
+
+.canvas-table__grid {
+  width: 100%;
+  border-collapse: collapse;
+  caption-side: bottom;
+  font-size: var(--canvas-font-size-s, 0.875rem);
+}
+
+.canvas-table__th,
+.canvas-table__td,
+.canvas-editable-table__td {
+  padding: var(--canvas-space-m);
+  color: var(--canvas-text-primary);
+  white-space: nowrap;
+  border-bottom: 1px solid var(--canvas-border-default);
+  vertical-align: middle;
+}
+
+.canvas-table__th {
+  color: var(--canvas-text-secondary);
+  font-weight: 500;
+  text-align: left;
+  border-bottom: 1px solid var(--canvas-border-default);
+}
+
+.canvas-table__th[role="button"] {
+  cursor: pointer;
+}
+
+.canvas-table__th-label {
+  display: inline-flex;
+  flex-grow: 1;
+}
+
+.canvas-table__row:nth-child(even) {
+  background-color: var(--canvas-surface-sunk, rgba(0, 0, 0, 0.03));
+}
+
+.canvas-table__row:last-child .canvas-table__td,
+.canvas-table__row:last-child .canvas-editable-table__td {
+  border-bottom: 0;
+}
+
+.canvas-table__align-left {
+  text-align: left;
+}
+
+.canvas-table__align-center {
+  text-align: center;
+}
+
+.canvas-table__align-right {
+  text-align: right;
+}
+
+.canvas-table__action {
+  font: inherit;
+  cursor: pointer;
+  padding: var(--canvas-space-2xs, 0.125rem) var(--canvas-space-s);
+  border: 1px solid var(--canvas-border-default);
+  border-radius: var(--canvas-radius-s, 0.375rem);
+  background: var(--canvas-surface, #fff);
+  color: var(--canvas-text-primary);
+}
+
+.canvas-table__pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--canvas-space-s);
+  padding-top: var(--canvas-space-s);
+}
+
+.canvas-table__page-btn {
+  font: inherit;
+  line-height: 1;
+  min-width: 2rem;
+  min-height: 2rem;
+  cursor: pointer;
+  border: 1px solid var(--canvas-border-default);
+  border-radius: var(--canvas-radius-s, 0.375rem);
+  background: var(--canvas-surface, #fff);
+  color: var(--canvas-text-primary);
+}
+
+.canvas-table__page-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.canvas-table__page-info {
+  font-size: var(--canvas-font-size-s, 0.875rem);
+  color: var(--canvas-text-secondary);
+}
+
+/* Editable */
+
+.canvas-editable-table__cell {
+  position: relative;
+  outline: none;
+  min-height: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: var(--canvas-space-2xs, 0.125rem);
+}
+
+.canvas-editable-table__td--selected .canvas-editable-table__cell {
+  box-shadow: inset 0 0 0 2px var(--canvas-focus-ring, #3b82f6);
+}
+
+.canvas-editable-table__td--editing .canvas-editable-table__cell {
+  box-shadow: inset 0 0 0 2px var(--canvas-border-strong, #111);
+}
+
+.canvas-editable-table__td--invalid .canvas-editable-table__cell {
+  box-shadow: inset 0 0 0 2px var(--canvas-danger, #b91c1c);
+}
+
+.canvas-editable-table__input {
+  font: inherit;
+  width: 100%;
+  min-width: 6rem;
+  border: 1px solid var(--canvas-border-default);
+  border-radius: var(--canvas-radius-s, 0.375rem);
+  padding: var(--canvas-space-2xs, 0.125rem) var(--canvas-space-s);
+  background: var(--canvas-surface, #fff);
+  color: var(--canvas-text-primary);
+}
+
+.canvas-editable-table__url {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--canvas-space-2xs, 0.125rem);
+  max-width: 100%;
+}
+
+.canvas-editable-table__url-link {
+  color: var(--canvas-link, #2563eb);
+  text-decoration: underline;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.canvas-editable-table__url-warn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 50%;
+  background: var(--canvas-warning-bg, #fef3c7);
+  color: var(--canvas-warning-fg, #92400e);
+}
+
+.canvas-editable-table__cell-error {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  font-size: 0.7rem;
+  color: var(--canvas-danger, #b91c1c);
+  white-space: nowrap;
+}
+
+.canvas-editable-table__changes {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--canvas-space-s);
+  padding: var(--canvas-space-s) var(--canvas-space-m);
+  margin-top: var(--canvas-space-s);
+  justify-content: space-between;
+  align-items: center;
+  background: var(--canvas-surface-elevated, var(--canvas-surface, #fff));
+  border-radius: var(--canvas-radius-l, 0.75rem);
+  border: 1px solid var(--canvas-border-default);
+}
+
+.canvas-editable-table__changes-count {
+  font-size: var(--canvas-font-size-s, 0.875rem);
+}
+
+.canvas-editable-table__changes-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: var(--canvas-space-s);
+}
+
+.canvas-editable-table__btn {
+  font: inherit;
+  cursor: pointer;
+  padding: var(--canvas-space-2xs, 0.125rem) var(--canvas-space-m);
+  border-radius: var(--canvas-radius-s, 0.375rem);
+  border: 1px solid var(--canvas-border-default);
+}
+
+.canvas-editable-table__btn--primary {
+  background: var(--canvas-accent, #111);
+  color: var(--canvas-accent-fg, #fff);
+  border-color: transparent;
+}
+
+.canvas-editable-table__btn--secondary {
+  background: var(--canvas-surface, #fff);
+  color: var(--canvas-text-primary);
+}
+
+.canvas-editable-table__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.canvas-editable-table__mutation-error {
+  width: 100%;
+  color: var(--canvas-danger, #b91c1c);
+  font-size: var(--canvas-font-size-s, 0.875rem);
+}
+
+.canvas-editable-table__mutation-busy {
+  width: 100%;
+  color: var(--canvas-text-secondary);
+  font-size: var(--canvas-font-size-s, 0.875rem);
+}
+
+.canvas-table-col {
+  display: none;
+}
+
+/* Viewport cues (mobile / compact / desktop) — overflow remains keyboard-scrollable */
+@media (max-width: 640px) {
+  .canvas-table__th,
+  .canvas-table__td,
+  .canvas-editable-table__td {
+    padding: var(--canvas-space-s);
+  }
+}
