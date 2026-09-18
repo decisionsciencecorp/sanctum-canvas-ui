@@ -45,4 +45,4 @@ composer install
 node --test tests/browser/*.test.js tests/browser/*.golden.test.js
 ```
 
-Phases A0–A6 complete for the browser/library surface. A7.4–A7.6 PHP APIs live under `public/api/` (`chat.php`, `tools.php`, `programs/`) with sources in `src/Php/{Inference,Tools,Storage,Http}/`. A7.7 lab page not yet.
+Phases A0–A6 complete for the browser/library surface. A7.4–A7.6 PHP APIs live under `public/api/`. **A7.7 standalone lab:** `public/index.php` (local `php -S … -t public`; evidence `docs/track-a/A7.7-evidence.md`). Named review URL is A7.8.
