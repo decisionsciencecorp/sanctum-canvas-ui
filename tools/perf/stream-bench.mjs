@@ -18,10 +18,10 @@ import {
   reduceEvents,
   createSseAdapter,
 } from "../../src/Browser/transport/index.js";
-import { createLifecycleOwner } from "../../src/Browser/runtime/lifecycle.js";
-import { createStore } from "../../src/Browser/runtime/store.js";
-import { createQueryManager } from "../../src/Browser/runtime/queryManager.js";
-import { createMutationManager } from "../../src/Browser/runtime/mutations.js";
+import { createLifecycleOwner } from "../../public/assets/js/runtime/lifecycle.js";
+import { createStore } from "../../public/assets/js/runtime/store.js";
+import { createQueryManager } from "../../public/assets/js/runtime/queryManager.js";
+import { createMutationManager } from "../../public/assets/js/runtime/mutations.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "../..");
