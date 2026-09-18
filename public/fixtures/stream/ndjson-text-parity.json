@@ -5,7 +5,7 @@
   "note": "OpenAI chat.completion.chunk NDJSON → same reducer summary as text-message-basic",
   "runId": "r1",
   "messageId": "m1",
-  "content": "root = Title(\"Hi\")\n",
+  "content": "root = TextContent(\"Hi\")\n",
   "expect": {
     "messages": 1,
     "runStatus": "finished"

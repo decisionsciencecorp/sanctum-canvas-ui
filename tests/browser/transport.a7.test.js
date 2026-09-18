@@ -323,6 +323,22 @@ describe("A7.3 ndjsonAdapter", () => {
     assert.equal(adapter.getState().messages[0].content, nd.content);
   });
 
+  it("passes through AG-UI events on an NDJSON line", () => {
+    const adapter = createNdjsonAdapter({ runId: "lab-1", messageId: "m1" });
+    adapter.push(
+      '{"type":"RUN_STARTED","runId":"lab-1"}\n' +
+        '{"type":"TEXT_MESSAGE_START","messageId":"m1","role":"assistant"}\n' +
+        '{"type":"TEXT_MESSAGE_CONTENT","messageId":"m1","delta":"root = TextContent(\\"Hi\\")\\n"}\n' +
+        '{"type":"TEXT_MESSAGE_END","messageId":"m1"}\n' +
+        '{"type":"RUN_FINISHED","runId":"lab-1"}\n',
+    );
+    adapter.flush();
+    const state = adapter.getState();
+    assert.equal(state.runStatus, "finished");
+    assert.equal(state.messages.length, 1);
+    assert.equal(state.messages[0].content, 'root = TextContent("Hi")\n');
+  });
+
   it("ndjson-tool-parity finishes tools as executing (END without RESULT)", () => {
     const nd = loadJson("ndjson-tool-parity.json");
     const adapter = createNdjsonAdapter({

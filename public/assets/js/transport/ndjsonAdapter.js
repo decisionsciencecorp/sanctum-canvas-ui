@@ -101,6 +101,33 @@ export function createNdjsonAdapter(options = {}) {
   function handleObject(json) {
     if (cancelled || closed) return;
 
+    // Already an AG-UI event (lab fake provider, fixture replay). Do not require OpenAI choices[].
+    if (typeof json.type === "string" && json.type) {
+      const known = {
+        RUN_STARTED: 1,
+        RUN_FINISHED: 1,
+        RUN_ERROR: 1,
+        RUN_CANCELLED: 1,
+        TEXT_MESSAGE_START: 1,
+        TEXT_MESSAGE_CONTENT: 1,
+        TEXT_MESSAGE_CHUNK: 1,
+        TEXT_MESSAGE_END: 1,
+        TOOL_CALL_START: 1,
+        TOOL_CALL_ARGS: 1,
+        TOOL_CALL_END: 1,
+        TOOL_CALL_RESULT: 1,
+      };
+      if (known[json.type]) {
+        if (json.type === "RUN_STARTED") runStarted = true;
+        if (json.type === "TEXT_MESSAGE_START" || json.type === "TEXT_MESSAGE_CONTENT" || json.type === "TEXT_MESSAGE_CHUNK") {
+          messageStarted = true;
+        }
+        if (json.type === "TEXT_MESSAGE_END") textEnded = true;
+        emit(json);
+        return;
+      }
+    }
+
     // Top-level error object (OpenAI / Venice style)
     if (json.error && typeof json.error === "object") {
       ensureRunStarted();

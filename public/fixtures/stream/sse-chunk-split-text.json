@@ -6,7 +6,7 @@
   "chunks": [
     "id: 1\nevent: message\ndata: {\"type\":\"RUN_STARTED\",\"runId\":\"r1\"}\n\n",
     "data: {\"type\":\"TEXT_MESSAGE_START\",\"messageId\":\"m1\",\"rol",
-    "e\":\"assistant\"}\n\ndata: {\"type\":\"TEXT_MESSAGE_CONTENT\",\"messageId\":\"m1\",\"delta\":\"root = Title(\\\"Hi\\\")\\n\"}\n\n",
+    "e\":\"assistant\"}\n\ndata: {\"type\":\"TEXT_MESSAGE_CONTENT\",\"messageId\":\"m1\",\"delta\":\"root = TextContent(\\\"Hi\\\")\\n\"}\n\n",
     "data: {\"type\":\"TEXT_MESSAGE_END\",\"messageId\":\"m1\"}\n\ndata: {\"type\":\"RUN_FINISHED\",\"runId\":\"r1\"}\n\n"
   ],
   "expect": {

@@ -15,7 +15,7 @@
     {
       "type": "TEXT_MESSAGE_CONTENT",
       "messageId": "m1",
-      "delta": "root = Title(\"Hi\")\n"
+      "delta": "root = TextContent(\"Hi\")\n"
     },
     {
       "type": "TEXT_MESSAGE_END",

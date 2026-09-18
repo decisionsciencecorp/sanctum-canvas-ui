@@ -95,11 +95,11 @@ function canvas_lab_tip(string $what, string $text): string
       </section>
 
       <section class="a7-lab-panel" aria-label="Type a prompt">
-        <h2>Type a prompt <?= canvas_lab_tip('Type a prompt', 'Start sends the box below. With Canned reply selected, the words you type are ignored and you always get the same Hello card.') ?></h2>
-        <p class="a7-hint">This is not a chatbot. The default answer is canned.</p>
+        <h2>Type a prompt <?= canvas_lab_tip('Type a prompt', 'Start asks this server for a screen. Canned reply ignores the text box and always draws the same Hello card. Saved example replays the menu above. Real model is not installed here.') ?></h2>
+        <p class="a7-hint">Press Start. With Canned reply selected, you always get a Hello card. The box is not read.</p>
         <label class="a7-lab-field">
-          <span>What you want drawn</span>
-          <textarea id="lab-prompt" name="prompt" rows="3" placeholder="Only used if a real model is selected" title="Ignored by the canned reply. Used only if a real model is hooked up."></textarea>
+          <span>Prompt <?= canvas_lab_tip('Prompt', 'Ignored while Who answers is Canned reply. Only a real model would use this text, and that model is not set up.') ?></span>
+          <textarea id="lab-prompt" name="prompt" rows="3" placeholder="Not used by Canned reply" title="Ignored unless Who answers is Real model."></textarea>
         </label>
         <label class="a7-lab-field a7-lab-field--inline">
           <span>Wire format <?= canvas_lab_tip('Wire format', 'How the reply is packaged on the wire. Line-by-line JSON and event stream should draw the same thing. Leave this on the default unless you are checking the stream.') ?></span>

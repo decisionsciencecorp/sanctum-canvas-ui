@@ -46,13 +46,13 @@ const FIXTURE_DIR = "/fixtures/stream";
 /** Known fixtures. id is the file; label is what the menu shows. */
 const FIXTURES = [
   ["lab-canvas-textcontent", "Hello card (start here)", "Draws one text card that says Hello from lab fixture."],
-  ["text-message-basic", "Short text message", "A basic text stream, not a full card."],
-  ["tool-call-lifecycle", "A tool call", "Shows a tool starting, running, and finishing."],
-  ["malformed-line-skip", "Skip a broken line", "A bad line in the stream that should be ignored."],
-  ["interrupted-run-error", "Run that fails", "The stream stops with an error."],
-  ["sse-chunk-split-text", "Text split across chunks", "Same words, cut into small event-stream pieces."],
-  ["ndjson-text-parity", "Text, line-by-line JSON", "Same text run, packaged as one JSON object per line."],
-  ["ndjson-tool-parity", "Tool call, line-by-line JSON", "Same tool call, packaged as one JSON object per line."],
+  ["text-message-basic", "Short text message", "Draws a text card that says Hi."],
+  ["tool-call-lifecycle", "A tool call", "Does not draw a card. Shows that a tool named get_data ran."],
+  ["malformed-line-skip", "Skip a broken line", "Does not draw a card. A bad line is skipped and the run still finishes."],
+  ["interrupted-run-error", "Run that fails", "Does not draw a card. The run stops and the error is shown in the canvas."],
+  ["sse-chunk-split-text", "Text split across chunks", "Same Hi card, cut into small pieces on the wire."],
+  ["ndjson-text-parity", "Text, line-by-line JSON", "Same Hi card, packaged as one JSON object per line."],
+  ["ndjson-tool-parity", "Tool call, line-by-line JSON", "Does not draw a card. Same tool call, one JSON object per line."],
 ];
 
 const els = {
@@ -367,6 +367,68 @@ function resetLab() {
   paintDebug();
 }
 
+function canvasLooksBlank() {
+  const text = (els.canvas?.innerText || "").trim();
+  return text === "" || text.startsWith("Nothing here yet");
+}
+
+function paintLabNote(text) {
+  if (!els.canvas) return;
+  els.canvas.replaceChildren();
+  const note = document.createElement("p");
+  note.className = "a7-lab-empty";
+  note.textContent = text;
+  els.canvas.appendChild(note);
+}
+
+/** If the renderer drew nothing, say why in the canvas instead of leaving it blank. */
+function explainIfBlank() {
+  if (!canvasLooksBlank()) return;
+  const state = reducer.getState();
+  const err = typeof state.error === "string" ? state.error : "";
+  if (err) {
+    const partial = (programSource || "").trim();
+    paintLabNote(
+      partial
+        ? `This run stopped: ${err} Partial text was “${partial}”.`
+        : `This run stopped: ${err}`,
+    );
+    return;
+  }
+  const tools = Array.isArray(state.tools) ? state.tools : [];
+  if (tools.length) {
+    const bits = tools.map((t) => {
+      const name = t.name || t.toolName || "tool";
+      const status = t.status || "done";
+      return `${name} (${status})`;
+    });
+    paintLabNote(`No screen in this example. It only runs a tool: ${bits.join("; ")}.`);
+    return;
+  }
+  const src = (programSource || "").trim();
+  if (src) {
+    paintLabNote(`The reply arrived, but this lab cannot draw it. Program was: ${src}`);
+    return;
+  }
+  paintLabNote("This example does not draw a screen. It only checks that a broken line is skipped.");
+}
+
+function resultStatus(kind) {
+  const text = (els.canvas?.innerText || "").trim();
+  if (
+    !canvasLooksBlank() &&
+    !text.startsWith("This ") &&
+    !text.startsWith("No screen") &&
+    !text.startsWith("The reply")
+  ) {
+    if (kind === "start" && (els.provider?.value || "fake") === "fake") {
+      return "Drew a Hello card. The words you typed were not used.";
+    }
+    return "Drew it in the canvas.";
+  }
+  return text || "Nothing was drawn.";
+}
+
 /**
  * Offline fixture replay — no Venice; uses transport adapters + eventReducer.
  * @param {string} fixtureId
@@ -425,11 +487,8 @@ async function replayFixture(fixtureId) {
       throw new Error("unsupported fixture shape");
     }
 
-    const summary = summarizeState(reducer.getState());
-    setStatus(
-      `Fixture ${fixtureId} done — runStatus=${summary.runStatus}, messages=${summary.messages}`,
-      { ready: true },
-    );
+    explainIfBlank();
+    setStatus(resultStatus("replay"), { ready: true });
   } catch (err) {
     if (err && /** @type {any} */ (err).name === "AbortError") {
       setStatus("Cancelled.", { ready: true });
@@ -496,7 +555,8 @@ async function startLive() {
       await consumeNdjsonResponse(res, consumeOpts);
     }
     syncLangFromReducer();
-    setStatus(`Live stream finished (${provider}/${format}).`, { ready: true });
+    explainIfBlank();
+    setStatus(resultStatus("start"), { ready: true });
   } catch (err) {
     if (err && /** @type {any} */ (err).name === "AbortError") {
       reducer.dispatch({ type: EventType.RUN_CANCELLED });
