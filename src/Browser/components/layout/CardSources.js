@@ -135,7 +135,10 @@ function update(el, props = {}, ctx = {}) {
 
 function destroy() {}
 
-export const CardSources = { create, update, destroy };
+// Owns its children: they are derived from props.sources (or props.children) in
+// create/update. Without this the reconciler wipes them when vnode.children is empty,
+// which blanked every CardSources(sources) emitted by a model program.
+export const CardSources = { create, update, destroy, ownsChildren: true };
 
 /** Heading row inside CardSources — text via vnode children. */
 export const CardSourcesHeading = {

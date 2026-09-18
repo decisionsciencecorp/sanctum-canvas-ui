@@ -1,0 +1,452 @@
+/**
+ * A9.3 — Guided walkthrough chrome. Outside #sanctum-canvas-root.
+ * No inline styles (CSP style-src 'self').
+ */
+
+.wt-body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    "top top"
+    "narration stage";
+  background: var(--canvas-surface-page, #f6f7f9);
+  color: var(--canvas-text, #1a1a1a);
+  font-family: var(--canvas-font-sans, system-ui, sans-serif);
+  height: 100vh;
+  overflow: hidden;
+}
+
+.wt-skip {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  z-index: 1000;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  background: var(--canvas-accent, #3b6ced);
+  color: #fff;
+  font-size: 0.85rem;
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform 0.12s ease;
+}
+
+.wt-skip:focus,
+.wt-skip:focus-visible {
+  transform: translateY(0);
+  outline: 3px solid var(--canvas-focus-ring, #1a4fd8);
+  outline-offset: 2px;
+}
+
+.wt-top :focus-visible,
+.wt-narration :focus-visible {
+  outline: 2px solid var(--canvas-focus-ring, #3b6ced);
+  outline-offset: 2px;
+}
+
+/* ---- top bar ---- */
+
+.wt-top {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 1.1rem;
+  background: var(--canvas-surface-raised, #fff);
+  border-bottom: 1px solid var(--canvas-border, #d8dde6);
+}
+
+.wt-top__left {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.wt-home {
+  color: var(--canvas-accent, #3b6ced);
+  text-decoration: none;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.wt-top__title {
+  font-weight: 700;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.wt-top__sub {
+  color: var(--canvas-text-muted, #5b6472);
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wt-top__right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 0 1 460px;
+  min-width: 0;
+}
+
+.wt-progress {
+  flex: 1 1 140px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--canvas-surface-sunk, #e6eaf0);
+  overflow: hidden;
+}
+
+.wt-progress__bar {
+  height: 100%;
+  width: 0;
+  background: var(--canvas-accent, #3b6ced);
+  transition: width 0.25s ease;
+}
+
+.wt-dots {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.wt-dot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--canvas-border, #c9d0db);
+  background: var(--canvas-surface-raised, #fff);
+  cursor: pointer;
+}
+
+.wt-dot.is-done {
+  background: #b9c8f5;
+  border-color: #b9c8f5;
+}
+
+.wt-dot.is-current {
+  background: var(--canvas-accent, #3b6ced);
+  border-color: var(--canvas-accent, #3b6ced);
+  transform: scale(1.25);
+}
+
+/* ---- narration column ---- */
+
+.wt-narration {
+  grid-area: narration;
+  padding: 1.1rem 1.25rem 1.5rem;
+  overflow: auto;
+  background: var(--canvas-surface-raised, #fff);
+  border-right: 1px solid var(--canvas-border, #d8dde6);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.wt-counter {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--canvas-text-muted, #5b6472);
+}
+
+.wt-actor {
+  margin: 0;
+  display: inline-block;
+  align-self: flex-start;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--canvas-surface-sunk, #eef1f5);
+  color: var(--canvas-text-muted, #5b6472);
+}
+
+.wt-actor[data-actor="you"],
+.wt-actor[data-actor^="you-"] {
+  background: #e3f2e6;
+  color: #1c6b31;
+}
+
+.wt-actor[data-actor="assistant"],
+.wt-actor[data-actor^="assistant-"] {
+  background: #e7edfd;
+  color: #2a4fbf;
+}
+
+.wt-title {
+  margin: 0.1rem 0 0.2rem;
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+.wt-says p {
+  margin: 0 0 0.65rem;
+  font-size: 0.97rem;
+  line-height: 1.55;
+}
+
+.wt-block {
+  border-top: 1px solid var(--canvas-border, #e3e7ee);
+  padding-top: 0.6rem;
+}
+
+.wt-block__label {
+  margin: 0 0 0.3rem;
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--canvas-text-muted, #5b6472);
+}
+
+.wt-why {
+  margin: 0;
+  font-size: 0.92rem;
+  padding: 0.55rem 0.7rem;
+  border-left: 3px solid var(--canvas-accent, #3b6ced);
+  background: #f3f6ff;
+  border-radius: 0 6px 6px 0;
+}
+
+.wt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.wt-chip {
+  font-family: var(--canvas-font-mono, ui-monospace, monospace);
+  font-size: 0.76rem;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background: var(--canvas-surface-sunk, #eef1f5);
+  border: 1px solid var(--canvas-border, #dde2ea);
+}
+
+.wt-program {
+  margin: 0;
+  padding: 0.6rem 0.7rem;
+  font-family: var(--canvas-font-mono, ui-monospace, monospace);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #1f2430;
+  color: #e6e9f0;
+  border-radius: 8px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.wt-hint {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  background: #fff6db;
+  border: 1px solid #f1d98a;
+  color: #5b4300;
+  font-size: 0.92rem;
+}
+
+.wt-controls {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.75rem 0 0.25rem;
+  margin-top: auto;
+  background: var(--canvas-surface-raised, #fff);
+  border-top: 1px solid var(--canvas-border, #e3e7ee);
+}
+
+.wt-btn {
+  padding: 0.5rem 0.95rem;
+  border-radius: 8px;
+  border: 1px solid var(--canvas-border, #c9d0db);
+  background: var(--canvas-surface-raised, #fff);
+  color: var(--canvas-text, #1a1a1a);
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.wt-btn:hover:not(:disabled) {
+  border-color: var(--canvas-accent, #3b6ced);
+}
+
+.wt-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.wt-btn--primary {
+  background: var(--canvas-accent, #3b6ced);
+  border-color: var(--canvas-accent, #3b6ced);
+  color: #fff;
+  font-weight: 600;
+  min-width: 6.5rem;
+}
+
+.wt-btn--muted {
+  color: var(--canvas-text-muted, #5b6472);
+}
+
+.wt-btn[aria-pressed="true"] {
+  background: #e7edfd;
+  border-color: var(--canvas-accent, #3b6ced);
+}
+
+.wt-status {
+  font-size: 0.8rem;
+  color: var(--canvas-text-muted, #5b6472);
+}
+
+.wt-keys {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--canvas-text-muted, #5b6472);
+}
+
+/* ---- stage: chat strip + canvas ---- */
+
+.wt-stage {
+  grid-area: stage;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  min-width: 0;
+}
+
+.wt-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem 1.25rem 0.5rem;
+  max-height: 170px;
+  overflow: auto;
+  background: var(--canvas-surface-page, #f6f7f9);
+  border-bottom: 1px solid var(--canvas-border, #e3e7ee);
+}
+
+.wt-chat:empty {
+  padding: 0;
+  border-bottom: 0;
+  max-height: 0;
+}
+
+.wt-bubble {
+  max-width: 68ch;
+  padding: 0.5rem 0.8rem;
+  border-radius: 14px;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.wt-bubble--user {
+  align-self: flex-end;
+  background: var(--canvas-accent, #3b6ced);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.wt-bubble--assistant {
+  align-self: flex-start;
+  background: var(--canvas-surface-raised, #fff);
+  border: 1px solid var(--canvas-border, #dde2ea);
+  border-bottom-left-radius: 4px;
+}
+
+.wt-canvas-frame {
+  min-height: 0;
+  overflow: auto;
+  padding: 1.25rem 1.25rem 3rem;
+}
+
+.wt-canvas {
+  max-width: 880px;
+  margin: 0 auto;
+  min-height: 240px;
+  padding: 1.25rem 1.5rem 1.5rem;
+  background: var(--canvas-surface-raised, #fff);
+  border: 1px solid var(--canvas-border, #d8dde6);
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.wt-canvas:empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--canvas-text-muted, #5b6472);
+  font-size: 0.95rem;
+}
+
+.wt-canvas:empty::after {
+  content: "The canvas is empty until the assistant answers.";
+}
+
+/* ---- small screens ---- */
+
+@media (max-width: 900px) {
+  .wt-body {
+    height: auto;
+    overflow: visible;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "top"
+      "narration"
+      "stage";
+  }
+
+  .wt-top {
+    flex-wrap: wrap;
+  }
+
+  .wt-top__sub {
+    display: none;
+  }
+
+  .wt-top__right {
+    flex: 1 1 100%;
+  }
+
+  .wt-narration {
+    border-right: 0;
+    border-bottom: 1px solid var(--canvas-border, #d8dde6);
+    max-height: none;
+    overflow: visible;
+  }
+
+  .wt-controls {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    padding-bottom: 0.6rem;
+  }
+
+  .wt-program {
+    max-height: 150px;
+  }
+
+  .wt-canvas-frame {
+    padding: 0.9rem 0.75rem 2rem;
+    overflow: visible;
+  }
+
+  .wt-canvas {
+    padding: 0.9rem 0.9rem 1.1rem;
+  }
+}

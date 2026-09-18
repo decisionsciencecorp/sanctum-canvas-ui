@@ -20,7 +20,7 @@ final class LabPageSmokeTest extends TestCase
 
     public function testLabIndexPhpEmitsCspAndCanvasMount(): void
     {
-        $path = $this->root . '/public/index.php';
+        $path = $this->root . '/public/stream.php';
         $this->assertFileExists($path);
 
         ob_start();
@@ -30,7 +30,7 @@ final class LabPageSmokeTest extends TestCase
             $headers[] = $header;
         };
 
-        // index.php calls header() — run in isolated include with output buffer.
+        // stream.php calls header() — run in isolated include with output buffer.
         // Use CLI sapi: header() may no-op but body still renders.
         include $path;
         $body = (string) ob_get_clean();

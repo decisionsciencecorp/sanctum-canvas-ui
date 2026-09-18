@@ -11,6 +11,7 @@ import {
   setOrRemoveAttr,
 } from "./shared.js";
 import { safeUrl as defaultSafeUrl } from "../../security/urlPolicy.js";
+import { setInlineStyle } from "../../renderer/inlineStyle.js";
 
 const ASPECT = new Set(["1:1", "3:2", "3:4", "4:3", "16:9"]);
 const SCALE = new Set(["fit", "fill"]);
@@ -84,7 +85,7 @@ export const Image = lifecycle({
 
     setClass(el, `canvas-image canvas-image--scale-${scale}`);
     el.setAttribute("data-aspect", aspect);
-    el.setAttribute("style", `aspect-ratio: ${ASPECT_RATIO[aspect]}`);
+    setInlineStyle(el, { "aspect-ratio": ASPECT_RATIO[aspect] });
 
     clearChildren(el);
 

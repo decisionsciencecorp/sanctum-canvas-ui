@@ -36,7 +36,7 @@ function validateCsrf(sessionKey, token, secret = "canvas-csrf-dev") {
 
 describe("security/csrf-idor — stubs", () => {
   it("Csrf PHP exports HEADER/COOKIE and requireValid", () => {
-    const php = readFileSync(join(root, "src/Php/Http/Csrf.php"), "utf8");
+    const php = readFileSync(join(root, "public/includes/Php/Http/Csrf.php"), "utf8");
     assert.match(php, /X-CSRF-Token/);
     assert.match(php, /canvas_csrf/);
     assert.match(php, /csrf_failed/);
@@ -51,7 +51,7 @@ describe("security/csrf-idor — stubs", () => {
   });
 
   it("ProgramController scopes persistence (IDOR surface documented)", () => {
-    const php = readFileSync(join(root, "src/Php/Storage/ProgramController.php"), "utf8");
+    const php = readFileSync(join(root, "public/includes/Php/Storage/ProgramController.php"), "utf8");
     assert.match(php, /csrf->requireValid/);
     assert.match(php, /AuthContext|\$auth/);
     // Owner/project must come from auth — spoofed body owner is not trusted

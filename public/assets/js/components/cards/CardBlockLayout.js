@@ -11,6 +11,7 @@ import {
   resolveIsStreaming,
   setClass,
 } from "./shared.js";
+import { setInlineStyle, clearInlineStyle } from "../../renderer/inlineStyle.js";
 
 /**
  * @param {Record<string, unknown>} props
@@ -54,9 +55,9 @@ export function buildCardBlockChrome(doc, el, opts) {
   if (opts.gap) {
     const varName =
       opts.size === "small" ? "--canvas-small-card-gap" : "--canvas-medium-card-gap";
-    el.setAttribute("style", `${varName}: ${opts.gap}`);
+    setInlineStyle(el, { [varName]: opts.gap });
   } else {
-    el.removeAttribute("style");
+    clearInlineStyle(el);
   }
 
   clearChildren(el);

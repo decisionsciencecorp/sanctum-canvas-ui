@@ -190,7 +190,7 @@ def main() -> int:
     # Allow CANVAS_LAB_URL to be a full index.php URL
     if base.endswith(".php"):
         base = base.rsplit("/", 1)[0]
-    main_url = f"{base}/index.php"
+    main_url = f"{base}/stream.php"
     written: list[str] = []
     report: dict = {"base": base, "pages": [], "keyboard": {}, "blockers": [], "warnings": []}
 

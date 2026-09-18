@@ -42,7 +42,7 @@ export function createMemoryRateLimiter(maxRequests = 60, windowSeconds = 60, no
 
 describe("security/rate-limits — stub mirrors PHP contract", () => {
   it("PHP RateLimiter source declares fixed-window + 429", () => {
-    const php = readFileSync(join(root, "src/Php/Http/RateLimiter.php"), "utf8");
+    const php = readFileSync(join(root, "public/includes/Php/Http/RateLimiter.php"), "utf8");
     assert.match(php, /rate_limited/);
     assert.match(php, /429/);
     assert.match(php, /maxRequests/);
@@ -67,8 +67,8 @@ describe("security/rate-limits — stub mirrors PHP contract", () => {
   });
 
   it("ToolDispatcher / ProgramController wire RateLimiter", () => {
-    const tools = readFileSync(join(root, "src/Php/Tools/ToolDispatcher.php"), "utf8");
-    const programs = readFileSync(join(root, "src/Php/Storage/ProgramController.php"), "utf8");
+    const tools = readFileSync(join(root, "public/includes/Php/Tools/ToolDispatcher.php"), "utf8");
+    const programs = readFileSync(join(root, "public/includes/Php/Storage/ProgramController.php"), "utf8");
     assert.match(tools, /RateLimiter/);
     assert.match(programs, /RateLimiter/);
   });

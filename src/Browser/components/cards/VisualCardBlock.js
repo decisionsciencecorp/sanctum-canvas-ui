@@ -12,6 +12,7 @@ import {
   unwrapItem,
 } from "./shared.js";
 import { createCardBlock } from "./CardBlockLayout.js";
+import { setInlineStyle, clearInlineStyle } from "../../renderer/inlineStyle.js";
 
 /**
  * @param {Record<string, unknown>} props
@@ -36,11 +37,11 @@ export function renderVisualCard(card, item, ctx, meta) {
 
   setClass(card, "canvas-visual-first-card canvas-card-item");
   if (bgCss) {
-    card.setAttribute("style", `--canvas-visual-card-image: ${bgCss}`);
+    setInlineStyle(card, { "--canvas-visual-card-image": bgCss });
     const alt = asText(item.bgImageAlt);
     if (alt) card.setAttribute("aria-label", alt);
   } else {
-    card.removeAttribute("style");
+    clearInlineStyle(card);
     card.removeAttribute("aria-label");
   }
 

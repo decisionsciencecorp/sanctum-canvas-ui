@@ -109,13 +109,13 @@ def main() -> int:
     proc = start_php(port)
     written: list[str] = []
     try:
-        wait_ready(f"{base}/index.php")
+        wait_ready(f"{base}/stream.php")
         wait_ready(f"{base}/fixtures/stream/lab-canvas-textcontent.json")
 
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             page = browser.new_page(viewport={"width": 1280, "height": 800})
-            page.goto(f"{base}/index.php", wait_until="networkidle", timeout=30000)
+            page.goto(f"{base}/stream.php", wait_until="networkidle", timeout=30000)
 
             # Lab chrome outside canvas mount
             assert page.locator("#lab-chrome").count() == 1

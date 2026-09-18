@@ -10,7 +10,7 @@
 
 | | |
 |--|--|
-| **Review URL** | **https://canvas-lab.decisionsciencecorp.com/index.php** |
+| **Review URL** | **https://canvas-lab.decisionsciencecorp.com/stream.php** |
 | What you see | Standalone Sanctum Canvas laboratory: fixture replay, live prompt, tools, debug panes **outside** `#sanctum-canvas-root`. |
 | Track B mount | Empty root lease + `src/Browser/host/mount.js` (`canvas-host-v1`) — no lab chrome imported. |
 
@@ -51,7 +51,7 @@ Track B implements against these docs/fixtures **without** reading `old/`. Compa
 
 ## Operator guide (snippet)
 
-1. Open **https://canvas-lab.decisionsciencecorp.com/index.php**.  
+1. Open **https://canvas-lab.decisionsciencecorp.com/stream.php**.  
 2. Confirm status leaves “Booting…”, Fixture dropdown populated.  
 3. Replay `lab-canvas-textcontent` → canvas shows **Hello from lab fixture**.  
 4. For Track B integration: register `createRendererAdapter({ libraryUrl })` on `SanctumCompanion.canvas`, mount into `#sanctum-canvas-root`, feed AG-UI events via `handle.dispatchEvent` or SSE.  

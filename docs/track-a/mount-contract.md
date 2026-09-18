@@ -2,7 +2,7 @@
 
 **Status:** **frozen** `canvas-host-v1` (2026-09-18). Breaking changes → `canvas-host-v2`.  
 **Implementation:** `src/Browser/host/mount.js` (public twin `public/assets/js/host/mount.js`).  
-**Lab proof:** `public/index.php` keeps chrome **outside** the root; see `docs/track-a/A7.7-evidence.md`.  
+**Lab proof:** `public/stream.php` keeps chrome **outside** the root; see `docs/track-a/A7.7-evidence.md`.  
 **Fixture:** `tests/browser/host.mount.test.js` · expectations `tests/fixtures/handoff/mount-lease-expectations.json`.
 
 ---

@@ -9,7 +9,7 @@
 
 | | |
 |--|--|
-| **Review URL** | **https://canvas-lab.decisionsciencecorp.com/index.php** |
+| **Review URL** | **https://canvas-lab.decisionsciencecorp.com/stream.php** |
 | HTTP | Redirects to HTTPS (Let’s Encrypt live as of 2026-09-18; Ada). |
 | What you see | Standalone Sanctum Canvas laboratory: fixture replay, live prompt (`/api/chat.php`), deterministic tools, debug panes, canvas mount `#sanctum-canvas-root`. |
 
@@ -65,7 +65,7 @@ Under `docs/track-a/screenshots/a7/`:
 
 ## Human review checklist
 
-1. Open **https://canvas-lab.decisionsciencecorp.com/index.php**.
+1. Open **https://canvas-lab.decisionsciencecorp.com/stream.php**.
 2. Confirm status is not stuck on Booting.
 3. Fixture `lab-canvas-textcontent` → Replay → canvas shows “Hello from lab fixture”.
 4. Optional: Start with fake provider; Cancel / Reset; tool buttons.

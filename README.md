@@ -45,4 +45,4 @@ composer install
 node --test tests/browser/*.test.js tests/browser/*.golden.test.js
 ```
 
-Phases A0–A6 complete for the browser/library surface. A7.4–A7.6 PHP APIs live under `public/api/`. **A7.7 standalone lab:** `public/index.php` (local `php -S … -t public`; evidence `docs/track-a/A7.7-evidence.md`). Named review URL is A7.8.
+Phases A0–A6 complete for the browser/library surface. A7.4–A7.6 PHP APIs live under `public/api/`. **Lab pages:** `public/index.php` home dashboard, `public/walkthrough.php` guided walkthrough (A9, `docs/track-a/A9-evidence.md`), `public/stream.php` stream lab (A7.7, `docs/track-a/A7.7-evidence.md`). Named review URL: https://canvas-lab.decisionsciencecorp.com/

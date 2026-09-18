@@ -5,7 +5,7 @@
 
 ## Named review URL
 
-**https://canvas-lab.decisionsciencecorp.com/index.php**
+**https://canvas-lab.decisionsciencecorp.com/stream.php**
 
 Human-visible lab: fixture replay, streaming chat, tools, debug panes beside (not inside) `#sanctum-canvas-root`.
 

@@ -11,6 +11,7 @@ import {
   setClass,
   setOrRemoveAttr,
 } from "./shared.js";
+import { setInlineStyle, clearInlineStyle } from "../../renderer/inlineStyle.js";
 
 const VARIANTS = new Set(["neutral", "info", "warning", "success", "danger"]);
 const VARIANT_LABELS = {
@@ -55,10 +56,10 @@ export const Callout = lifecycle({
     setClass(el, cls);
     applyVariantCue(el, variant, VARIANT_LABELS);
     if (autodismiss) {
-      el.setAttribute("style", `--canvas-callout-duration: ${duration}ms`);
+      setInlineStyle(el, { "--canvas-callout-duration": `${duration}ms` });
       el.setAttribute("data-autodismiss", "true");
     } else {
-      el.removeAttribute("style");
+      clearInlineStyle(el);
       el.removeAttribute("data-autodismiss");
     }
 

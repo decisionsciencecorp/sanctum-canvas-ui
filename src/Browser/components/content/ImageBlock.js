@@ -10,6 +10,7 @@ import {
 } from "./shared.js";
 import { resolveImageAccessibility, resolveSafeSrc } from "./Image.js";
 import { toCssUrl as defaultToCssUrl } from "../../security/urlPolicy.js";
+import { setInlineStyle } from "../../renderer/inlineStyle.js";
 
 export const ImageBlock = lifecycle({
   mount(doc) {
@@ -60,7 +61,7 @@ export const ImageBlock = lifecycle({
         ? ctx.urlPolicy.toCssUrl(safe)
         : defaultToCssUrl(safe);
     if (cssUrl) {
-      el.setAttribute("style", `--canvas-image-block-bg: ${cssUrl}`);
+      setInlineStyle(el, { "--canvas-image-block-bg": cssUrl });
       el.setAttribute("class", "canvas-image-block canvas-image-block--has-bg");
     }
 

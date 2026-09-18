@@ -193,12 +193,18 @@ export function restoreInteractiveState(snap) {
       } catch {
         /* some input types reject selection */
       }
-    } else {
-      if (entry.selectionStart !== undefined && "selectionStart" in el) {
-        /** @type {{ selectionStart: number|null }} */ (el).selectionStart = entry.selectionStart;
-      }
-      if (entry.selectionEnd !== undefined && "selectionEnd" in el) {
-        /** @type {{ selectionEnd: number|null }} */ (el).selectionEnd = entry.selectionEnd;
+    } else if (entry.selectionStart != null || entry.selectionEnd != null) {
+      // Null selection = input type without a selection (number, date, …): nothing to
+      // restore, and assigning null throws in real browsers.
+      try {
+        if (entry.selectionStart != null && "selectionStart" in el) {
+          /** @type {{ selectionStart: number|null }} */ (el).selectionStart = entry.selectionStart;
+        }
+        if (entry.selectionEnd != null && "selectionEnd" in el) {
+          /** @type {{ selectionEnd: number|null }} */ (el).selectionEnd = entry.selectionEnd;
+        }
+      } catch {
+        /* some input types reject selection */
       }
     }
     if (entry.scrollTop !== undefined && "scrollTop" in el) {

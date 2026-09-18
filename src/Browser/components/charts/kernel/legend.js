@@ -3,6 +3,7 @@
  */
 
 import { seriesMark } from "./palette.js";
+import { setInlineStyle } from "../../../renderer/inlineStyle.js";
 
 /**
  * @param {Document} doc
@@ -25,7 +26,7 @@ export function renderLegend(doc, items) {
     const swatch = doc.createElement("span");
     swatch.setAttribute("class", "canvas-chart__legend-swatch");
     swatch.setAttribute("data-mark", mark);
-    swatch.setAttribute("style", `background: ${item.color};`);
+    setInlineStyle(swatch, { background: item.color });
     swatch.setAttribute("aria-hidden", "true");
 
     const label = doc.createElement("span");

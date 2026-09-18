@@ -15,6 +15,7 @@ import {
   unwrapItem,
 } from "./shared.js";
 import { createCardBlock } from "./CardBlockLayout.js";
+import { setInlineStyle } from "../../renderer/inlineStyle.js";
 
 const BG_COLORS = new Set(["gray", "info", "success", "warning", "danger"]);
 
@@ -46,7 +47,7 @@ export function renderContextCard(card, item, ctx, meta) {
   setClass(card, cls);
 
   if (bgCss) {
-    card.setAttribute("style", `background-image: ${bgCss}`);
+    setInlineStyle(card, { "background-image": bgCss });
     const alt = asText(item.bgImageAlt);
     if (alt) card.setAttribute("aria-label", alt);
   } else {

@@ -10,6 +10,7 @@ import {
   setClass,
   setOrRemoveAttr,
 } from "./shared.js";
+import { setInlineStyle } from "../../renderer/inlineStyle.js";
 
 /** @type {WeakMap<Element, ReturnType<typeof setTimeout>>} */
 const copiedTimers = new WeakMap();
@@ -95,7 +96,7 @@ export const CodeBlock = lifecycle({
     live.setAttribute("aria-atomic", "true");
     live.setAttribute("data-canvas-copy-live", "");
     // Visually hidden announcement region — never focused.
-    live.setAttribute("style", "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)");
+    setInlineStyle(live, { position: "absolute", width: "1px", height: "1px", overflow: "hidden", clip: "rect(0,0,0,0)" });
 
     const btn = doc.createElement("button");
     btn.setAttribute("type", "button");

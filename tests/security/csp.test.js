@@ -19,7 +19,7 @@ const REQUIRED = [
 
 describe("security/csp — lab and docs", () => {
   const sources = [
-    join(root, "public/index.php"),
+    join(root, "public/stream.php"),
     join(root, "public/lab/csp.html"),
     join(root, "docs/track-a/csp.md"),
   ];
@@ -41,15 +41,15 @@ describe("security/csp — lab and docs", () => {
     });
   }
 
-  it("index.php sets CSP via header() before HTML", () => {
-    const php = readFileSync(join(root, "public/index.php"), "utf8");
+  it("stream.php sets CSP via header() before HTML", () => {
+    const php = readFileSync(join(root, "public/stream.php"), "utf8");
     const headerIdx = php.indexOf("Content-Security-Policy");
     const doctypeIdx = php.indexOf("<!DOCTYPE");
     assert.ok(headerIdx >= 0 && doctypeIdx > headerIdx);
   });
 
-  it("index.php and csp.html include CSP meta http-equiv", () => {
-    for (const rel of ["public/index.php", "public/lab/csp.html"]) {
+  it("stream.php and csp.html include CSP meta http-equiv", () => {
+    for (const rel of ["public/stream.php", "public/lab/csp.html"]) {
       const body = readFileSync(join(root, rel), "utf8");
       assert.match(
         body,

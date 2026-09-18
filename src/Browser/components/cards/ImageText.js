@@ -9,6 +9,7 @@ import {
   resolveSafeUrl,
   setClass,
 } from "./shared.js";
+import { setInlineStyle } from "../../renderer/inlineStyle.js";
 
 const LAYOUTS = new Set(["horizontal", "vertical"]);
 
@@ -52,7 +53,7 @@ function createImageText(name, opts = {}) {
             ? `${props.imageSize}px`
             : asText(props.imageSize);
         if (size) {
-          imgWrap.setAttribute("style", `width:${size};height:${size}`);
+          setInlineStyle(imgWrap, { width: size, height: size });
         }
       }
 

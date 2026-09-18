@@ -20,7 +20,7 @@ function redactClientSafe(message) {
 
 describe("security/secret-leakage — stubs", () => {
   it("ErrorRedactor.php exists and strips credentials", () => {
-    const php = readFileSync(join(root, "src/Php/Http/ErrorRedactor.php"), "utf8");
+    const php = readFileSync(join(root, "public/includes/Php/Http/ErrorRedactor.php"), "utf8");
     assert.match(php, /REDACTED|redact/i);
     assert.match(php, /Bearer|sk-|VENICE|API_KEY/i);
   });

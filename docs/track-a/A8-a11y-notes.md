@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-18  
 **Task:** [#4172](https://tasks.decisionsciencecorp.com/admin/view.php?id=4172)  
-**Review URL:** **https://canvas-lab.decisionsciencecorp.com/index.php**  
+**Review URL:** **https://canvas-lab.decisionsciencecorp.com/stream.php**  
 **Tool:** `tools/design-smoke/verify_a8_a11y.py` (Python Playwright)  
 **Depends:** A7.8 named lab, A8.2 registry parity checklist
 
@@ -10,7 +10,7 @@
 
 | Surface | URL | Role |
 |---------|-----|------|
-| Standalone lab | `/index.php` | Primary review — keyboard smoke, landmarks, fixture canvas |
+| Standalone stream lab | `/stream.php` | Primary review — keyboard smoke, landmarks, fixture canvas |
 | A5 labs | `/lab/a5-*.html` | Foundation + upstream baseline gallery |
 | A6 labs | `/lab/a6-*.html` | Library + upstream baseline gallery |
 
@@ -51,7 +51,7 @@ Viewports: **desktop 1280×800**, **mobile 390×844**. Screenshots under `docs/t
 |----|-----------|-------|-----|
 | `control-name` | 4.1.2 | `/lab/a6-baseline.html` form inputs (name/email/date) had adjacent `<label>` text but **no `for`/`id`** | Wired `for`/`id`; Priority slider + Region trigger get `aria-labelledby` |
 | Focus outside canvas | 2.4.7 | Lab chrome not covered by `a11y.css` (scoped to `.canvas-root`) | `:focus-visible` rules in `public/lab/a7-lab.css` |
-| Bypass blocks | 2.4.1 | Dense chrome before canvas | Skip link in `public/index.php` |
+| Bypass blocks | 2.4.1 | Dense chrome before canvas | Skip link in `public/stream.php` |
 | Baseline focus CSS | 2.4.7 | Static A5/A6 baseline pages had no focus rules | Appended `:focus-visible` to `a5-baseline.css` / `a6-baseline.css` |
 
 ## Explicit non-blockers
