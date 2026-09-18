@@ -1,0 +1,206 @@
+/**
+ * A6.7–A6.9 — Accessible SVG charts (plain CSS, --canvas-* tokens).
+ */
+
+.canvas-chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-s);
+  color: var(--canvas-text-primary);
+  background: var(--canvas-surface-foreground);
+  border: 1px solid var(--canvas-border-default);
+  border-radius: var(--canvas-radius-xl);
+  padding: var(--canvas-space-m);
+  min-width: 0;
+}
+
+.canvas-chart__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-s);
+  min-width: 0;
+}
+
+.canvas-chart__plot {
+  position: relative;
+  width: 100%;
+  min-height: 160px;
+  min-width: 0;
+}
+
+.canvas-chart__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.canvas-chart__axis-line {
+  stroke: var(--canvas-border-interactive);
+  stroke-width: 1;
+}
+
+.canvas-chart__grid-line {
+  stroke: var(--canvas-border-default);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.canvas-chart__tick-label,
+.canvas-chart__axis-title {
+  fill: var(--canvas-text-secondary);
+  font-size: var(--canvas-font-size-2xs);
+  font-family: var(--canvas-font-label);
+}
+
+.canvas-chart__axis-title {
+  font-weight: var(--canvas-font-weight-medium);
+}
+
+.canvas-chart__bar,
+.canvas-chart__slice,
+.canvas-chart__stack-seg,
+.canvas-chart__radial-bar,
+.canvas-chart__point {
+  outline: none;
+}
+
+.canvas-chart__bar:focus,
+.canvas-chart__slice:focus,
+.canvas-chart__stack-seg:focus,
+.canvas-chart__radial-bar:focus,
+.canvas-chart__point:focus {
+  outline: var(--canvas-focus-ring-width) solid var(--canvas-focus-ring);
+  outline-offset: var(--canvas-focus-ring-offset);
+}
+
+.canvas-chart__line {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.canvas-chart__radar-ring,
+.canvas-chart__radar-axis {
+  stroke: var(--canvas-border-default);
+  stroke-width: 1;
+}
+
+.canvas-chart__stack-track {
+  fill: var(--canvas-surface-sunk);
+}
+
+.canvas-chart__radial-track {
+  opacity: 0.5;
+}
+
+.canvas-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--canvas-space-s) var(--canvas-space-m);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--canvas-font-size-xs);
+  color: var(--canvas-text-secondary);
+}
+
+.canvas-chart__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--canvas-space-2xs);
+}
+
+.canvas-chart__legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--canvas-radius-2xs);
+  border: 1px solid var(--canvas-border-interactive);
+  flex-shrink: 0;
+}
+
+.canvas-chart__legend-swatch[data-mark="dashed"] {
+  background-image: repeating-linear-gradient(
+    90deg,
+    currentColor 0 4px,
+    transparent 4px 7px
+  );
+}
+
+.canvas-chart__legend-swatch[data-mark="dotted"] {
+  background-image: radial-gradient(currentColor 1px, transparent 1px);
+  background-size: 4px 4px;
+}
+
+.canvas-chart__tooltip {
+  position: absolute;
+  left: var(--canvas-space-s);
+  top: var(--canvas-space-s);
+  z-index: 1;
+  max-width: min(100%, 16rem);
+  padding: var(--canvas-space-2xs) var(--canvas-space-xs);
+  border-radius: var(--canvas-radius-s);
+  border: 1px solid var(--canvas-border-default);
+  background: var(--canvas-surface-popover);
+  color: var(--canvas-text-primary);
+  font-size: var(--canvas-font-size-xs);
+  box-shadow: var(--canvas-shadow-s);
+  pointer-events: none;
+}
+
+.canvas-chart__tooltip[hidden] {
+  display: none;
+}
+
+.canvas-chart__data-table {
+  overflow-x: auto;
+  border-top: 1px solid var(--canvas-border-default);
+  padding-top: var(--canvas-space-s);
+}
+
+.canvas-chart__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--canvas-font-size-xs);
+  font-family: var(--canvas-font-numbers);
+}
+
+.canvas-chart__table-caption {
+  text-align: left;
+  font-family: var(--canvas-font-label);
+  font-weight: var(--canvas-font-weight-medium);
+  color: var(--canvas-text-secondary);
+  padding-bottom: var(--canvas-space-2xs);
+}
+
+.canvas-chart__table th,
+.canvas-chart__table td {
+  text-align: left;
+  padding: var(--canvas-space-2xs) var(--canvas-space-xs);
+  border-bottom: 1px solid var(--canvas-border-default);
+  color: var(--canvas-text-primary);
+}
+
+.canvas-chart__status {
+  color: var(--canvas-text-secondary);
+  font-size: var(--canvas-font-size-sm);
+}
+
+.canvas-chart[data-status="error"] .canvas-chart__status {
+  color: var(--canvas-status-danger-fg);
+}
+
+.canvas-chart--reduced-motion .canvas-chart__bar,
+.canvas-chart--reduced-motion .canvas-chart__slice,
+.canvas-chart--reduced-motion .canvas-chart__point {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas-chart__bar,
+  .canvas-chart__slice,
+  .canvas-chart__point {
+    transition: none;
+  }
+}

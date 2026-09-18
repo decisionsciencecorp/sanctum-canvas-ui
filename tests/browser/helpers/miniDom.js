@@ -89,6 +89,7 @@ class FakeElement extends FakeNode {
     this.offsetLeft = 0;
     this.offsetWidth = 280;
     this.clientWidth = 280;
+    this.clientHeight = 200;
     this.scrollWidth = 280;
     this.style = { overflow: "" };
     /** @type {Map<string, Set<Function>>} */
@@ -313,6 +314,13 @@ class FakeDocument {
     if (String(tag).toLowerCase() === "body" && !this.body) {
       this.body = el;
     }
+    return el;
+  }
+
+  /** SVG path for charts (A6.7) — same FakeElement, tagged with namespaceURI. */
+  createElementNS(_ns, tag) {
+    const el = this.createElement(tag);
+    el.namespaceURI = String(_ns || "");
     return el;
   }
 

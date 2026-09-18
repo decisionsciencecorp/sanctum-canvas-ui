@@ -1,0 +1,1 @@
+../../../../../src/Browser/components/charts/HorizontalBarChart.js

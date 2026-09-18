@@ -1,0 +1,1 @@
+../../../../../../src/Browser/components/charts/kernel/index.js

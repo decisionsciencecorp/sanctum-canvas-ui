@@ -170,4 +170,14 @@
   --canvas-layout-pad: var(--canvas-space-m-l);
   --canvas-layout-max-width: 72rem;
   --canvas-touch-target-min: 44px;
+
+  /* —— Chart series palette (A6.7) —— */
+  --canvas-chart-1: #0d47a1;
+  --canvas-chart-2: #208b3a;
+  --canvas-chart-3: #b12a90;
+  --canvas-chart-4: #e16462;
+  --canvas-chart-5: #fca636;
+  --canvas-chart-6: #1976d2;
+  --canvas-chart-7: #7014cc;
+  --canvas-chart-8: #cb253e;
 }
