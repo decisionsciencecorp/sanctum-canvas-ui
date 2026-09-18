@@ -447,7 +447,7 @@ async function replayFixture(fixtureId) {
 async function startLive() {
   resetLab();
   setBusy(true);
-  setStatus("Starting live stream…");
+  setStatus("Sending…");
   abortCtl = new AbortController();
 
   const format = els.format?.value === "sse" ? "sse" : "ndjson";
@@ -658,7 +658,7 @@ async function boot() {
     // Prove reducer import is live (offline unit of work without stream).
     reduceEvents([]);
 
-    setStatus("Ready — pick a fixture or start a live stream.", { ready: true });
+    setStatus("Ready. Pick Hello card and press Replay.", { ready: true });
     paintDebug();
   } catch (err) {
     setStatus(`Boot failed: ${sanitize(err)}`, { error: true });
