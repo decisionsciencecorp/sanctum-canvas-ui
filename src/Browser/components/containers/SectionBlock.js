@@ -195,6 +195,7 @@ export function didSectionUserIntervene(host) {
 }
 
 export const SectionBlock = lifecycle({
+  ownsChildren: true,
   mount(doc) {
     const el = doc.createElement("div");
     el.setAttribute("data-canvas-component", "SectionBlock");

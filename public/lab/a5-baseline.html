@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OpenUI upstream baseline — A5 foundation (static)</title>
+    <!--
+      Baseline method (A5.8 / Doc #1381):
+      Storybook under old/packages/react-ui was not run in this environment.
+      This page is a static HTML fixture mirroring OpenUI structure/classes from
+      old/packages/react-ui/src/components/* with tokens from openui-defaults.scss.
+    -->
+    <link rel="stylesheet" href="./a5-baseline-tokens.css" />
+    <link rel="stylesheet" href="./a5-baseline.css" />
+  </head>
+  <body>
+    <main class="baseline-root baseline-page" id="baseline-root" data-baseline-ready="1">
+      <h1>OpenUI A5 baseline (static fixture)</h1>
+      <p class="baseline-lede">
+        Upstream visual reference constructed from <code>old/</code> class names and
+        token values. Same family ids as the Sanctum port lab for paired screenshots.
+      </p>
+
+      <section class="baseline-family" id="family-stack" data-family="stack">
+        <h2>Stack</h2>
+        <div class="openui-stack" data-direction="row">
+          <span>Stack A</span>
+          <span>Stack B</span>
+          <span>Stack C</span>
+        </div>
+      </section>
+
+      <section class="baseline-family" id="family-card" data-family="card">
+        <h2>Card</h2>
+        <div class="openui-card openui-card-card openui-card-standard">
+          <div class="openui-card-header">
+            <p class="openui-card-header-title">Card title</p>
+            <p class="openui-card-header-subtitle">Card subtitle</p>
+          </div>
+          <div class="openui-card-content">
+            <p>Card body line for visual parity.</p>
+          </div>
+          <div class="openui-sources">
+            <p class="openui-sources-heading">Sources</p>
+            <ul class="openui-sources-list">
+              <li class="openui-source-item">Example source · example.com</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="baseline-family" id="family-content" data-family="content">
+        <h2>Content primitives</h2>
+        <div class="openui-stack">
+          <div class="openui-card-header">
+            <p class="openui-card-header-title">Inline header</p>
+            <p class="openui-card-header-subtitle">Secondary line</p>
+          </div>
+          <div class="openui-text-content">
+            TextContent sunk block — foundation paragraph.
+          </div>
+          <div class="openui-text-callout">
+            <strong>TextCallout</strong>
+            <div>Highlight callout for operators.</div>
+          </div>
+          <div class="openui-callout">
+            <strong>Callout</strong>
+            <div>Status notice for operators.</div>
+          </div>
+          <hr class="openui-separator" />
+          <div class="openui-tag-block" role="list">
+            <span class="openui-tag" role="listitem">Alpha</span>
+            <span class="openui-tag" role="listitem">Beta</span>
+            <span class="openui-tag" role="listitem">Gamma</span>
+          </div>
+          <div class="openui-entity-list">
+            <div class="openui-entity-list-row">
+              <span>Agent</span><span>Lane</span>
+            </div>
+            <div class="openui-entity-list-row">
+              <span>Ada</span><span>Infra</span>
+            </div>
+            <div class="openui-entity-list-row">
+              <span>Otto</span><span>Build</span>
+            </div>
+          </div>
+          <div class="openui-metric-indicator">
+            <div class="openui-metric-indicator-value">12</div>
+            <div class="openui-metric-indicator-subtext">Open tasks</div>
+            <div class="openui-metric-indicator-trend">+33%</div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="baseline-family"
+        id="family-lists-code-images"
+        data-family="lists-code-images"
+      >
+        <h2>Lists / Code / Images</h2>
+        <div class="openui-stack">
+          <div class="openui-list-block">
+            <div class="openui-list-item">
+              <span class="openui-list-item-index">1</span>
+              <div>
+                <p class="openui-list-item-title">First item</p>
+                <p class="openui-list-item-subtitle">Detail A</p>
+              </div>
+            </div>
+            <div class="openui-list-item">
+              <span class="openui-list-item-index">2</span>
+              <div>
+                <p class="openui-list-item-title">Second item</p>
+                <p class="openui-list-item-subtitle">Detail B</p>
+              </div>
+            </div>
+            <div class="openui-list-item">
+              <span class="openui-list-item-index">3</span>
+              <div>
+                <p class="openui-list-item-title">Third item</p>
+              </div>
+            </div>
+          </div>
+          <pre class="openui-code-block-wrapper"><code>const parity = true;
+console.log(parity);</code></pre>
+          <div class="openui-image">
+            <img alt="Lab placeholder image" src="./lab-image.svg" />
+          </div>
+          <div class="openui-image-block">
+            <img alt="Lab image block" src="./lab-image.svg" />
+          </div>
+        </div>
+      </section>
+
+      <section class="baseline-family" id="family-tabs" data-family="tabs">
+        <h2>Tabs</h2>
+        <div class="openui-tabs">
+          <div class="openui-tabs-list" role="tablist">
+            <button type="button" class="openui-tabs-trigger" data-state="active" role="tab">
+              Line
+            </button>
+            <button type="button" class="openui-tabs-trigger" data-state="inactive" role="tab">
+              Bar
+            </button>
+            <button type="button" class="openui-tabs-trigger" data-state="inactive" role="tab">
+              Area
+            </button>
+          </div>
+          <div class="openui-tabs-content" role="tabpanel">
+            Line panel body for visual parity.
+          </div>
+        </div>
+      </section>
+
+      <section class="baseline-family" id="family-accordion" data-family="accordion">
+        <h2>Accordion</h2>
+        <div class="openui-accordion openui-accordion-card">
+          <div class="openui-accordion-item" data-state="open">
+            <button type="button" class="openui-accordion-trigger" aria-expanded="true">
+              Section one <span>▾</span>
+            </button>
+            <div class="openui-accordion-content">Accordion panel one content.</div>
+          </div>
+          <div class="openui-accordion-item" data-state="closed">
+            <button type="button" class="openui-accordion-trigger" aria-expanded="false">
+              Section two <span>▸</span>
+            </button>
+            <div class="openui-accordion-content" hidden>Accordion panel two content.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="baseline-family" id="family-section" data-family="section">
+        <h2>Section</h2>
+        <div class="openui-foldable-section">
+          <div class="openui-foldable-section-item" data-state="open">
+            <button type="button" class="openui-foldable-section-trigger" aria-expanded="true">
+              Overview
+            </button>
+            <div class="openui-foldable-section-panel">Overview body.</div>
+          </div>
+          <div class="openui-foldable-section-item" data-state="closed">
+            <button type="button" class="openui-foldable-section-trigger" aria-expanded="false">
+              Details
+            </button>
+            <div class="openui-foldable-section-panel" hidden>Details body.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="baseline-family" id="family-steps" data-family="steps">
+        <h2>Steps</h2>
+        <div class="openui-steps-container">
+          <ol class="openui-steps">
+            <li class="openui-step-item" data-state="current">
+              <span class="openui-step-number">1</span>
+              <div>
+                <p class="openui-step-title">Gather</p>
+                <p class="openui-step-details">Collect inputs</p>
+              </div>
+            </li>
+            <li class="openui-step-item" data-state="upcoming">
+              <span class="openui-step-number">2</span>
+              <div>
+                <p class="openui-step-title">Review</p>
+                <p class="openui-step-details">Check parity</p>
+              </div>
+            </li>
+            <li class="openui-step-item" data-state="upcoming">
+              <span class="openui-step-number">3</span>
+              <div>
+                <p class="openui-step-title">Ship</p>
+                <p class="openui-step-details">Close A5</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="baseline-family" id="family-carousel" data-family="carousel">
+        <h2>Carousel</h2>
+        <div class="openui-carousel">
+          <div class="openui-carousel-content">
+            <div class="openui-carousel-item">
+              <div>Slide 1</div>
+              <div>Alpha detail</div>
+            </div>
+            <div class="openui-carousel-item">
+              <div>Slide 2</div>
+              <div>Beta detail</div>
+            </div>
+            <div class="openui-carousel-item">
+              <div>Slide 3</div>
+              <div>Gamma detail</div>
+            </div>
+          </div>
+          <div class="openui-carousel-nav">
+            <button type="button">Previous</button>
+            <button type="button">Next</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="baseline-family" id="family-modal" data-family="modal">
+        <h2>Modal (open)</h2>
+        <div class="openui-modal-root">
+          <div class="openui-modal-overlay"></div>
+          <div class="openui-modal-content openui-modal-md" role="dialog" aria-modal="true">
+            <div class="openui-modal-header">
+              <h2 class="openui-modal-title" id="openui-modal-title">Lab dialog</h2>
+              <button type="button" class="openui-modal-close" aria-label="Close">×</button>
+            </div>
+            <div class="openui-modal-body">Modal body content for open-state parity.</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

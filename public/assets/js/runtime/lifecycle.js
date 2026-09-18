@@ -1,0 +1,1 @@
+../../../../src/Browser/runtime/lifecycle.js

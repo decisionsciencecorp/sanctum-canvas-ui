@@ -234,8 +234,22 @@ function renderSlides(root, slides, ctx, state) {
     wrap.setAttribute("role", "group");
     wrap.setAttribute("aria-roledescription", "slide");
     wrap.setAttribute("aria-label", `Slide ${i + 1} of ${slides.length}`);
-    // Fake offsetLeft for miniDom / layout-less environments
-    /** @type {any} */ (wrap).offsetLeft = i * 280;
+    // miniDom lacks layout; stamp a synthetic offsetLeft only when writable.
+    // Real browsers expose offsetLeft as a getter — assignment throws and must
+    // not abort slide mount (A5.8 lab / Playwright).
+    try {
+      const desc = Object.getOwnPropertyDescriptor(wrap, "offsetLeft");
+      const proto = Object.getPrototypeOf(wrap);
+      const protoDesc = proto
+        ? Object.getOwnPropertyDescriptor(proto, "offsetLeft")
+        : undefined;
+      const hasLayoutGetter = !!(protoDesc && protoDesc.get && !protoDesc.set);
+      if (!hasLayoutGetter && (!desc || desc.writable)) {
+        /** @type {any} */ (wrap).offsetLeft = i * 280;
+      }
+    } catch {
+      /* ignore — layout getter in real DOM */
+    }
     if (typeof ctx.renderChildren === "function") {
       ctx.renderChildren(wrap, slide);
     } else {
@@ -263,6 +277,7 @@ function renderSlides(root, slides, ctx, state) {
 }
 
 export const Carousel = lifecycle({
+  ownsChildren: true,
   mount(doc) {
     const root = doc.createElement("div");
     root.setAttribute("data-canvas-component", "Carousel");

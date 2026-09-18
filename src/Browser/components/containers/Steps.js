@@ -104,6 +104,7 @@ export function didStepsUserIntervene(host) {
 }
 
 export const Steps = lifecycle({
+  ownsChildren: true,
   mount(doc) {
     const el = doc.createElement("div");
     el.setAttribute("data-canvas-component", "Steps");

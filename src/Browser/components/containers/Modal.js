@@ -167,26 +167,62 @@ function applyOpen(dialog, state, open, props, ctx) {
         ? /** @type {Element} */ (doc.activeElement)
         : state.restoreFocus);
 
-    if (typeof /** @type {{ showModal?: Function }} */ (dialog).showModal === "function") {
-      /** @type {{ showModal: Function }} */ (dialog).showModal();
-    } else {
-      dialog.setAttribute("open", "");
-      /** @type {{ open: boolean }} */ (dialog).open = true;
-    }
-    setScrollLock(doc, true);
-    state.open = true;
-    dialog.setAttribute("data-open", "true");
+    state.propsRef = props;
+    state.ctxRef = ctx;
 
-    // Initial focus: first focusable in body, else close, else dialog
-    queueMicrotaskOrNow(() => {
-      if (!state.open) return;
-      const focusables = focusableElements(dialog);
-      const preferred =
-        focusables.find((el) => el !== state.closeBtn) ||
-        state.closeBtn ||
-        dialog;
-      preferred.focus?.();
-    });
+    const finishOpen = () => {
+      setScrollLock(doc, true);
+      state.open = true;
+      dialog.setAttribute("data-open", "true");
+      queueMicrotaskOrNow(() => {
+        if (!state.open) return;
+        const focusables = focusableElements(dialog);
+        const preferred =
+          focusables.find((el) => el !== state.closeBtn) ||
+          state.closeBtn ||
+          dialog;
+        preferred.focus?.();
+      });
+    };
+
+    /**
+     * Native showModal() throws if the dialog is not in a Document yet
+     * (common during create()+patch before reconciler append). miniDom's
+     * stub succeeds without being connected — keep that sync path for tests.
+     */
+    let shown = false;
+    try {
+      if (typeof /** @type {{ showModal?: Function }} */ (dialog).showModal === "function") {
+        /** @type {{ showModal: Function }} */ (dialog).showModal();
+        shown = true;
+      } else {
+        dialog.setAttribute("open", "");
+        /** @type {{ open: boolean }} */ (dialog).open = true;
+        shown = true;
+      }
+    } catch {
+      shown = false;
+    }
+
+    if (!shown) {
+      queueMicrotaskOrNow(() => {
+        if (!resolveOpen(state.propsRef) || state.open) return;
+        try {
+          if (typeof /** @type {{ showModal?: Function }} */ (dialog).showModal === "function") {
+            /** @type {{ showModal: Function }} */ (dialog).showModal();
+          } else {
+            dialog.setAttribute("open", "");
+            /** @type {{ open: boolean }} */ (dialog).open = true;
+          }
+          finishOpen();
+        } catch {
+          /* still not connectable — leave closed */
+        }
+      });
+      return;
+    }
+
+    finishOpen();
   } else if (!open && wasOpen) {
     // Closing
     if (typeof /** @type {{ close?: Function }} */ (dialog).close === "function") {
@@ -227,6 +263,7 @@ function requestClose(dialog, state) {
 }
 
 export const Modal = lifecycle({
+  ownsChildren: true,
   mount(doc) {
     const dialog = doc.createElement("dialog");
     dialog.setAttribute("data-canvas-component", "Modal");

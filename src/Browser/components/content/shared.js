@@ -199,5 +199,7 @@ export function lifecycle(impl) {
     destroy(el, ctx = {}) {
       impl.unmount?.(el, ctx);
     },
+    // Content primitives render from props; keyed reconciler must not wipe chrome.
+    ownsChildren: impl.ownsChildren !== false,
   };
 }

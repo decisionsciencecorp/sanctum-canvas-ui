@@ -1,0 +1,57 @@
+/**
+ * A5.8 foundation lab chrome — spacing only; component look comes from
+ * public/assets/css/components/*.css
+ */
+
+.lab-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-2xl);
+  padding-block: var(--canvas-space-l);
+}
+
+.lab-page > h1 {
+  margin: 0;
+  font-family: var(--canvas-font-display, var(--canvas-font-body));
+  font-size: var(--canvas-font-size-xl);
+  font-weight: var(--canvas-font-weight-semibold, 600);
+}
+
+.lab-lede {
+  margin: 0;
+  color: var(--canvas-text-secondary);
+  max-width: 42rem;
+}
+
+.lab-family {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-m);
+  padding: var(--canvas-space-l);
+  border: 1px solid var(--canvas-border-default);
+  border-radius: var(--canvas-radius-xl);
+  background: var(--canvas-surface-foreground);
+  scroll-margin-top: var(--canvas-space-l);
+}
+
+.lab-family > h2 {
+  margin: 0;
+  font-size: var(--canvas-font-size-lg);
+  font-weight: var(--canvas-font-weight-medium, 500);
+}
+
+.lab-family > .lab-mount {
+  min-width: 0;
+}
+
+.lab-status {
+  margin: 0;
+  font-size: var(--canvas-font-size-sm);
+  color: var(--canvas-text-secondary);
+}
+
+.lab-stub-text {
+  font-family: var(--canvas-font-body);
+  font-size: var(--canvas-font-size-md);
+  color: var(--canvas-text-primary);
+}

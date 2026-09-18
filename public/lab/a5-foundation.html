@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sanctum Canvas — A5 foundation lab</title>
+    <!--
+      style-src includes 'unsafe-inline' so component-owned style attrs
+      (aspect-ratio, ImageBlock bg custom prop, Callout duration) apply in lab.
+      Scripts stay module-only (no unsafe-inline / unsafe-eval).
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+    />
+    <link rel="stylesheet" href="../assets/css/tokens.css" />
+    <link rel="stylesheet" href="../assets/css/skins.css" />
+    <link rel="stylesheet" href="../assets/css/layout.css" />
+    <link rel="stylesheet" href="../assets/css/a11y.css" />
+    <link rel="stylesheet" href="../assets/css/components/stack.css" />
+    <link rel="stylesheet" href="../assets/css/components/card.css" />
+    <link rel="stylesheet" href="../assets/css/components/content.css" />
+    <link rel="stylesheet" href="../assets/css/components/list.css" />
+    <link rel="stylesheet" href="../assets/css/components/code-block.css" />
+    <link rel="stylesheet" href="../assets/css/components/image.css" />
+    <link rel="stylesheet" href="../assets/css/components/tabs.css" />
+    <link rel="stylesheet" href="../assets/css/components/accordion.css" />
+    <link rel="stylesheet" href="../assets/css/components/section-block.css" />
+    <link rel="stylesheet" href="../assets/css/components/steps.css" />
+    <link rel="stylesheet" href="../assets/css/components/carousel.css" />
+    <link rel="stylesheet" href="../assets/css/components/modal.css" />
+    <link rel="stylesheet" href="./a5-foundation.css" />
+  </head>
+  <body>
+    <main class="canvas-root lab-page" id="canvas-root">
+      <h1>A5 foundation components</h1>
+      <p class="lab-lede">
+        Playwright visual-parity target (A5.8). One mount per component family.
+        Modal opens on load for the open-state shot.
+      </p>
+
+      <section class="lab-family" id="family-stack" data-family="stack" aria-label="Stack">
+        <h2>Stack</h2>
+        <div class="lab-mount" id="mount-stack"></div>
+      </section>
+
+      <section class="lab-family" id="family-card" data-family="card" aria-label="Card">
+        <h2>Card</h2>
+        <div class="lab-mount" id="mount-card"></div>
+      </section>
+
+      <section
+        class="lab-family"
+        id="family-content"
+        data-family="content"
+        aria-label="Content primitives"
+      >
+        <h2>Content primitives</h2>
+        <div class="lab-mount" id="mount-content"></div>
+      </section>
+
+      <section
+        class="lab-family"
+        id="family-lists-code-images"
+        data-family="lists-code-images"
+        aria-label="Lists, code, images"
+      >
+        <h2>Lists / Code / Images</h2>
+        <div class="lab-mount" id="mount-lists-code-images"></div>
+      </section>
+
+      <section class="lab-family" id="family-tabs" data-family="tabs" aria-label="Tabs">
+        <h2>Tabs</h2>
+        <div class="lab-mount" id="mount-tabs"></div>
+      </section>
+
+      <section
+        class="lab-family"
+        id="family-accordion"
+        data-family="accordion"
+        aria-label="Accordion"
+      >
+        <h2>Accordion</h2>
+        <div class="lab-mount" id="mount-accordion"></div>
+      </section>
+
+      <section
+        class="lab-family"
+        id="family-section"
+        data-family="section"
+        aria-label="Section"
+      >
+        <h2>Section</h2>
+        <div class="lab-mount" id="mount-section"></div>
+      </section>
+
+      <section class="lab-family" id="family-steps" data-family="steps" aria-label="Steps">
+        <h2>Steps</h2>
+        <div class="lab-mount" id="mount-steps"></div>
+      </section>
+
+      <section
+        class="lab-family"
+        id="family-carousel"
+        data-family="carousel"
+        aria-label="Carousel"
+      >
+        <h2>Carousel</h2>
+        <div class="lab-mount" id="mount-carousel"></div>
+      </section>
+
+      <section class="lab-family" id="family-modal" data-family="modal" aria-label="Modal">
+        <h2>Modal (open)</h2>
+        <div class="lab-mount" id="mount-modal"></div>
+      </section>
+
+      <p id="status" class="lab-status" role="status">Loading…</p>
+    </main>
+    <script type="module" src="./a5-foundation.js"></script>
+  </body>
+</html>
