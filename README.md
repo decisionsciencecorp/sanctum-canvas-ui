@@ -36,3 +36,13 @@ Upstream pin at fork time: see `old/` history and `UPSTREAM.md`.
 ## License
 
 Upstream OpenUI is MIT; preserve attribution under `old/` and in `LICENSES/`.
+
+## Develop
+
+```bash
+composer install
+./vendor/bin/phpunit
+node --test tests/browser/*.test.js tests/browser/*.golden.test.js
+```
+
+Phases A0–A6 complete for the browser/library surface. A7.4–A7.6 PHP APIs live under `public/api/` (`chat.php`, `tools.php`, `programs/`) with sources in `src/Php/{Inference,Tools,Storage,Http}/`. A7.7 lab page not yet.

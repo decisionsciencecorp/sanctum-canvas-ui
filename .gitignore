@@ -20,3 +20,4 @@ old/node_modules/
 old/**/node_modules/
 old/**/dist/
 old/**/.turbo/
+var/

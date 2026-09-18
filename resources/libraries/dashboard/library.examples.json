@@ -1,0 +1,104 @@
+{
+  "contractFormatVersion": "1.0.0",
+  "id": "sanctum-openui-examples",
+  "variant": "dashboard",
+  "root": "Stack",
+  "upstreamCommit": "ee54f66",
+  "componentGroups": [
+    { "name": "Foundation", "components": ["TextContent"] },
+    { "name": "Layout", "components": ["Stack"] },
+    { "name": "Forms", "components": ["Input"] },
+    { "name": "Charts", "components": ["BarChart"] },
+    { "name": "Actions", "components": ["Button"] }
+  ],
+  "components": {
+    "TextContent": {
+      "name": "TextContent",
+      "version": "0.5.0",
+      "propertyOrder": ["text", "size", "weight"],
+      "properties": {
+        "text": { "type": "string", "required": true },
+        "size": { "type": "string", "enum": ["sm", "md", "lg"], "default": "md" },
+        "weight": { "type": "string", "enum": ["normal", "medium", "bold"], "default": "normal" }
+      },
+      "required": ["text"],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "components/TextContent.js",
+      "securityCapabilities": ["none"],
+      "prompt": { "description": "Plain text content block.", "group": "Foundation" }
+    },
+    "Stack": {
+      "name": "Stack",
+      "version": "0.5.0",
+      "propertyOrder": ["children", "direction", "gap", "align", "justify", "wrap"],
+      "properties": {
+        "children": { "type": "array", "required": true },
+        "direction": { "type": "string", "enum": ["row", "column"], "default": "column" },
+        "gap": { "type": "string", "default": "md" },
+        "align": { "type": "string", "default": "stretch" },
+        "justify": { "type": "string", "default": "start" },
+        "wrap": { "type": "boolean", "default": false }
+      },
+      "required": ["children"],
+      "reactiveProps": [],
+      "allowedChildren": ["*registered*"],
+      "renderer": "components/Stack.js",
+      "securityCapabilities": ["none"],
+      "prompt": { "description": "Dashboard root layout stack.", "group": "Layout" }
+    },
+    "Input": {
+      "name": "Input",
+      "version": "0.5.0",
+      "propertyOrder": ["name", "placeholder", "type", "rules", "value"],
+      "properties": {
+        "name": { "type": "string", "required": true },
+        "placeholder": { "type": "string" },
+        "type": { "type": "string", "enum": ["text", "email", "password", "number", "url"] },
+        "rules": { "type": "object" },
+        "value": { "type": "string" }
+      },
+      "required": ["name"],
+      "reactiveProps": ["value"],
+      "allowedChildren": null,
+      "renderer": "components/Input.js",
+      "securityCapabilities": ["none"],
+      "prompt": { "description": "Single-line input; value is reactive.", "group": "Forms" }
+    },
+    "BarChart": {
+      "name": "BarChart",
+      "version": "0.5.0",
+      "propertyOrder": ["labels", "series", "variant", "xLabel", "yLabel", "height"],
+      "properties": {
+        "labels": { "type": "array", "required": true },
+        "series": { "type": "array", "required": true },
+        "variant": { "type": "string" },
+        "xLabel": { "type": "string" },
+        "yLabel": { "type": "string" },
+        "height": { "type": "number" }
+      },
+      "required": ["labels", "series"],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "components/BarChart.js",
+      "securityCapabilities": ["none"],
+      "prompt": { "description": "Vertical bar chart.", "group": "Charts" }
+    },
+    "Button": {
+      "name": "Button",
+      "version": "0.5.0",
+      "propertyOrder": ["label", "variant", "action"],
+      "properties": {
+        "label": { "type": "string", "required": true },
+        "variant": { "type": "string", "enum": ["primary", "secondary", "danger"], "default": "primary" },
+        "action": { "type": "object" }
+      },
+      "required": ["label"],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "components/Button.js",
+      "securityCapabilities": ["actions", "links"],
+      "prompt": { "description": "Action-bearing button.", "group": "Actions" }
+    }
+  }
+}
