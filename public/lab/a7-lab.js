@@ -43,16 +43,16 @@ const LAB_AUTH = "canvas-lab-dev";
 const LIBRARY_URL = "/assets/libraries/dashboard/library.v1.json";
 const FIXTURE_DIR = "/fixtures/stream";
 
-/** Known fixtures (offline-capable). Prefer lab-canvas-textcontent for canvas smoke. */
-const FIXTURE_IDS = [
-  "lab-canvas-textcontent",
-  "text-message-basic",
-  "tool-call-lifecycle",
-  "malformed-line-skip",
-  "interrupted-run-error",
-  "sse-chunk-split-text",
-  "ndjson-text-parity",
-  "ndjson-tool-parity",
+/** Known fixtures. id is the file; label is what the menu shows. */
+const FIXTURES = [
+  ["lab-canvas-textcontent", "Hello card (start here)", "Draws one text card that says Hello from lab fixture."],
+  ["text-message-basic", "Short text message", "A basic text stream, not a full card."],
+  ["tool-call-lifecycle", "A tool call", "Shows a tool starting, running, and finishing."],
+  ["malformed-line-skip", "Skip a broken line", "A bad line in the stream that should be ignored."],
+  ["interrupted-run-error", "Run that fails", "The stream stops with an error."],
+  ["sse-chunk-split-text", "Text split across chunks", "Same words, cut into small event-stream pieces."],
+  ["ndjson-text-parity", "Text, line-by-line JSON", "Same text run, packaged as one JSON object per line."],
+  ["ndjson-tool-parity", "Tool call, line-by-line JSON", "Same tool call, packaged as one JSON object per line."],
 ];
 
 const els = {
@@ -67,6 +67,7 @@ const els = {
   patch: document.getElementById("lab-patch"),
   patchSource: document.getElementById("lab-patch-source"),
   status: document.getElementById("lab-status"),
+  fixtureHelp: document.getElementById("lab-fixture-help"),
   canvas: document.getElementById("sanctum-canvas-root"),
   toolOut: document.getElementById("lab-tool-out"),
   debugLang: document.getElementById("debug-lang"),
@@ -358,9 +359,7 @@ function resetLab() {
   if (schema) {
     streamingParser = createStreamingParser(schema, library.root || "Stack");
   }
-  if (els.canvas) {
-    while (els.canvas.firstChild) els.canvas.removeChild(els.canvas.firstChild);
-  }
+  if (els.canvas) showCanvasPlaceholder();
   if (els.toolOut) els.toolOut.textContent = "";
   setBusy(false);
   setStatus("Reset.", { ready: true });
@@ -585,16 +584,34 @@ async function callTool(tool, args) {
   }
 }
 
+function showCanvasPlaceholder() {
+  if (!els.canvas) return;
+  els.canvas.replaceChildren();
+  const note = document.createElement("p");
+  note.id = "lab-canvas-empty";
+  note.className = "a7-lab-empty";
+  note.textContent = "Nothing here yet. On the left, pick Hello card and press Replay.";
+  els.canvas.appendChild(note);
+}
+
 function fillFixtureSelect() {
   if (!els.fixture) return;
-  els.fixture.innerHTML = "";
-  for (const id of FIXTURE_IDS) {
+  els.fixture.replaceChildren();
+  for (const [id, label, tip] of FIXTURES) {
     const opt = document.createElement("option");
     opt.value = id;
-    opt.textContent = id;
+    opt.textContent = label;
+    opt.title = tip;
+    opt.dataset.tip = tip;
     if (id === "lab-canvas-textcontent") opt.selected = true;
     els.fixture.appendChild(opt);
   }
+  const showTip = () => {
+    const opt = els.fixture.selectedOptions[0];
+    if (els.fixtureHelp) els.fixtureHelp.textContent = opt?.dataset.tip || "";
+  };
+  els.fixture.addEventListener("change", showTip);
+  showTip();
 }
 
 async function boot() {

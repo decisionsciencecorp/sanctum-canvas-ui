@@ -78,18 +78,94 @@
   color: var(--canvas-text-muted, #5a6270);
 }
 
+.a7-lab-hint {
+  margin: -0.2rem 0 0.55rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--canvas-text-muted, #5a6270);
+}
+
+.a7-lab-panel h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--canvas-text-muted, #5a6270);
+}
+
+.a7-tip {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.a7-tip__btn {
+  width: 1.15rem;
+  height: 1.15rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--canvas-border, #c9d0db);
+  background: var(--canvas-surface-page, #f6f7f9);
+  color: var(--canvas-text-muted, #5a6270);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: help;
+}
+
+.a7-tip__bubble {
+  display: none;
+  position: absolute;
+  z-index: 40;
+  left: 0;
+  top: calc(100% + 0.35rem);
+  width: 15rem;
+  max-width: min(15rem, 70vw);
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+  background: #1c2430;
+  color: #f4f6f8;
+  font-size: 0.75rem;
+  font-weight: 450;
+  line-height: 1.4;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: 0 8px 24px rgba(16, 22, 32, 0.28);
+}
+
+.a7-tip:hover .a7-tip__bubble,
+.a7-tip:focus-within .a7-tip__bubble {
+  display: block;
+}
+
+.a7-lab-empty {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--canvas-text-muted, #5a6270);
+}
+
 .a7-lab-panel {
   margin-bottom: 1.1rem;
   padding-bottom: 0.9rem;
   border-bottom: 1px solid var(--canvas-border, #e3e7ee);
 }
 
-.a7-lab-panel h2 {
-  margin: 0 0 0.55rem;
-  font-size: 0.78rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--canvas-text-muted, #5a6270);
+.a7-lab-panel h2 .a7-tip__btn {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.a7-lab-field > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 .a7-lab-field {
