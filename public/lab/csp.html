@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="sanctum">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sanctum Canvas — CSP lab harness</title>
+    <!--
+      Strict CSP for the Canvas lab (A4.7).
+      No unsafe-eval. No unsafe-inline for scripts.
+      Prefer classes over inline style attributes (style-src has no 'unsafe-inline').
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+    />
+    <link rel="stylesheet" href="../assets/css/tokens.css" />
+    <link rel="stylesheet" href="../assets/css/skins.css" />
+    <link rel="stylesheet" href="../assets/css/layout.css" />
+    <link rel="stylesheet" href="../assets/css/a11y.css" />
+    <link rel="stylesheet" href="./csp-harness.css" />
+  </head>
+  <body>
+    <main class="canvas-root lab-harness" id="canvas-root">
+      <h1 class="lab-title">Canvas CSP lab</h1>
+      <p class="lab-lede">
+        Same-origin modules and styles under a strict Content-Security-Policy.
+        Hostile trees are rejected by renderer limits before DOM work grows unbounded.
+      </p>
+      <div class="canvas-stack">
+        <p id="status" class="lab-status" role="status">Ready.</p>
+        <button type="button" id="run-ok" class="canvas-touch lab-btn">Render small tree</button>
+        <button type="button" id="run-hostile" class="canvas-touch lab-btn lab-btn--danger">
+          Attempt hostile tree
+        </button>
+        <pre id="out" class="lab-out" aria-live="polite"></pre>
+      </div>
+    </main>
+    <script type="module" src="./csp-harness.js"></script>
+  </body>
+</html>

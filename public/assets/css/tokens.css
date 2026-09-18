@@ -1,0 +1,173 @@
+/**
+ * Sanctum Canvas semantic design tokens.
+ * Meaning translated from upstream openui-defaults / design-system variables.
+ * Namespace: --canvas-*  (plain CSS only; no SCSS, no model-generated class APIs).
+ */
+
+:root {
+  /* —— Surfaces —— */
+  --canvas-surface-background: oklch(0.97 0 89.876 / 1);
+  --canvas-surface-foreground: oklch(0.994 0 89.876 / 1);
+  --canvas-surface-popover: oklch(0.994 0 89.876 / 1);
+  --canvas-surface-sunk-light: oklch(0.097 0 0 / 0.02);
+  --canvas-surface-sunk: oklch(0.097 0 0 / 0.04);
+  --canvas-surface-sunk-deep: oklch(0.097 0 0 / 0.08);
+  --canvas-surface-elevated-light: oklch(0.097 0 0 / 0.04);
+  --canvas-surface-elevated: oklch(0.097 0 0 / 0.08);
+  --canvas-surface-elevated-strong: oklch(0.097 0 0 / 0.16);
+  --canvas-surface-elevated-intense: oklch(0.097 0 0 / 0.32);
+  --canvas-surface-overlay: oklch(0 0 0 / 0.4);
+  --canvas-surface-highlight-subtle: oklch(0.097 0 0 / 0.02);
+  --canvas-surface-highlight: oklch(0.097 0 0 / 0.04);
+  --canvas-surface-highlight-strong: oklch(0.097 0 0 / 0.08);
+  --canvas-surface-highlight-intense: oklch(0.097 0 0 / 0.32);
+  --canvas-surface-inverted: oklch(0.097 0 0 / 1);
+
+  /* —— Text —— */
+  --canvas-text-primary: oklch(0.097 0 0 / 1);
+  --canvas-text-secondary: oklch(0.097 0 0 / 0.5);
+  --canvas-text-tertiary: oklch(0.097 0 0 / 0.2);
+  --canvas-text-link: oklch(0.097 0 0 / 1);
+  --canvas-text-brand: oklch(0.546 0.215 262.881 / 1);
+  --canvas-text-on-accent: oklch(0.994 0 89.876 / 1);
+  --canvas-text-on-accent-secondary: oklch(0.994 0 89.876 / 0.5);
+  --canvas-text-white: oklch(1 0 89.876 / 1);
+  --canvas-text-black: oklch(0 0 0 / 1);
+
+  /* —— Borders —— */
+  --canvas-border-default: oklch(0.097 0 0 / 0.06);
+  --canvas-border-interactive: oklch(0.097 0 0 / 0.12);
+  --canvas-border-interactive-emphasis: oklch(0.097 0 0 / 0.3);
+  --canvas-border-interactive-selected: oklch(0.097 0 0 / 1);
+  --canvas-border-accent: oklch(0.546 0.215 262.881 / 0.08);
+  --canvas-border-accent-emphasis: oklch(0.546 0.215 262.881 / 0.3);
+
+  /* —— Interaction —— */
+  --canvas-interactive-default: oklch(0.546 0.215 262.881 / 1);
+  --canvas-interactive-hover: oklch(0.546 0.215 262.881 / 0.8);
+  --canvas-interactive-pressed: oklch(0.546 0.215 262.881 / 1);
+  --canvas-interactive-disabled: oklch(0.546 0.215 262.881 / 0.4);
+  --canvas-interactive-destructive: oklch(0.577 0.215 27.325 / 1);
+  --canvas-interactive-destructive-hover: oklch(0.637 0.208 25.331 / 1);
+  --canvas-interactive-destructive-pressed: oklch(0.505 0.19 27.518 / 1);
+  --canvas-interactive-destructive-disabled: oklch(0.577 0.215 27.325 / 0.4);
+  --canvas-interactive-destructive-soft: oklch(0.577 0.215 27.325 / 0.02);
+  --canvas-interactive-destructive-soft-hover: oklch(0.577 0.215 27.325 / 0.08);
+  --canvas-focus-ring: oklch(0.546 0.215 262.881 / 0.55);
+  --canvas-focus-ring-width: 2px;
+  --canvas-focus-ring-offset: 2px;
+
+  /* —— Status —— */
+  --canvas-status-info-bg: oklch(0.623 0.188 259.815 / 0.12);
+  --canvas-status-info-fg: oklch(0.424 0.181 265.638 / 1);
+  --canvas-status-info-border: oklch(0.623 0.188 259.815 / 0.08);
+  --canvas-status-info-border-emphasis: oklch(0.546 0.215 262.881 / 1);
+  --canvas-status-success-bg: oklch(0.627 0.17 149.214 / 0.12);
+  --canvas-status-success-fg: oklch(0.448 0.108 151.328 / 1);
+  --canvas-status-success-border: oklch(0.627 0.17 149.214 / 0.08);
+  --canvas-status-success-border-emphasis: oklch(0.627 0.17 149.214 / 1);
+  --canvas-status-alert-bg: oklch(0.795 0.162 86.047 / 0.16);
+  --canvas-status-alert-fg: oklch(0.476 0.103 61.907 / 1);
+  --canvas-status-alert-border: oklch(0.861 0.173 91.936 / 0.08);
+  --canvas-status-alert-border-emphasis: oklch(0.681 0.142 75.834 / 1);
+  --canvas-status-danger-bg: oklch(0.577 0.215 27.325 / 0.12);
+  --canvas-status-danger-fg: oklch(0.505 0.19 27.518 / 1);
+  --canvas-status-danger-border: oklch(0.577 0.215 27.325 / 0.08);
+  --canvas-status-danger-border-emphasis: oklch(0.577 0.215 27.325 / 1);
+
+  /* —— Spacing —— */
+  --canvas-space-000: 0;
+  --canvas-space-3xs: 2px;
+  --canvas-space-2xs: 4px;
+  --canvas-space-xs: 6px;
+  --canvas-space-s: 8px;
+  --canvas-space-s-m: 10px;
+  --canvas-space-m: 12px;
+  --canvas-space-m-l: 16px;
+  --canvas-space-l: 20px;
+  --canvas-space-xl: 24px;
+  --canvas-space-2xl: 36px;
+  --canvas-space-3xl: 48px;
+  --canvas-space-0: var(--canvas-space-000);
+  --canvas-space-1: var(--canvas-space-3xs);
+  --canvas-space-2: var(--canvas-space-2xs);
+  --canvas-space-3: var(--canvas-space-xs);
+  --canvas-space-4: var(--canvas-space-s);
+  --canvas-space-5: var(--canvas-space-s-m);
+  --canvas-space-6: var(--canvas-space-m);
+  --canvas-space-8: var(--canvas-space-m-l);
+  --canvas-space-10: var(--canvas-space-l);
+  --canvas-space-12: var(--canvas-space-xl);
+  --canvas-space-16: var(--canvas-space-2xl);
+
+  /* —— Type (system stacks — no CDN fonts under CSP) —— */
+  --canvas-font-body: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --canvas-font-heading: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --canvas-font-label: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --canvas-font-code: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --canvas-font-numbers: ui-monospace, system-ui, "Segoe UI", sans-serif;
+  --canvas-font-size-2xs: 10px;
+  --canvas-font-size-xs: 12px;
+  --canvas-font-size-sm: 14px;
+  --canvas-font-size-md: 16px;
+  --canvas-font-size-lg: 18px;
+  --canvas-font-size-xl: 20px;
+  --canvas-font-size-2xl: 24px;
+  --canvas-font-size-3xl: 28px;
+  --canvas-font-size-4xl: 32px;
+  --canvas-font-size-5xl: 36px;
+  --canvas-font-weight-regular: 400;
+  --canvas-font-weight-medium: 500;
+  --canvas-font-weight-bold: 600;
+  --canvas-font-weight-heavy: 700;
+  --canvas-line-height-body: 1.5;
+  --canvas-line-height-heading: 1.25;
+  --canvas-line-height-heading-large: 1.1;
+  --canvas-line-height-label: 1.25;
+  --canvas-line-height-code: 1.5;
+  --canvas-letter-spacing-normal: 0;
+  --canvas-letter-spacing-tight: -0.1px;
+  --canvas-letter-spacing-tighter: -0.2px;
+
+  /* —— Radii —— */
+  --canvas-radius-none: 0;
+  --canvas-radius-3xs: 1px;
+  --canvas-radius-2xs: 2px;
+  --canvas-radius-xs: 4px;
+  --canvas-radius-s: 6px;
+  --canvas-radius-m: 8px;
+  --canvas-radius-l: 10px;
+  --canvas-radius-xl: 12px;
+  --canvas-radius-2xl: 14px;
+  --canvas-radius-3xl: 16px;
+  --canvas-radius-4xl: 20px;
+  --canvas-radius-5xl: 24px;
+  --canvas-radius-6xl: 28px;
+  --canvas-radius-7xl: 32px;
+  --canvas-radius-8xl: 40px;
+  --canvas-radius-9xl: 48px;
+  --canvas-radius-full: 9999px;
+
+  /* —— Shadows —— */
+  --canvas-shadow-0: none;
+  --canvas-shadow-s: 0 1px 3px -2px oklch(0 0 0 / 0.02), 0 2px 5px -2px oklch(0 0 0 / 0.04);
+  --canvas-shadow-m: 0 4px 6px -2px oklch(0 0 0 / 0.025), 0 2px 2px -2px oklch(0 0 0 / 0.05);
+  --canvas-shadow-l: 0 4px 4px -2px oklch(0 0 0 / 0.05), 0 4px 8px -2px oklch(0 0 0 / 0.04);
+  --canvas-shadow-xl: 0 8px 16px -4px oklch(0 0 0 / 0.08), 0 16px 32px -6px oklch(0 0 0 / 0.12);
+  --canvas-shadow-2xl: 0 12px 24px -6px oklch(0 0 0 / 0.12), 0 24px 48px -8px oklch(0 0 0 / 0.16);
+  --canvas-shadow-3xl: 0 16px 32px -8px oklch(0 0 0 / 0.16), 0 32px 64px -12px oklch(0 0 0 / 0.22);
+
+  /* —— Motion —— */
+  --canvas-motion-duration-fast: 120ms;
+  --canvas-motion-duration-default: 200ms;
+  --canvas-motion-duration-slow: 320ms;
+  --canvas-motion-duration-slower: 480ms;
+  --canvas-motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --canvas-motion-ease-emphasized: cubic-bezier(0.2, 0, 0, 1.2);
+
+  /* —— Layout / touch (defaults; layout.css may override by container) —— */
+  --canvas-layout-gap: var(--canvas-space-m);
+  --canvas-layout-pad: var(--canvas-space-m-l);
+  --canvas-layout-max-width: 72rem;
+  --canvas-touch-target-min: 44px;
+}

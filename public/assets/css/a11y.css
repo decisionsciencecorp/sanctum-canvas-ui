@@ -1,0 +1,101 @@
+/**
+ * Accessibility and media adaptations for Sanctum Canvas.
+ */
+
+/* Reduced motion — collapse durations; disable non-essential animation */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --canvas-motion-duration-fast: 0ms;
+    --canvas-motion-duration-default: 0ms;
+    --canvas-motion-duration-slow: 0ms;
+    --canvas-motion-duration-slower: 0ms;
+  }
+
+  .canvas-root *,
+  .canvas-root *::before,
+  .canvas-root *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Forced colors / Windows High Contrast */
+@media (forced-colors: active) {
+  .canvas-root {
+    forced-color-adjust: auto;
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
+
+  .canvas-root a,
+  .canvas-root .canvas-link {
+    color: LinkText;
+  }
+
+  .canvas-root button,
+  .canvas-root [role="button"] {
+    border: 1px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+  }
+
+  .canvas-root :focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: var(--canvas-focus-ring-offset);
+  }
+}
+
+/* Visible focus for keyboard users */
+.canvas-root :focus {
+  outline: none;
+}
+
+.canvas-root :focus-visible {
+  outline: var(--canvas-focus-ring-width) solid var(--canvas-focus-ring);
+  outline-offset: var(--canvas-focus-ring-offset);
+}
+
+/* Zoom-friendly: rem-based type already; avoid locking height on text blocks */
+.canvas-root {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-wrap: anywhere;
+}
+
+.canvas-root img,
+.canvas-root svg,
+.canvas-root video,
+.canvas-root canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Print */
+@media print {
+  .canvas-root {
+    background: white;
+    color: black;
+    max-width: none;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .canvas-root a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    color: #333;
+  }
+
+  .canvas-no-print,
+  .canvas-root [data-canvas-no-print] {
+    display: none !important;
+  }
+
+  .canvas-root * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+}

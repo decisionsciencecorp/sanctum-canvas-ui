@@ -1,0 +1,104 @@
+/**
+ * Container-aware layout primitives (Doc #1379 §6.3).
+ * Breakpoints relative to the canvas container, not the browser page:
+ *   mobile  < 480px
+ *   compact 480–800px
+ *   desktop > 800px
+ */
+
+.canvas-root {
+  container-type: inline-size;
+  container-name: canvas;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--canvas-layout-max-width);
+  margin-inline: auto;
+  padding: var(--canvas-layout-pad);
+  background: var(--canvas-surface-background);
+  color: var(--canvas-text-primary);
+  font-family: var(--canvas-font-body);
+  font-size: var(--canvas-font-size-md);
+  line-height: var(--canvas-line-height-body);
+}
+
+.canvas-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-layout-gap);
+}
+
+.canvas-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: var(--canvas-layout-gap);
+}
+
+.canvas-row > * {
+  min-width: 0;
+}
+
+/* Default: mobile-first inside the container */
+.canvas-root {
+  --canvas-layout-gap: var(--canvas-space-m);
+  --canvas-layout-pad: var(--canvas-space-m);
+  --canvas-layout-columns: 1;
+}
+
+@container canvas (min-width: 480px) {
+  .canvas-root {
+    --canvas-layout-gap: var(--canvas-space-m-l);
+    --canvas-layout-pad: var(--canvas-space-l);
+    --canvas-layout-columns: 2;
+  }
+
+  .canvas-row--responsive {
+    flex-wrap: nowrap;
+  }
+}
+
+@container canvas (min-width: 800px) {
+  .canvas-root {
+    --canvas-layout-gap: var(--canvas-space-xl);
+    --canvas-layout-pad: var(--canvas-space-xl);
+    --canvas-layout-columns: 3;
+  }
+}
+
+.canvas-grid {
+  display: grid;
+  gap: var(--canvas-layout-gap);
+  grid-template-columns: repeat(var(--canvas-layout-columns, 1), minmax(0, 1fr));
+}
+
+/* Touch targets — interactive controls */
+.canvas-touch,
+.canvas-root button,
+.canvas-root [role="button"],
+.canvas-root a.canvas-link,
+.canvas-root input[type="checkbox"],
+.canvas-root input[type="radio"],
+.canvas-root input[type="range"] {
+  min-height: var(--canvas-touch-target-min);
+  min-width: var(--canvas-touch-target-min);
+}
+
+.canvas-root input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+.canvas-root select,
+.canvas-root textarea {
+  min-height: var(--canvas-touch-target-min);
+  font-size: max(1rem, var(--canvas-font-size-md));
+}
+
+.canvas-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

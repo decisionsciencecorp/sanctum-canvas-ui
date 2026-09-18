@@ -1,0 +1,87 @@
+/* Lab chrome — classes only (CSP style-src 'self', no unsafe-inline). */
+
+.lab-harness {
+  min-height: 100vh;
+}
+
+.lab-title {
+  font: var(--canvas-font-weight-bold) var(--canvas-font-size-2xl) / var(--canvas-line-height-heading)
+    var(--canvas-font-heading);
+  margin: 0 0 var(--canvas-space-s);
+  color: var(--canvas-text-primary);
+}
+
+.lab-lede {
+  margin: 0 0 var(--canvas-space-l);
+  color: var(--canvas-text-secondary);
+  max-width: 40rem;
+}
+
+.lab-status {
+  margin: 0;
+  padding: var(--canvas-space-s) var(--canvas-space-m);
+  border-radius: var(--canvas-radius-m);
+  background: var(--canvas-surface-elevated);
+  border: 1px solid var(--canvas-border-default);
+}
+
+.lab-status--ok {
+  background: var(--canvas-status-success-bg);
+  border-color: var(--canvas-status-success-border-emphasis);
+  color: var(--canvas-status-success-fg);
+}
+
+.lab-status--err {
+  background: var(--canvas-status-danger-bg);
+  border-color: var(--canvas-status-danger-border-emphasis);
+  color: var(--canvas-status-danger-fg);
+}
+
+.lab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--canvas-space-s) var(--canvas-space-m-l);
+  border-radius: var(--canvas-radius-m);
+  border: 1px solid var(--canvas-border-interactive);
+  background: var(--canvas-interactive-default);
+  color: var(--canvas-text-on-accent);
+  font: var(--canvas-font-weight-medium) var(--canvas-font-size-sm) / var(--canvas-line-height-label)
+    var(--canvas-font-label);
+  cursor: pointer;
+}
+
+.lab-btn:hover {
+  background: var(--canvas-interactive-hover);
+}
+
+.lab-btn--danger {
+  background: var(--canvas-interactive-destructive);
+  border-color: var(--canvas-status-danger-border-emphasis);
+}
+
+.lab-btn--danger:hover {
+  background: var(--canvas-interactive-destructive-hover);
+}
+
+.lab-out {
+  margin: 0;
+  padding: var(--canvas-space-m);
+  border-radius: var(--canvas-radius-m);
+  background: var(--canvas-surface-sunk);
+  border: 1px solid var(--canvas-border-default);
+  font: var(--canvas-font-weight-regular) var(--canvas-font-size-xs) / var(--canvas-line-height-code)
+    var(--canvas-font-code);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.lab-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.lab-nav a {
+  color: var(--canvas-text-link);
+}

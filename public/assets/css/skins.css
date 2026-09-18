@@ -1,0 +1,150 @@
+/**
+ * Theme skins — override semantic tokens only (not component rules).
+ * Activate with data-theme="light" | "dark" | "sanctum" on <html> or :root.
+ * Default (:root without data-theme) matches light.
+ */
+
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --canvas-surface-background: oklch(0.145 0 0 / 1);
+  --canvas-surface-foreground: oklch(0.205 0 0 / 1);
+  --canvas-surface-popover: oklch(0.205 0 0 / 1);
+  --canvas-surface-sunk-light: oklch(0.994 0 89.876 / 0.02);
+  --canvas-surface-sunk: oklch(0.994 0 89.876 / 0.04);
+  --canvas-surface-sunk-deep: oklch(0.994 0 89.876 / 0.08);
+  --canvas-surface-elevated-light: oklch(0.994 0 89.876 / 0.04);
+  --canvas-surface-elevated: oklch(0.994 0 89.876 / 0.08);
+  --canvas-surface-elevated-strong: oklch(0.994 0 89.876 / 0.16);
+  --canvas-surface-elevated-intense: oklch(0.994 0 89.876 / 0.32);
+  --canvas-surface-overlay: oklch(0 0 0 / 0.6);
+  --canvas-surface-highlight-subtle: oklch(0.994 0 89.876 / 0.02);
+  --canvas-surface-highlight: oklch(0.994 0 89.876 / 0.04);
+  --canvas-surface-highlight-strong: oklch(0.994 0 89.876 / 0.08);
+  --canvas-surface-highlight-intense: oklch(0.994 0 89.876 / 0.3);
+  --canvas-surface-inverted: oklch(0.994 0 89.876 / 1);
+
+  --canvas-text-primary: oklch(0.985 0 89.876 / 1);
+  --canvas-text-secondary: oklch(0.985 0 89.876 / 0.5);
+  --canvas-text-tertiary: oklch(0.985 0 89.876 / 0.2);
+  --canvas-text-link: oklch(0.985 0 89.876 / 1);
+  --canvas-text-brand: oklch(0.72 0.14 250 / 1);
+  --canvas-text-on-accent: oklch(0.994 0 89.876 / 1);
+  --canvas-text-on-accent-secondary: oklch(0.994 0 89.876 / 0.5);
+
+  --canvas-border-default: oklch(0.994 0 89.876 / 0.06);
+  --canvas-border-interactive: oklch(0.994 0 89.876 / 0.12);
+  --canvas-border-interactive-emphasis: oklch(0.994 0 89.876 / 0.4);
+  --canvas-border-interactive-selected: oklch(0.985 0 89.876 / 1);
+  --canvas-border-accent: oklch(0.546 0.215 262.881 / 0.2);
+  --canvas-border-accent-emphasis: oklch(0.546 0.215 262.881 / 0.4);
+
+  --canvas-interactive-default: oklch(0.62 0.18 255 / 1);
+  --canvas-interactive-hover: oklch(0.62 0.18 255 / 0.85);
+  --canvas-interactive-pressed: oklch(0.62 0.18 255 / 1);
+  --canvas-interactive-disabled: oklch(0.62 0.18 255 / 0.4);
+
+  --canvas-status-info-fg: oklch(0.809 0.096 251.813 / 1);
+  --canvas-status-success-fg: oklch(0.871 0.136 154.449 / 1);
+  --canvas-status-alert-fg: oklch(0.905 0.166 98.111 / 1);
+  --canvas-status-danger-fg: oklch(0.808 0.103 19.571 / 1);
+
+  --canvas-shadow-s: 0 1px 2px oklch(0 0 0 / 0.4);
+  --canvas-shadow-m: 0 4px 10px oklch(0 0 0 / 0.5);
+  --canvas-shadow-l: 0 12px 24px oklch(0 0 0 / 0.55);
+  --canvas-shadow-xl: 0 18px 36px oklch(0 0 0 / 0.6);
+  --canvas-shadow-2xl: 0 26px 54px oklch(0 0 0 / 0.7);
+  --canvas-shadow-3xl: 0 34px 72px oklch(0 0 0 / 0.8);
+}
+
+/**
+ * Sanctum brand skin — cool slate canvas + teal accent.
+ * Keeps semantic roles; swaps brand/interactive/focus hues.
+ */
+:root[data-theme="sanctum"] {
+  color-scheme: dark;
+
+  --canvas-surface-background: oklch(0.16 0.02 250 / 1);
+  --canvas-surface-foreground: oklch(0.22 0.025 250 / 1);
+  --canvas-surface-popover: oklch(0.22 0.025 250 / 1);
+  --canvas-surface-sunk-light: oklch(0.95 0.01 250 / 0.03);
+  --canvas-surface-sunk: oklch(0.95 0.01 250 / 0.05);
+  --canvas-surface-sunk-deep: oklch(0.95 0.01 250 / 0.09);
+  --canvas-surface-elevated-light: oklch(0.95 0.01 250 / 0.05);
+  --canvas-surface-elevated: oklch(0.95 0.01 250 / 0.09);
+  --canvas-surface-elevated-strong: oklch(0.95 0.01 250 / 0.16);
+  --canvas-surface-elevated-intense: oklch(0.95 0.01 250 / 0.28);
+  --canvas-surface-overlay: oklch(0.05 0.02 250 / 0.65);
+  --canvas-surface-highlight-subtle: oklch(0.78 0.08 195 / 0.06);
+  --canvas-surface-highlight: oklch(0.78 0.08 195 / 0.1);
+  --canvas-surface-highlight-strong: oklch(0.78 0.08 195 / 0.16);
+  --canvas-surface-highlight-intense: oklch(0.78 0.08 195 / 0.28);
+  --canvas-surface-inverted: oklch(0.96 0.01 250 / 1);
+
+  --canvas-text-primary: oklch(0.94 0.01 250 / 1);
+  --canvas-text-secondary: oklch(0.94 0.01 250 / 0.65);
+  --canvas-text-tertiary: oklch(0.94 0.01 250 / 0.4);
+  --canvas-text-link: oklch(0.82 0.09 195 / 1);
+  --canvas-text-brand: oklch(0.78 0.1 195 / 1);
+  --canvas-text-on-accent: oklch(0.14 0.02 250 / 1);
+
+  --canvas-border-default: oklch(0.94 0.01 250 / 0.1);
+  --canvas-border-interactive: oklch(0.94 0.01 250 / 0.18);
+  --canvas-border-interactive-emphasis: oklch(0.94 0.01 250 / 0.35);
+  --canvas-border-interactive-selected: oklch(0.82 0.09 195 / 1);
+  --canvas-border-accent: oklch(0.78 0.1 195 / 0.25);
+  --canvas-border-accent-emphasis: oklch(0.78 0.1 195 / 0.45);
+
+  --canvas-interactive-default: oklch(0.72 0.11 195 / 1);
+  --canvas-interactive-hover: oklch(0.78 0.1 195 / 1);
+  --canvas-interactive-pressed: oklch(0.65 0.12 195 / 1);
+  --canvas-interactive-disabled: oklch(0.72 0.11 195 / 0.35);
+  --canvas-focus-ring: oklch(0.78 0.1 195 / 0.6);
+
+  --canvas-status-info-bg: oklch(0.7 0.1 230 / 0.14);
+  --canvas-status-info-fg: oklch(0.82 0.08 230 / 1);
+  --canvas-status-success-bg: oklch(0.72 0.12 155 / 0.14);
+  --canvas-status-success-fg: oklch(0.84 0.1 155 / 1);
+  --canvas-status-alert-bg: oklch(0.8 0.12 90 / 0.16);
+  --canvas-status-alert-fg: oklch(0.88 0.12 95 / 1);
+  --canvas-status-danger-bg: oklch(0.65 0.16 25 / 0.14);
+  --canvas-status-danger-fg: oklch(0.82 0.1 25 / 1);
+
+  --canvas-shadow-s: 0 1px 3px oklch(0.05 0.02 250 / 0.45);
+  --canvas-shadow-m: 0 4px 12px oklch(0.05 0.02 250 / 0.5);
+  --canvas-shadow-l: 0 10px 28px oklch(0.05 0.02 250 / 0.55);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+
+    --canvas-surface-background: oklch(0.145 0 0 / 1);
+    --canvas-surface-foreground: oklch(0.205 0 0 / 1);
+    --canvas-surface-popover: oklch(0.205 0 0 / 1);
+    --canvas-surface-sunk-light: oklch(0.994 0 89.876 / 0.02);
+    --canvas-surface-sunk: oklch(0.994 0 89.876 / 0.04);
+    --canvas-surface-sunk-deep: oklch(0.994 0 89.876 / 0.08);
+    --canvas-surface-elevated-light: oklch(0.994 0 89.876 / 0.04);
+    --canvas-surface-elevated: oklch(0.994 0 89.876 / 0.08);
+    --canvas-surface-elevated-strong: oklch(0.994 0 89.876 / 0.16);
+    --canvas-surface-elevated-intense: oklch(0.994 0 89.876 / 0.32);
+    --canvas-surface-overlay: oklch(0 0 0 / 0.6);
+    --canvas-surface-inverted: oklch(0.994 0 89.876 / 1);
+
+    --canvas-text-primary: oklch(0.985 0 89.876 / 1);
+    --canvas-text-secondary: oklch(0.985 0 89.876 / 0.5);
+    --canvas-text-tertiary: oklch(0.985 0 89.876 / 0.2);
+    --canvas-text-link: oklch(0.985 0 89.876 / 1);
+
+    --canvas-border-default: oklch(0.994 0 89.876 / 0.06);
+    --canvas-border-interactive: oklch(0.994 0 89.876 / 0.12);
+    --canvas-border-interactive-emphasis: oklch(0.994 0 89.876 / 0.4);
+    --canvas-border-interactive-selected: oklch(0.985 0 89.876 / 1);
+  }
+}
