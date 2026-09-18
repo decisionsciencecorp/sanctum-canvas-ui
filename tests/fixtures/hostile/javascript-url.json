@@ -1,0 +1,9 @@
+{
+  "id": "hostile-javascript-url",
+  "kind": "markdown",
+  "description": "Markdown link with javascript: URL must not become an href.",
+  "input": "Click [here](javascript:alert('xss')) please.",
+  "mustNotMatch": ["javascript:", "<a\\b[^>]*href"],
+  "mustMatch": ["here"],
+  "expectedRejection": "sanitizeUrl rejects javascript:; link rendered as plain text"
+}

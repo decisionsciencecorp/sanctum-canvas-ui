@@ -1,0 +1,18 @@
+{
+  "id": "hostile-unknown-component",
+  "kind": "openui",
+  "description": "Unknown OpenUI component type must not execute; registry fallback only.",
+  "input": {
+    "type": "EvilScriptRunner",
+    "props": {
+      "onMount": "alert(1)",
+      "href": "javascript:alert(1)",
+      "children": [{ "type": "script", "props": { "text": "alert(1)" } }]
+    }
+  },
+  "expectedRejection": "createComponentRegistry renders div[data-openui-unknown=EvilScriptRunner]; no script execution, href ignored by fallback",
+  "assert": {
+    "attribute": "data-openui-unknown",
+    "value": "EvilScriptRunner"
+  }
+}

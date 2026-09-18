@@ -1,0 +1,65 @@
+{
+  "upstream": "old/packages/react-ui/src/components/_shared/utils/safeUrl.ts",
+  "cases": [
+    {
+      "id": "url-https",
+      "input": "https://example.com/a",
+      "expect": "https://example.com/a",
+      "parity": "exact"
+    },
+    {
+      "id": "url-http",
+      "input": "http://example.com",
+      "expect": "http://example.com",
+      "parity": "exact"
+    },
+    {
+      "id": "url-js",
+      "input": "javascript:alert(1)",
+      "expect": null,
+      "parity": "exact"
+    },
+    {
+      "id": "url-data",
+      "input": "data:text/html,hi",
+      "expect": null,
+      "parity": "exact"
+    },
+    {
+      "id": "url-vbscript",
+      "input": "vbscript:msg",
+      "expect": null,
+      "parity": "exact"
+    },
+    {
+      "id": "url-file",
+      "input": "file:///etc/passwd",
+      "expect": null,
+      "parity": "exact"
+    },
+    {
+      "id": "url-js-tab",
+      "input": "java\tscript:alert(1)",
+      "expect": null,
+      "parity": "exact"
+    },
+    {
+      "id": "url-js-newline",
+      "input": "java\nscript:alert(1)",
+      "expect": null,
+      "parity": "exact"
+    },
+    {
+      "id": "url-empty",
+      "input": "  ",
+      "expect": null,
+      "parity": "exact"
+    },
+    {
+      "id": "url-nullish",
+      "input": null,
+      "expect": null,
+      "parity": "exact"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "id": "hostile-markdown-event-handlers",
+  "kind": "markdown",
+  "description": "Raw HTML event handlers embedded in markdown must be escaped/stripped.",
+  "input": "Hi <img src=x onerror=alert(1)> and <p onclick=\"steal()\">click</p> <script>alert(1)</script>",
+  "mustNotMatch": ["onerror", "onclick", "<script", "<img"],
+  "mustMatch": ["&lt;img", "&lt;script"],
+  "expectedRejection": "Raw HTML escaped before format; sanitizeHtml strips residual on*/script"
+}
