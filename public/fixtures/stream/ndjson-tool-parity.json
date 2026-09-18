@@ -1,1 +1,18 @@
-../../../tests/fixtures/stream/ndjson-tool-parity.json
+{
+  "id": "ndjson-tool-parity",
+  "parity": "exact",
+  "format": "ndjson",
+  "runId": "r2",
+  "messageId": "m-tools",
+  "tools": [
+    {
+      "id": "t1",
+      "name": "get_data",
+      "arguments": "{\"q\":1}"
+    }
+  ],
+  "expect": {
+    "toolStatus": "executing",
+    "runStatus": "finished"
+  }
+}

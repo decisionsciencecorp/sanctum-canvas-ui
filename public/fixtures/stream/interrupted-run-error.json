@@ -1,1 +1,16 @@
-../../../tests/fixtures/stream/interrupted-run-error.json
+{
+  "id": "interrupted-run-error",
+  "parity": "exact",
+  "events": [
+    { "type": "RUN_STARTED", "runId": "r-err" },
+    { "type": "TEXT_MESSAGE_START", "messageId": "m1", "role": "assistant" },
+    { "type": "TEXT_MESSAGE_CONTENT", "messageId": "m1", "delta": "partial" },
+    { "type": "TOOL_CALL_START", "toolCallId": "t1", "toolName": "x" },
+    { "type": "RUN_ERROR", "message": "upstream timeout" }
+  ],
+  "expect": {
+    "runStatus": "error",
+    "messages": 1,
+    "toolStatus": "error"
+  }
+}

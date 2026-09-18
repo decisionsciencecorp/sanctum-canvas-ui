@@ -1,1 +1,22 @@
-../../../tests/fixtures/stream/malformed-line-skip.json
+{
+  "id": "malformed-line-skip",
+  "parity": "sanctum_hardening",
+  "hardening": "H-stream-skip",
+  "events": [
+    {
+      "type": "RUN_STARTED",
+      "runId": "r3"
+    },
+    {
+      "raw": "not-json"
+    },
+    {
+      "type": "RUN_FINISHED",
+      "runId": "r3"
+    }
+  ],
+  "expect": {
+    "skippedMalformed": 1,
+    "runStatus": "finished"
+  }
+}

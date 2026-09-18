@@ -1,1 +1,33 @@
-../../../tests/fixtures/stream/text-message-basic.json
+{
+  "id": "text-message-basic",
+  "parity": "exact",
+  "source": "react-headless processStreamedMessage patterns",
+  "events": [
+    {
+      "type": "RUN_STARTED",
+      "runId": "r1"
+    },
+    {
+      "type": "TEXT_MESSAGE_START",
+      "messageId": "m1",
+      "role": "assistant"
+    },
+    {
+      "type": "TEXT_MESSAGE_CONTENT",
+      "messageId": "m1",
+      "delta": "root = Title(\"Hi\")\n"
+    },
+    {
+      "type": "TEXT_MESSAGE_END",
+      "messageId": "m1"
+    },
+    {
+      "type": "RUN_FINISHED",
+      "runId": "r1"
+    }
+  ],
+  "expect": {
+    "messages": 1,
+    "runStatus": "finished"
+  }
+}

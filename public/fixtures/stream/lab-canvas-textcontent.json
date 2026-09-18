@@ -1,1 +1,33 @@
-../../../resources/fixtures/stream/lab-canvas-textcontent.json
+{
+  "id": "lab-canvas-textcontent",
+  "parity": "sanctum-lab",
+  "note": "A7.7 offline canvas smoke — valid dashboard TextContent root",
+  "events": [
+    {
+      "type": "RUN_STARTED",
+      "runId": "lab-r1"
+    },
+    {
+      "type": "TEXT_MESSAGE_START",
+      "messageId": "lab-m1",
+      "role": "assistant"
+    },
+    {
+      "type": "TEXT_MESSAGE_CONTENT",
+      "messageId": "lab-m1",
+      "delta": "root = TextContent(\"Hello from lab fixture\")\n"
+    },
+    {
+      "type": "TEXT_MESSAGE_END",
+      "messageId": "lab-m1"
+    },
+    {
+      "type": "RUN_FINISHED",
+      "runId": "lab-r1"
+    }
+  ],
+  "expect": {
+    "messages": 1,
+    "runStatus": "finished"
+  }
+}
