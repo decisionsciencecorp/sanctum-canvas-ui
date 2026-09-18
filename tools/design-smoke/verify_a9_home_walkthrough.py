@@ -179,6 +179,13 @@ def run(base: str, tag: str) -> list[str]:
                 page.click(canvas + '[data-canvas-component="Modal"] button:has-text("Send it")')
                 page.wait_for_selector(canvas + '[data-canvas-component="Callout"]:has-text("Note sent")', timeout=10000)
 
+            if step_id == "steps":
+                # Guide must stay on screen when the canvas jumps to the new block.
+                title_box = page.locator("#wt-title").bounding_box()
+                assert title_box and title_box["y"] > 0, title_box
+                steps_box = page.locator(canvas + '[data-canvas-component="Steps"]').bounding_box()
+                assert steps_box and steps_box["y"] > 40, steps_box
+
             for sel in EXPECT[step_id]:
                 page.wait_for_selector(canvas + sel, timeout=10000, state="attached")
             seen_steps.append(step_id)

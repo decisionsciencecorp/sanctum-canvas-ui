@@ -16,7 +16,9 @@
   color: var(--canvas-text, #1a1a1a);
   font-family: var(--canvas-font-sans, system-ui, sans-serif);
   height: 100vh;
-  overflow: hidden;
+  /* clip, not hidden: hidden is still a scroll container, and scrollIntoView
+     (or anything like it) will move the guide column out of the viewport. */
+  overflow: clip;
 }
 
 .wt-skip {

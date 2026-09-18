@@ -342,10 +342,18 @@ function setControls() {
 }
 
 function scrollCanvasToNewest() {
-  const rootStack = root.firstElementChild;
-  const last = rootStack?.lastElementChild;
-  if (last && typeof last.scrollIntoView === "function") {
-    last.scrollIntoView({ block: "start", behavior: "smooth" });
+  // Scroll only the canvas pane. scrollIntoView walks every ancestor, including
+  // the page itself, which pulls the guide column up and clips it.
+  const frame = document.querySelector(".wt-canvas-frame");
+  const last = root.firstElementChild?.lastElementChild;
+  if (!frame || !last) return;
+  const frameRect = frame.getBoundingClientRect();
+  const lastRect = last.getBoundingClientRect();
+  const pad = 16;
+  if (lastRect.bottom > frameRect.bottom - pad) {
+    frame.scrollTop += lastRect.bottom - frameRect.bottom + pad;
+  } else if (lastRect.top < frameRect.top + pad) {
+    frame.scrollTop += lastRect.top - frameRect.top - pad;
   }
 }
 
