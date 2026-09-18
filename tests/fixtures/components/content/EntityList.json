@@ -1,0 +1,23 @@
+{
+  "component": "EntityList",
+  "cases": [
+    {
+      "name": "default with header footer",
+      "props": {
+        "size": "default",
+        "header": { "left": "Item", "right": "Value" },
+        "rows": [
+          { "left": "Revenue", "right": "120", "rightVariant": "number" },
+          { "left": "Notes", "right": "ok", "rightVariant": "text" }
+        ],
+        "footer": { "left": "Total", "right": "120", "rightVariant": "number" }
+      },
+      "expect": { "data-size": "default", "data-status": "ready", "rowCount": 4 }
+    },
+    {
+      "name": "empty list",
+      "props": { "rows": [] },
+      "expect": { "data-status": "empty" }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "component": "Callout",
+  "cases": [
+    {
+      "name": "warning",
+      "props": { "variant": "warning", "title": "Careful", "description": "Check this" },
+      "expect": { "data-variant": "warning", "role": "status" }
+    },
+    {
+      "name": "hidden when visible false",
+      "props": { "title": "Hi", "visible": false },
+      "expect": { "hidden": "true" }
+    }
+  ]
+}

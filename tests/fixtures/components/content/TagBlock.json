@@ -1,0 +1,21 @@
+{
+  "component": "TagBlock",
+  "cases": [
+    {
+      "name": "two tags",
+      "props": {
+        "tags": [
+          { "text": "Alpha", "variant": "info" },
+          { "text": "Beta", "variant": "neutral" }
+        ],
+        "size": "sm"
+      },
+      "expect": { "data-status": "ready", "role": "list", "childCount": 2 }
+    },
+    {
+      "name": "empty tags",
+      "props": { "tags": [] },
+      "expect": { "data-status": "empty" }
+    }
+  ]
+}

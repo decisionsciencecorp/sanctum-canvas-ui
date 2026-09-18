@@ -1,0 +1,19 @@
+{
+  "component": "TextCallout",
+  "cases": [
+    {
+      "name": "info callout",
+      "props": { "variant": "info", "title": "Note", "description": "Details here" },
+      "expect": {
+        "data-variant": "info",
+        "data-status": "ready",
+        "aria-label": "Information"
+      }
+    },
+    {
+      "name": "error surface",
+      "props": { "title": "x", "status": "error", "errorMessage": "Failed" },
+      "expect": { "data-status": "error" }
+    }
+  ]
+}

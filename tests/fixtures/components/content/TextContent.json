@@ -1,0 +1,25 @@
+{
+  "component": "TextContent",
+  "cases": [
+    {
+      "name": "default sunk text",
+      "props": { "text": "Hello canvas", "variant": "sunk", "size": "md", "weight": "normal" },
+      "expect": {
+        "data-canvas-component": "TextContent",
+        "data-variant": "sunk",
+        "data-status": "ready",
+        "body": "Hello canvas"
+      }
+    },
+    {
+      "name": "loading status",
+      "props": { "text": "x", "status": "loading" },
+      "expect": { "data-status": "loading", "aria-busy": "true" }
+    },
+    {
+      "name": "empty when no text",
+      "props": { "text": "" },
+      "expect": { "data-status": "empty" }
+    }
+  ]
+}

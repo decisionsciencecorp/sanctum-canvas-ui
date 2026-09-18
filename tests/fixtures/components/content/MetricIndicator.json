@@ -1,0 +1,35 @@
+{
+  "component": "MetricIndicator",
+  "cases": [
+    {
+      "name": "strikethrough with trend up",
+      "props": {
+        "variant": "with-strikethrough",
+        "value": "$42",
+        "previousValue": "$40",
+        "subtext": "MoM",
+        "trend": { "direction": "up", "value": 5 }
+      },
+      "expect": {
+        "data-variant": "with-strikethrough",
+        "data-status": "ready",
+        "trend": "up"
+      }
+    },
+    {
+      "name": "inline down",
+      "props": {
+        "variant": "inline",
+        "value": "9",
+        "subtext": "pts",
+        "trend": { "direction": "down", "value": 2 }
+      },
+      "expect": { "data-variant": "inline", "trend": "down" }
+    },
+    {
+      "name": "loading",
+      "props": { "value": "1", "status": "loading" },
+      "expect": { "data-status": "loading", "aria-busy": "true" }
+    }
+  ]
+}

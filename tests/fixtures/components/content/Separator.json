@@ -1,0 +1,23 @@
+{
+  "component": "Separator",
+  "cases": [
+    {
+      "name": "decorative horizontal",
+      "props": { "orientation": "horizontal", "decorative": true },
+      "expect": {
+        "data-orientation": "horizontal",
+        "role": "none",
+        "aria-hidden": "true"
+      }
+    },
+    {
+      "name": "semantic vertical",
+      "props": { "orientation": "vertical", "decorative": false },
+      "expect": {
+        "data-orientation": "vertical",
+        "role": "separator",
+        "aria-orientation": "vertical"
+      }
+    }
+  ]
+}

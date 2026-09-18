@@ -1,0 +1,15 @@
+{
+  "component": "Tag",
+  "cases": [
+    {
+      "name": "success md",
+      "props": { "text": "Live", "variant": "success", "size": "md" },
+      "expect": { "data-variant": "success", "data-size": "md", "data-status": "ready" }
+    },
+    {
+      "name": "empty tag",
+      "props": { "text": "" },
+      "expect": { "data-status": "empty" }
+    }
+  ]
+}

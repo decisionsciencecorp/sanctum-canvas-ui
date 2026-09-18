@@ -1,0 +1,20 @@
+{
+  "component": "CardHeader",
+  "cases": [
+    {
+      "name": "title subtitle actions",
+      "props": {
+        "icon": "◆",
+        "title": "Card",
+        "subtitle": "Subtitle",
+        "actions": ["Edit", "More"]
+      },
+      "expect": { "data-status": "ready" }
+    },
+    {
+      "name": "empty",
+      "props": {},
+      "expect": { "data-status": "empty" }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "component": "InlineHeader",
+  "cases": [
+    {
+      "name": "heading and description",
+      "props": { "heading": "Section", "description": "About this" },
+      "expect": { "data-status": "ready" }
+    },
+    {
+      "name": "empty",
+      "props": {},
+      "expect": { "data-status": "empty" }
+    }
+  ]
+}
