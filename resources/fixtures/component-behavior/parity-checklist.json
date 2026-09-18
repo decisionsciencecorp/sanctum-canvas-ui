@@ -1,0 +1,29 @@
+{
+  "note": "A0 freezes the checklist; A5/A6 fill Playwright baselines vs old/",
+  "viewports": [
+    {
+      "name": "mobile",
+      "w": 390,
+      "h": 844
+    },
+    {
+      "name": "desktop",
+      "w": 1280,
+      "h": 800
+    }
+  ],
+  "families": [
+    "foundation",
+    "layout",
+    "forms",
+    "tables",
+    "charts",
+    "card-blocks",
+    "tool-activity"
+  ],
+  "evidenceRequired": [
+    "playwright_screenshot",
+    "upstream_baseline",
+    "model_inspection_note"
+  ]
+}

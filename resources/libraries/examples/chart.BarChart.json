@@ -1,0 +1,22 @@
+{
+  "name": "BarChart",
+  "version": "0.5.0",
+  "propertyOrder": ["labels", "series", "variant", "xLabel", "yLabel", "height"],
+  "properties": {
+    "labels": { "type": "array", "items": { "type": "string" }, "required": true },
+    "series": { "type": "array", "items": { "$ref": "Series" }, "required": true },
+    "variant": { "type": "string" },
+    "xLabel": { "type": "string" },
+    "yLabel": { "type": "string" },
+    "height": { "type": "number" }
+  },
+  "required": ["labels", "series"],
+  "reactiveProps": [],
+  "allowedChildren": null,
+  "renderer": "components/BarChart.js",
+  "securityCapabilities": ["none"],
+  "prompt": {
+    "description": "Vertical bar chart. Series must be data, not nested components.",
+    "group": "Charts"
+  }
+}

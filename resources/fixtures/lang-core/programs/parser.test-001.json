@@ -1,0 +1,11 @@
+{
+  "id": "parser.test-001",
+  "source_file": "old/packages/lang-core/src/parser/__tests__/parser.test.ts",
+  "input": "');\n  });\n\n  it(\"preserves python fenced code blocks inside strings\", () => {\n    const code = \"root = Title(\\\"",
+  "upstream_commit": "ee54f66",
+  "parity": "exact",
+  "expect": {
+    "note": "golden outputs filled in A2 when parser exists; input frozen in A0"
+  },
+  "content_sha256_16": "6e449af8b16ccc74"
+}

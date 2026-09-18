@@ -1,0 +1,21 @@
+{
+  "name": "Input",
+  "version": "0.5.0",
+  "propertyOrder": ["name", "placeholder", "type", "rules", "value"],
+  "properties": {
+    "name": { "type": "string", "required": true },
+    "placeholder": { "type": "string" },
+    "type": { "type": "string", "enum": ["text", "email", "password", "number", "url"] },
+    "rules": { "type": "object" },
+    "value": { "type": "string" }
+  },
+  "required": ["name"],
+  "reactiveProps": ["value"],
+  "allowedChildren": null,
+  "renderer": "components/Input.js",
+  "securityCapabilities": ["none"],
+  "prompt": {
+    "description": "Single-line text input. value is $binding.",
+    "group": "Forms"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "excess-args-Title",
+  "input": "root = Title(\"hello\", \"extra\")",
+  "expect": {
+    "errors": [
+      {
+        "code": "excess-args"
+      }
+    ],
+    "notes": "valid prefix may still materialize"
+  },
+  "parity": "exact",
+  "source": "parser.test.ts",
+  "upstream_commit": "ee54f66"
+}

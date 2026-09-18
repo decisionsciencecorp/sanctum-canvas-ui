@@ -1,0 +1,14 @@
+{
+  "id": "unknown-component-DataTable",
+  "input": "root = DataTable()",
+  "expect": {
+    "errors": [
+      {
+        "code": "unknown-component"
+      }
+    ]
+  },
+  "parity": "exact",
+  "source": "parser.test.ts",
+  "upstream_commit": "ee54f66"
+}

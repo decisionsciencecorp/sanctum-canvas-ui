@@ -1,0 +1,11 @@
+{
+  "id": "materialize.validation.test-000",
+  "source_file": "old/packages/lang-core/src/parser/__tests__/materialize.validation.test.ts",
+  "input": "root = ObjBox({ views: 3 })",
+  "upstream_commit": "ee54f66",
+  "parity": "exact",
+  "expect": {
+    "note": "golden outputs filled in A2 when parser exists; input frozen in A0"
+  },
+  "content_sha256_16": "2210cba0ea35404f"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "merge-replace-header",
+  "upstream_commit": "ee54f66",
+  "parity": "exact",
+  "source": "serialize.test.ts mergeStatements integration",
+  "base": "header = Title(\"Old\")\nroot = Stack([header])",
+  "patch": "header = Title(\"New\")",
+  "expect": {
+    "serializedContains": "header = Title(\"New\")"
+  }
+}

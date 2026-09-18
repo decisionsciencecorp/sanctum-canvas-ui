@@ -1,0 +1,14 @@
+{
+  "id": "null-required",
+  "input": "root = Stack(null)",
+  "expect": {
+    "errors": [
+      {
+        "code": "null-required"
+      }
+    ]
+  },
+  "parity": "exact",
+  "source": "parser.test.ts",
+  "upstream_commit": "ee54f66"
+}

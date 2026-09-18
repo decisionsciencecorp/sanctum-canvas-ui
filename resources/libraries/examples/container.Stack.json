@@ -1,0 +1,22 @@
+{
+  "name": "Stack",
+  "version": "0.5.0",
+  "propertyOrder": ["children", "direction", "gap", "align", "justify", "wrap"],
+  "properties": {
+    "children": { "type": "array", "items": { "$ref": "Component" }, "required": true },
+    "direction": { "type": "string", "enum": ["row", "column"], "default": "column" },
+    "gap": { "type": "string", "default": "md" },
+    "align": { "type": "string", "enum": ["start", "center", "end", "stretch"], "default": "stretch" },
+    "justify": { "type": "string", "enum": ["start", "center", "end", "between"], "default": "start" },
+    "wrap": { "type": "boolean", "default": false }
+  },
+  "required": ["children"],
+  "reactiveProps": [],
+  "allowedChildren": ["*registered*"],
+  "renderer": "components/Stack.js",
+  "securityCapabilities": ["none"],
+  "prompt": {
+    "description": "Dashboard root and generic layout stack.",
+    "group": "Layout"
+  }
+}

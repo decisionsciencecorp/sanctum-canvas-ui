@@ -1,0 +1,16 @@
+{
+  "id": "unresolved-ref",
+  "input": "root = Stack([tbl])",
+  "expect": {
+    "meta": {
+      "unresolved": [
+        "tbl"
+      ]
+    },
+    "errors": []
+  },
+  "parity": "exact",
+  "source": "parser.test.ts",
+  "hardening": "H6 may elevate unresolved to error when complete",
+  "upstream_commit": "ee54f66"
+}

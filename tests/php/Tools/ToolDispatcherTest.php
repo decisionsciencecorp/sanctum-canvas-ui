@@ -8,6 +8,7 @@ use Sanctum\Canvas\Php\Http\AuthContext;
 use Sanctum\Canvas\Php\Http\Csrf;
 use Sanctum\Canvas\Php\Http\HttpException;
 use Sanctum\Canvas\Php\Tools\JsonSchemaValidator;
+use Sanctum\Canvas\Php\Tools\ToolDefinition;
 use Sanctum\Canvas\Php\Tools\ToolDispatcher;
 use Sanctum\Canvas\Php\Tools\ToolRegistry;
 
@@ -132,5 +133,62 @@ final class ToolDispatcherTest extends TestCase
         $this->assertNotEmpty($recs);
         $json = json_encode($recs);
         $this->assertStringNotContainsString('secret-payload-should-not-appear', (string) $json);
+    }
+
+    public function testHandlerMissingOkKeyIsRejected(): void
+    {
+        $reg = new ToolRegistry([
+            new ToolDefinition(
+                'bad_result',
+                ToolDefinition::CLASS_READ,
+                ['type' => 'object', 'additionalProperties' => false],
+                static fn (): array => ['data' => ['x' => 1]],
+            ),
+        ]);
+        $dispatcher = new ToolDispatcher($reg, csrf: $this->csrf);
+        try {
+            $dispatcher->dispatch($this->auth, ['tool' => 'bad_result', 'arguments' => []]);
+            $this->fail('expected handler_invalid_result');
+        } catch (HttpException $e) {
+            $this->assertSame('handler_invalid_result', $e->errorCode);
+        }
+    }
+
+    public function testHandlerErrorStringIsRedactedOntoResponse(): void
+    {
+        $reg = new ToolRegistry([
+            new ToolDefinition(
+                'soft_fail',
+                ToolDefinition::CLASS_READ,
+                ['type' => 'object', 'additionalProperties' => false],
+                static fn (): array => ['ok' => false, 'error' => 'token=sk-secret-should-redact'],
+            ),
+        ]);
+        $dispatcher = new ToolDispatcher($reg, csrf: $this->csrf);
+        $res = $dispatcher->dispatch($this->auth, ['tool' => 'soft_fail', 'arguments' => []]);
+        $this->assertFalse($res['ok']);
+        $this->assertArrayHasKey('error', $res);
+        $this->assertIsString($res['error']);
+        $this->assertStringNotContainsString('sk-secret-should-redact', $res['error']);
+    }
+
+    public function testEmptyAndOversizedToolNamesRejected(): void
+    {
+        try {
+            $this->dispatcher->dispatch($this->auth, ['tool' => '', 'arguments' => []]);
+            $this->fail('expected invalid_tool_name');
+        } catch (HttpException $e) {
+            $this->assertSame('invalid_tool_name', $e->errorCode);
+        }
+
+        try {
+            $this->dispatcher->dispatch($this->auth, [
+                'tool' => str_repeat('a', 65),
+                'arguments' => [],
+            ]);
+            $this->fail('expected invalid_tool_name');
+        } catch (HttpException $e) {
+            $this->assertSame('invalid_tool_name', $e->errorCode);
+        }
     }
 }

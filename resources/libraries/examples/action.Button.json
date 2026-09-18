@@ -1,0 +1,19 @@
+{
+  "name": "Button",
+  "version": "0.5.0",
+  "propertyOrder": ["label", "variant", "action"],
+  "properties": {
+    "label": { "type": "string", "required": true },
+    "variant": { "type": "string", "enum": ["primary", "secondary", "danger"], "default": "primary" },
+    "action": { "type": "object", "description": "ActionPlan or open_url / continue_conversation" }
+  },
+  "required": ["label"],
+  "reactiveProps": [],
+  "allowedChildren": null,
+  "renderer": "components/Button.js",
+  "securityCapabilities": ["actions", "links"],
+  "prompt": {
+    "description": "Clickable button that runs an action plan.",
+    "group": "Actions"
+  }
+}

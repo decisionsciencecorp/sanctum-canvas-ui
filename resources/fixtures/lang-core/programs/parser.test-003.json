@@ -1,0 +1,11 @@
+{
+  "id": "parser.test-003",
+  "source_file": "old/packages/lang-core/src/parser/__tests__/parser.test.ts",
+  "input": ";\n    const result = parse(code, schema);\n    expect(result.meta.errors).toHaveLength(0);\n    expect(result.root).not.toBeNull();\n    expect(result.root?.props.text).toBe(\"\nHello // World\nhttps://example.com/\n\");\n  });\n\n  it(\"preserves # inside multiline strings\", () => {\n    const code = ",
+  "upstream_commit": "ee54f66",
+  "parity": "exact",
+  "expect": {
+    "note": "golden outputs filled in A2 when parser exists; input frozen in A0"
+  },
+  "content_sha256_16": "c7da70313573c7c1"
+}

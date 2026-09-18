@@ -1,0 +1,11 @@
+{
+  "id": "serialize.test-001",
+  "source_file": "old/packages/lang-core/src/parser/__tests__/serialize.test.ts",
+  "input": "root = Table(null, [[1, 2]])",
+  "upstream_commit": "ee54f66",
+  "parity": "exact",
+  "expect": {
+    "note": "golden outputs filled in A2 when parser exists; input frozen in A0"
+  },
+  "content_sha256_16": "036370e04583d940"
+}

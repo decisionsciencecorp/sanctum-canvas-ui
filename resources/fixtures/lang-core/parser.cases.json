@@ -1,0 +1,162 @@
+{
+  "id": "parser",
+  "source": "old/packages/lang-core/src/parser/__tests__/parser.test.ts",
+  "case_count": 31,
+  "cases": [
+    {
+      "id": "parser/000",
+      "name": "reports when component name is not in schema",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/001",
+      "name": "drops unknown component from tree (returns null)",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/002",
+      "name": "reports all unknown components in a tree",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/003",
+      "name": "does not report for known component names",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/004",
+      "name": "reports excess-args error but still renders with valid args",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/005",
+      "name": "excess-args message lists count",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/006",
+      "name": "does not report when arg count matches param count",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/007",
+      "name": "does not report when fewer args than params (handled by missing-required)",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/008",
+      "name": "tracks unresolved refs in meta.unresolved (one-shot)",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/009",
+      "name": "does not produce errors for unresolved refs",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/010",
+      "name": "clears unresolved when ref is defined",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/011",
+      "name": "tracks unresolved refs mid-stream without errors",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/012",
+      "name": "resolves automatically when ref is defined in a later chunk",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/013",
+      "name": "keeps unresolved refs in meta.unresolved at end of stream",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/014",
+      "name": "missing-required has correct shape",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/015",
+      "name": "null-required has correct shape",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/016",
+      "name": "drops unresolved refs from children arrays",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/017",
+      "name": "drops invalid components (missing required props) from arrays",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/018",
+      "name": "drops unknown components from arrays",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/019",
+      "name": "preserves null literals in arrays",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/020",
+      "name": "streaming: unresolved refs fill in when defined later",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/021",
+      "name": "detects unreachable statements on complete parse",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/022",
+      "name": "no orphans when all statements are reachable",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/023",
+      "name": "orphaned computed during streaming too",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/024",
+      "name": "detects multiple orphaned statements",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/025",
+      "name": "deeply nested refs are not orphaned",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/026",
+      "name": "preserves js markdown fences inside strings",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/027",
+      "name": "preserves python fenced code blocks inside strings",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/028",
+      "name": "preserves // inside multiline strings",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/029",
+      "name": "preserves # inside multiline strings",
+      "parity": "exact"
+    },
+    {
+      "id": "parser/030",
+      "name": "does not treat apostrophes as string delimiters when stripping fences",
+      "parity": "exact"
+    }
+  ]
+}

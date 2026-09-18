@@ -1,0 +1,94 @@
+{
+  "upstream_commit": "ee54f66",
+  "packages": [
+    {
+      "path": "packages/lang-core",
+      "disposition": "port_completely",
+      "notes": "Language kernel"
+    },
+    {
+      "path": "packages/react-lang",
+      "disposition": "port_behavior_not_react",
+      "notes": "Streaming/state orchestration as plain classes"
+    },
+    {
+      "path": "packages/react-ui/src/genui-lib",
+      "disposition": "port_contracts_and_prompt",
+      "notes": "Component vocabulary"
+    },
+    {
+      "path": "packages/react-ui/src/components",
+      "disposition": "port_dom_css_behavior",
+      "notes": "Reference implementation only"
+    },
+    {
+      "path": "packages/react-headless",
+      "disposition": "port_transport_selectively",
+      "notes": "AG-UI adapters + reducer"
+    },
+    {
+      "path": "packages/AgentInterface or similar product shell",
+      "disposition": "exclude",
+      "notes": "Track B owns companion chrome"
+    },
+    {
+      "path": "browser-bundle",
+      "disposition": "exclude",
+      "notes": "React packaged artifact"
+    },
+    {
+      "path": "cloud/cli/next/vue/svelte/rn templates",
+      "disposition": "reference_only",
+      "notes": "Not Sanctum runtime"
+    },
+    {
+      "path": "devtools/observability-cloud",
+      "disposition": "exclude_initially",
+      "notes": "Local debug panel instead"
+    }
+  ],
+  "intentional_hardenings": [
+    {
+      "id": "H1",
+      "topic": "reactive_metadata",
+      "upstream": "WeakSet only; lost in JSON Schema",
+      "sanctum": "explicit reactiveProps[] per component in library JSON"
+    },
+    {
+      "id": "H2",
+      "topic": "property_order",
+      "upstream": "Object.keys / Zod key order",
+      "sanctum": "explicit propertyOrder[] required; CI fails if missing"
+    },
+    {
+      "id": "H3",
+      "topic": "slot_validation",
+      "upstream": "skips some composite/slot checks",
+      "sanctum": "validate child slots against allowed refs"
+    },
+    {
+      "id": "H4",
+      "topic": "url_policy",
+      "upstream": "safeUrl not applied to all markdown links",
+      "sanctum": "central policy for all URL sinks"
+    },
+    {
+      "id": "H5",
+      "topic": "integer_strictness",
+      "upstream": "1.5 may pass integer",
+      "sanctum": "document; prefer exact integer when not partial"
+    },
+    {
+      "id": "H6",
+      "topic": "unresolved_refs",
+      "upstream": "meta.unresolved only",
+      "sanctum": "complete programs treat unresolved as errors"
+    },
+    {
+      "id": "H7",
+      "topic": "no_side_effects_while_partial",
+      "upstream": "documented intent",
+      "sanctum": "hard gate: no Query/Mutation/tool/OpenUrl while incomplete"
+    }
+  ]
+}

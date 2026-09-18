@@ -1,0 +1,14 @@
+{
+  "id": "missing-required",
+  "input": "root = Stack()",
+  "expect": {
+    "errors": [
+      {
+        "code": "missing-required"
+      }
+    ]
+  },
+  "parity": "exact",
+  "source": "parser.test.ts",
+  "upstream_commit": "ee54f66"
+}

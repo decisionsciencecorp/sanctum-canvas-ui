@@ -1,0 +1,45 @@
+{
+  "note": "Derived from reactive() in genui-lib; must appear in contracts",
+  "props": [
+    {
+      "component": "Input",
+      "prop": "value"
+    },
+    {
+      "component": "TextArea",
+      "prop": "value"
+    },
+    {
+      "component": "Select",
+      "prop": "value"
+    },
+    {
+      "component": "Slider",
+      "prop": "value"
+    },
+    {
+      "component": "DatePicker",
+      "prop": "value"
+    },
+    {
+      "component": "CheckBoxGroup",
+      "prop": "value"
+    },
+    {
+      "component": "SwitchGroup",
+      "prop": "value"
+    },
+    {
+      "component": "RadioGroup",
+      "prop": "value"
+    },
+    {
+      "component": "Callout",
+      "prop": "visible"
+    },
+    {
+      "component": "Modal",
+      "prop": "open"
+    }
+  ]
+}

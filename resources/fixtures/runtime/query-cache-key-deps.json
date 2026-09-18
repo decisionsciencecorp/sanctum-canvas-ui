@@ -1,0 +1,13 @@
+{
+  "id": "query-cache-key-deps",
+  "parity": "exact",
+  "source": "lang-core queryManager.ts + vue-lang Renderer.query.test.ts",
+  "program": "$id = 1\ndata = Query(get_item, {id: $id})\nroot = Title(data.name)",
+  "expect": {
+    "cacheKeyIncludes": [
+      "get_item",
+      "id"
+    ],
+    "refetchOnDepChange": true
+  }
+}

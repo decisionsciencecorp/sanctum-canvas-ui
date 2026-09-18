@@ -1,0 +1,157 @@
+{
+  "id": "serialize",
+  "source": "old/packages/lang-core/src/parser/__tests__/serialize.test.ts",
+  "case_count": 30,
+  "cases": [
+    {
+      "id": "serialize/000",
+      "name": "serializes a simple component",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/001",
+      "name": "uses statementId as root name",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/002",
+      "name": "extracts children with statementId as separate statements",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/003",
+      "name": "inlines components without statementId",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/004",
+      "name": "serializes strings with escaping",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/005",
+      "name": "serializes numbers",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/006",
+      "name": "serializes booleans",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/007",
+      "name": "serializes null",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/008",
+      "name": "serializes plain objects",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/009",
+      "name": "maps props to positional args via ParamMap",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/010",
+      "name": "trims trailing optional args",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/011",
+      "name": "fills middle gaps with null",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/012",
+      "name": "serializes StateRef",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/013",
+      "name": "serializes RuntimeRef",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/014",
+      "name": "serializes BinOp with correct precedence",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/015",
+      "name": "serializes Ternary",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/016",
+      "name": "serializes Member access",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/017",
+      "name": "serializes Index access",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/018",
+      "name": "serializes UnaryOp",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/019",
+      "name": "serializes builtins with @ prefix",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/020",
+      "name": "serializes Action without @ prefix",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/021",
+      "name": "includes non-null state declarations",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/022",
+      "name": "omits null state declarations",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/023",
+      "name": "round-trips a simple component",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/024",
+      "name": "round-trips nested components",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/025",
+      "name": "round-trips with optional args",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/026",
+      "name": "serialized output works as a merge patch",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/027",
+      "name": "handles empty children array",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/028",
+      "name": "handles partial nodes",
+      "parity": "exact"
+    },
+    {
+      "id": "serialize/029",
+      "name": "handles duplicate statementIds without infinite loop",
+      "parity": "exact"
+    }
+  ]
+}

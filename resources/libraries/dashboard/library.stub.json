@@ -1,0 +1,2215 @@
+{
+  "id": "sanctum-openui-dashboard-stub",
+  "variant": "dashboard",
+  "root": "Stack",
+  "upstream_commit": "ee54f66",
+  "contractFormatVersion": "1.0.0",
+  "note": "A0 heuristic extraction from Zod source; A1 will refine types/required/children from full library.toJSONSchema() or hand completion.",
+  "components": {
+    "AccordionItem": {
+      "name": "AccordionItem",
+      "version": "0.5.0",
+      "source": "Accordion/schema.ts",
+      "propertyOrder": [
+        "value",
+        "trigger",
+        "content"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "value": {
+          "type": "unknown"
+        },
+        "trigger": {
+          "type": "unknown"
+        },
+        "content": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/AccordionItem.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "Action": {
+      "name": "Action",
+      "version": "0.5.0",
+      "source": "Action/schema.ts",
+      "propertyOrder": [
+        "type"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "type": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Action.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "BoldText": {
+      "name": "BoldText",
+      "version": "0.5.0",
+      "source": "BoldText/schema.ts",
+      "propertyOrder": [
+        "variant",
+        "value",
+        "subtext",
+        "subtextVariant",
+        "size"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "variant": {
+          "type": "unknown"
+        },
+        "value": {
+          "type": "unknown"
+        },
+        "subtext": {
+          "type": "unknown"
+        },
+        "subtextVariant": {
+          "type": "unknown"
+        },
+        "size": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/BoldText.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "Button": {
+      "name": "Button",
+      "version": "0.5.0",
+      "source": "Button/schema.ts",
+      "propertyOrder": [
+        "label",
+        "action",
+        "variant",
+        "type",
+        "size"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "label": {
+          "type": "unknown"
+        },
+        "action": {
+          "type": "unknown"
+        },
+        "variant": {
+          "type": "unknown"
+        },
+        "type": {
+          "type": "unknown"
+        },
+        "size": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Button.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "Buttons": {
+      "name": "Buttons",
+      "version": "0.5.0",
+      "source": "Buttons/schema.ts",
+      "propertyOrder": [
+        "buttons",
+        "direction"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "buttons": {
+          "type": "unknown"
+        },
+        "direction": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Buttons.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "Callout": {
+      "name": "Callout",
+      "version": "0.5.0",
+      "source": "Callout/schema.ts",
+      "propertyOrder": [
+        "variant",
+        "title",
+        "description",
+        "visible"
+      ],
+      "reactiveProps": [
+        "visible"
+      ],
+      "properties": {
+        "variant": {
+          "type": "unknown"
+        },
+        "title": {
+          "type": "unknown"
+        },
+        "description": {
+          "type": "unknown"
+        },
+        "visible": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Callout.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "CardHeader": {
+      "name": "CardHeader",
+      "version": "0.5.0",
+      "source": "CardHeader/schema.ts",
+      "propertyOrder": [
+        "title",
+        "subtitle"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "title": {
+          "type": "unknown"
+        },
+        "subtitle": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/CardHeader.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "CheckBoxItem": {
+      "name": "CheckBoxItem",
+      "version": "0.5.0",
+      "source": "CheckBoxGroup/schema.ts",
+      "propertyOrder": [
+        "label",
+        "description",
+        "name",
+        "defaultChecked"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "properties": {
+        "label": {
+          "type": "unknown"
+        },
+        "description": {
+          "type": "unknown"
+        },
+        "name": {
+          "type": "unknown"
+        },
+        "defaultChecked": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/CheckBoxItem.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "ChipItem": {
+      "name": "ChipItem",
+      "version": "0.5.0",
+      "source": "Chips/schema.ts",
+      "propertyOrder": [
+        "value",
+        "label",
+        "icon",
+        "disabled"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "value": {
+          "type": "unknown"
+        },
+        "label": {
+          "type": "unknown"
+        },
+        "icon": {
+          "type": "unknown"
+        },
+        "disabled": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/ChipItem.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "CodeBlock": {
+      "name": "CodeBlock",
+      "version": "0.5.0",
+      "source": "CodeBlock/schema.ts",
+      "propertyOrder": [
+        "language",
+        "codeString"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "language": {
+          "type": "unknown"
+        },
+        "codeString": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/CodeBlock.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "CompositeCardItem": {
+      "name": "CompositeCardItem",
+      "version": "0.5.0",
+      "source": "CompositeCardBlock/schema.ts",
+      "propertyOrder": [
+        "price",
+        "button"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "price": {
+          "type": "unknown"
+        },
+        "button": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/CompositeCardItem.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "ContextCardItem": {
+      "name": "ContextCardItem",
+      "version": "0.5.0",
+      "source": "ContextCardBlock/schema.ts",
+      "propertyOrder": [
+        "id",
+        "title",
+        "body",
+        "bgColor",
+        "bgImageSrc",
+        "bgImageAlt"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "id": {
+          "type": "unknown"
+        },
+        "title": {
+          "type": "unknown"
+        },
+        "body": {
+          "type": "unknown"
+        },
+        "bgColor": {
+          "type": "unknown"
+        },
+        "bgImageSrc": {
+          "type": "unknown"
+        },
+        "bgImageAlt": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/ContextCardItem.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "DatePicker": {
+      "name": "DatePicker",
+      "version": "0.5.0",
+      "source": "DatePicker/schema.ts",
+      "propertyOrder": [
+        "name",
+        "mode",
+        "rules",
+        "value"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "unknown"
+        },
+        "mode": {
+          "type": "unknown"
+        },
+        "rules": {
+          "type": "unknown"
+        },
+        "value": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/DatePicker.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "EditableTable": {
+      "name": "EditableTable",
+      "version": "0.5.0",
+      "source": "EditableTable/schema.ts",
+      "propertyOrder": [
+        "name",
+        "columns",
+        "data"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "name": {
+          "type": "unknown"
+        },
+        "columns": {
+          "type": "unknown"
+        },
+        "data": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/EditableTable.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "EntityList": {
+      "name": "EntityList",
+      "version": "0.5.0",
+      "source": "EntityList/schema.ts",
+      "propertyOrder": [
+        "left",
+        "right",
+        "rightVariant"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "left": {
+          "type": "unknown"
+        },
+        "right": {
+          "type": "unknown"
+        },
+        "rightVariant": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/EntityList.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "Form": {
+      "name": "Form",
+      "version": "0.5.0",
+      "source": "Form/schema.ts",
+      "propertyOrder": [
+        "name",
+        "buttons",
+        "fields"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "name": {
+          "type": "unknown"
+        },
+        "buttons": {
+          "type": "unknown"
+        },
+        "fields": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Form.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "refined"
+    },
+    "FormControl": {
+      "name": "FormControl",
+      "version": "0.5.0",
+      "source": "FormControl/schema.ts",
+      "propertyOrder": [
+        "label",
+        "input",
+        "hint"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "label": {
+          "type": "unknown"
+        },
+        "input": {
+          "type": "unknown"
+        },
+        "hint": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/FormControl.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "IconButton": {
+      "name": "IconButton",
+      "version": "0.5.0",
+      "source": "IconButton/schema.ts",
+      "propertyOrder": [
+        "name",
+        "icon",
+        "action",
+        "variant",
+        "size",
+        "shape"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "name": {
+          "type": "unknown"
+        },
+        "icon": {
+          "type": "unknown"
+        },
+        "action": {
+          "type": "unknown"
+        },
+        "variant": {
+          "type": "unknown"
+        },
+        "size": {
+          "type": "unknown"
+        },
+        "shape": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/IconButton.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "IconText": {
+      "name": "IconText",
+      "version": "0.5.0",
+      "source": "IconText/schema.ts",
+      "propertyOrder": [
+        "icon",
+        "iconVariant",
+        "iconSize",
+        "title",
+        "subtitle",
+        "bold",
+        "layout"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "icon": {
+          "type": "unknown"
+        },
+        "iconVariant": {
+          "type": "unknown"
+        },
+        "iconSize": {
+          "type": "unknown"
+        },
+        "title": {
+          "type": "unknown"
+        },
+        "subtitle": {
+          "type": "unknown"
+        },
+        "bold": {
+          "type": "unknown"
+        },
+        "layout": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/IconText.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "Image": {
+      "name": "Image",
+      "version": "0.5.0",
+      "source": "Image/schema.ts",
+      "propertyOrder": [
+        "alt",
+        "src"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "alt": {
+          "type": "unknown"
+        },
+        "src": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Image.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "ImageBlock": {
+      "name": "ImageBlock",
+      "version": "0.5.0",
+      "source": "ImageBlock/schema.ts",
+      "propertyOrder": [
+        "src",
+        "alt"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "src": {
+          "type": "unknown"
+        },
+        "alt": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/ImageBlock.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "ImageGallery": {
+      "name": "ImageGallery",
+      "version": "0.5.0",
+      "source": "ImageGallery/schema.ts",
+      "propertyOrder": [
+        "src",
+        "alt",
+        "details"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "src": {
+          "type": "unknown"
+        },
+        "alt": {
+          "type": "unknown"
+        },
+        "details": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/ImageGallery.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "ImageText": {
+      "name": "ImageText",
+      "version": "0.5.0",
+      "source": "ImageText/schema.ts",
+      "propertyOrder": [
+        "src",
+        "alt",
+        "title",
+        "subtitle",
+        "bold",
+        "layout",
+        "imageSize"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "src": {
+          "type": "unknown"
+        },
+        "alt": {
+          "type": "unknown"
+        },
+        "title": {
+          "type": "unknown"
+        },
+        "subtitle": {
+          "type": "unknown"
+        },
+        "bold": {
+          "type": "unknown"
+        },
+        "layout": {
+          "type": "unknown"
+        },
+        "imageSize": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/ImageText.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "ImageTextLarge": {
+      "name": "ImageTextLarge",
+      "version": "0.5.0",
+      "source": "ImageTextLarge/schema.ts",
+      "propertyOrder": [
+        "src",
+        "alt",
+        "title",
+        "subtitle",
+        "bold"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "src": {
+          "type": "unknown"
+        },
+        "alt": {
+          "type": "unknown"
+        },
+        "title": {
+          "type": "unknown"
+        },
+        "subtitle": {
+          "type": "unknown"
+        },
+        "bold": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/ImageTextLarge.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "InlineHeader": {
+      "name": "InlineHeader",
+      "version": "0.5.0",
+      "source": "InlineHeader/schema.ts",
+      "propertyOrder": [
+        "heading",
+        "description"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "heading": {
+          "type": "unknown"
+        },
+        "description": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/InlineHeader.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "Input": {
+      "name": "Input",
+      "version": "0.5.0",
+      "source": "Input/schema.ts",
+      "propertyOrder": [
+        "name",
+        "placeholder",
+        "type",
+        "rules",
+        "value"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "unknown"
+        },
+        "placeholder": {
+          "type": "unknown"
+        },
+        "type": {
+          "type": "unknown"
+        },
+        "rules": {
+          "type": "unknown"
+        },
+        "value": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Input.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "Label": {
+      "name": "Label",
+      "version": "0.5.0",
+      "source": "Label/schema.ts",
+      "propertyOrder": [
+        "text"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "text": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Label.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "MarkDownRenderer": {
+      "name": "MarkDownRenderer",
+      "version": "0.5.0",
+      "source": "MarkDownRenderer/schema.ts",
+      "propertyOrder": [
+        "textMarkdown",
+        "variant"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "textMarkdown": {
+          "type": "unknown"
+        },
+        "variant": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/MarkDownRenderer.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "MetricIndicatorWithStrikethrough": {
+      "name": "MetricIndicatorWithStrikethrough",
+      "version": "0.5.0",
+      "source": "MetricIndicator/schema.ts",
+      "propertyOrder": [
+        "direction",
+        "value"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "direction": {
+          "type": "unknown"
+        },
+        "value": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/MetricIndicatorWithStrikethrough.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "Modal": {
+      "name": "Modal",
+      "version": "0.5.0",
+      "source": "Modal/schema.ts",
+      "propertyOrder": [
+        "title",
+        "open",
+        "children",
+        "size"
+      ],
+      "reactiveProps": [
+        "open"
+      ],
+      "properties": {
+        "title": {
+          "type": "unknown"
+        },
+        "open": {
+          "type": "unknown"
+        },
+        "children": {
+          "type": "unknown"
+        },
+        "size": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Modal.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "OptionCard": {
+      "name": "OptionCard",
+      "version": "0.5.0",
+      "source": "OptionCards/schema.ts",
+      "propertyOrder": [
+        "value",
+        "title",
+        "subtitle",
+        "topContent",
+        "disabled"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "value": {
+          "type": "unknown"
+        },
+        "title": {
+          "type": "unknown"
+        },
+        "subtitle": {
+          "type": "unknown"
+        },
+        "topContent": {
+          "type": "unknown"
+        },
+        "disabled": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/OptionCard.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "OverviewCardItem": {
+      "name": "OverviewCardItem",
+      "version": "0.5.0",
+      "source": "OverviewCardBlock/schema.ts",
+      "propertyOrder": [
+        "id",
+        "top",
+        "bottom"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "id": {
+          "type": "unknown"
+        },
+        "top": {
+          "type": "unknown"
+        },
+        "bottom": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/OverviewCardItem.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "RadioItem": {
+      "name": "RadioItem",
+      "version": "0.5.0",
+      "source": "RadioGroup/schema.ts",
+      "propertyOrder": [
+        "label",
+        "description",
+        "value"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "label": {
+          "type": "unknown"
+        },
+        "description": {
+          "type": "unknown"
+        },
+        "value": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/RadioItem.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "SelectItem": {
+      "name": "SelectItem",
+      "version": "0.5.0",
+      "source": "Select/schema.ts",
+      "propertyOrder": [
+        "value",
+        "label"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "unknown"
+        },
+        "label": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/SelectItem.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "Separator": {
+      "name": "Separator",
+      "version": "0.5.0",
+      "source": "Separator/schema.ts",
+      "propertyOrder": [
+        "orientation",
+        "decorative"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "orientation": {
+          "type": "unknown"
+        },
+        "decorative": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Separator.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "Slider": {
+      "name": "Slider",
+      "version": "0.5.0",
+      "source": "Slider/schema.ts",
+      "propertyOrder": [
+        "name",
+        "variant",
+        "min",
+        "max",
+        "step",
+        "defaultValue",
+        "label",
+        "rules",
+        "value"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "unknown"
+        },
+        "variant": {
+          "type": "unknown"
+        },
+        "min": {
+          "type": "unknown"
+        },
+        "max": {
+          "type": "unknown"
+        },
+        "step": {
+          "type": "unknown"
+        },
+        "defaultValue": {
+          "type": "unknown"
+        },
+        "label": {
+          "type": "unknown"
+        },
+        "rules": {
+          "type": "unknown"
+        },
+        "value": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Slider.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "SnippetCardItem": {
+      "name": "SnippetCardItem",
+      "version": "0.5.0",
+      "source": "SnippetCardBlock/schema.ts",
+      "propertyOrder": [
+        "id",
+        "lhs",
+        "rhs"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "id": {
+          "type": "unknown"
+        },
+        "lhs": {
+          "type": "unknown"
+        },
+        "rhs": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/SnippetCardItem.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "Stack": {
+      "name": "Stack",
+      "version": "0.5.0",
+      "source": "Stack/schema.ts",
+      "propertyOrder": [
+        "direction",
+        "gap",
+        "align",
+        "justify",
+        "wrap"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "direction": {
+          "type": "unknown"
+        },
+        "gap": {
+          "type": "unknown"
+        },
+        "align": {
+          "type": "unknown"
+        },
+        "justify": {
+          "type": "unknown"
+        },
+        "wrap": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Stack.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "StepsItem": {
+      "name": "StepsItem",
+      "version": "0.5.0",
+      "source": "Steps/schema.ts",
+      "propertyOrder": [
+        "title",
+        "details"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "title": {
+          "type": "unknown"
+        },
+        "details": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/StepsItem.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "SwitchItem": {
+      "name": "SwitchItem",
+      "version": "0.5.0",
+      "source": "SwitchGroup/schema.ts",
+      "propertyOrder": [
+        "label",
+        "description",
+        "name",
+        "defaultChecked"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "properties": {
+        "label": {
+          "type": "unknown"
+        },
+        "description": {
+          "type": "unknown"
+        },
+        "name": {
+          "type": "unknown"
+        },
+        "defaultChecked": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/SwitchItem.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "Col": {
+      "name": "Col",
+      "version": "0.5.0",
+      "source": "Table/schema.ts",
+      "propertyOrder": [
+        "label",
+        "data",
+        "type"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "label": {
+          "type": "unknown"
+        },
+        "data": {
+          "type": "unknown"
+        },
+        "type": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Col.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "TabItem": {
+      "name": "TabItem",
+      "version": "0.5.0",
+      "source": "Tabs/schema.ts",
+      "propertyOrder": [
+        "value",
+        "trigger",
+        "content"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "value": {
+          "type": "unknown"
+        },
+        "trigger": {
+          "type": "unknown"
+        },
+        "content": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/TabItem.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "Tag": {
+      "name": "Tag",
+      "version": "0.5.0",
+      "source": "Tag/schema.ts",
+      "propertyOrder": [
+        "text",
+        "icon",
+        "size",
+        "variant"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "text": {
+          "type": "unknown"
+        },
+        "icon": {
+          "type": "unknown"
+        },
+        "size": {
+          "type": "unknown"
+        },
+        "variant": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Tag.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "TagBlock": {
+      "name": "TagBlock",
+      "version": "0.5.0",
+      "source": "TagBlock/schema.ts",
+      "propertyOrder": [
+        "tags",
+        "size"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "tags": {
+          "type": "unknown"
+        },
+        "size": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/TagBlock.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "Text": {
+      "name": "Text",
+      "version": "0.5.0",
+      "source": "Text/schema.ts",
+      "propertyOrder": [
+        "variant",
+        "value",
+        "subtext",
+        "subtextVariant",
+        "size"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "variant": {
+          "type": "unknown"
+        },
+        "value": {
+          "type": "unknown"
+        },
+        "subtext": {
+          "type": "unknown"
+        },
+        "subtextVariant": {
+          "type": "unknown"
+        },
+        "size": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Text.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "TextArea": {
+      "name": "TextArea",
+      "version": "0.5.0",
+      "source": "TextArea/schema.ts",
+      "propertyOrder": [
+        "name",
+        "placeholder",
+        "rows",
+        "rules",
+        "value"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "unknown"
+        },
+        "placeholder": {
+          "type": "unknown"
+        },
+        "rows": {
+          "type": "unknown"
+        },
+        "rules": {
+          "type": "unknown"
+        },
+        "value": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/TextArea.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "TextCallout": {
+      "name": "TextCallout",
+      "version": "0.5.0",
+      "source": "TextCallout/schema.ts",
+      "propertyOrder": [
+        "variant",
+        "title",
+        "description"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "variant": {
+          "type": "unknown"
+        },
+        "title": {
+          "type": "unknown"
+        },
+        "description": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/TextCallout.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "TextContent": {
+      "name": "TextContent",
+      "version": "0.5.0",
+      "source": "TextContent/schema.ts",
+      "propertyOrder": [
+        "text",
+        "size"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "text": {
+          "type": "unknown"
+        },
+        "size": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/TextContent.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "VisualCardItem": {
+      "name": "VisualCardItem",
+      "version": "0.5.0",
+      "source": "VisualCardBlock/schema.ts",
+      "propertyOrder": [
+        "body",
+        "id",
+        "bgImageSrc",
+        "tag",
+        "bgImageAlt"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "body": {
+          "type": "unknown"
+        },
+        "id": {
+          "type": "unknown"
+        },
+        "bgImageSrc": {
+          "type": "unknown"
+        },
+        "tag": {
+          "type": "unknown"
+        },
+        "bgImageAlt": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/VisualCardItem.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_zod_schema_ts"
+    },
+    "Accordion": {
+      "name": "Accordion",
+      "version": "0.5.0",
+      "source": "Accordion/index.tsx",
+      "propertyOrder": [
+        "items"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "items": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Accordion.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_index_tsx"
+    },
+    "Carousel": {
+      "name": "Carousel",
+      "version": "0.5.0",
+      "source": "Carousel/index.tsx",
+      "propertyOrder": [
+        "children",
+        "variant"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "children": {
+          "type": "unknown"
+        },
+        "variant": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Carousel.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_index_tsx"
+    },
+    "FollowUpBlock": {
+      "name": "FollowUpBlock",
+      "version": "0.5.0",
+      "source": "FollowUpBlock/index.tsx",
+      "propertyOrder": [
+        "items"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "items": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/FollowUpBlock.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_index_tsx"
+    },
+    "FollowUpItem": {
+      "name": "FollowUpItem",
+      "version": "0.5.0",
+      "source": "FollowUpItem/index.tsx",
+      "propertyOrder": [
+        "text"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "text": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/FollowUpItem.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_index_tsx"
+    },
+    "ListBlock": {
+      "name": "ListBlock",
+      "version": "0.5.0",
+      "source": "ListBlock/index.tsx",
+      "propertyOrder": [
+        "items",
+        "variant",
+        "size"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "items": {
+          "type": "unknown"
+        },
+        "variant": {
+          "type": "unknown"
+        },
+        "size": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/ListBlock.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_index_tsx"
+    },
+    "ListItem": {
+      "name": "ListItem",
+      "version": "0.5.0",
+      "source": "ListItem/index.tsx",
+      "propertyOrder": [
+        "title",
+        "subtitle",
+        "image",
+        "actionLabel",
+        "action"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "title": {
+          "type": "unknown"
+        },
+        "subtitle": {
+          "type": "unknown"
+        },
+        "image": {
+          "type": "unknown"
+        },
+        "actionLabel": {
+          "type": "unknown"
+        },
+        "action": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/ListItem.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_index_tsx"
+    },
+    "RadioGroup": {
+      "name": "RadioGroup",
+      "version": "0.5.0",
+      "source": "RadioGroup/index.tsx",
+      "propertyOrder": [
+        "name",
+        "items",
+        "defaultValue",
+        "rules",
+        "value"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "unknown"
+        },
+        "items": {
+          "type": "unknown"
+        },
+        "defaultValue": {
+          "type": "unknown"
+        },
+        "rules": {
+          "type": "unknown"
+        },
+        "value": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/RadioGroup.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "refined"
+    },
+    "SectionBlock": {
+      "name": "SectionBlock",
+      "version": "0.5.0",
+      "source": "SectionBlock/index.tsx",
+      "propertyOrder": [
+        "sections",
+        "isFoldable"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "sections": {
+          "type": "unknown"
+        },
+        "isFoldable": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/SectionBlock.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_index_tsx"
+    },
+    "SectionItem": {
+      "name": "SectionItem",
+      "version": "0.5.0",
+      "source": "SectionItem/index.tsx",
+      "propertyOrder": [
+        "value",
+        "trigger",
+        "content"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "value": {
+          "type": "unknown"
+        },
+        "trigger": {
+          "type": "unknown"
+        },
+        "content": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/SectionItem.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_index_tsx"
+    },
+    "Steps": {
+      "name": "Steps",
+      "version": "0.5.0",
+      "source": "Steps/index.tsx",
+      "propertyOrder": [
+        "items"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "items": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Steps.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_index_tsx"
+    },
+    "Table": {
+      "name": "Table",
+      "version": "0.5.0",
+      "source": "Table/index.tsx",
+      "propertyOrder": [
+        "columns"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "columns": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Table.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "refined"
+    },
+    "Tabs": {
+      "name": "Tabs",
+      "version": "0.5.0",
+      "source": "Tabs/index.tsx",
+      "propertyOrder": [
+        "items"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "items": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/Tabs.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "heuristic_from_index_tsx"
+    },
+    "Select": {
+      "name": "Select",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "name",
+        "items",
+        "placeholder",
+        "rules",
+        "value",
+        "size"
+      ],
+      "properties": {
+        "name": {
+          "type": "unknown"
+        },
+        "items": {
+          "type": "unknown"
+        },
+        "placeholder": {
+          "type": "unknown"
+        },
+        "rules": {
+          "type": "unknown"
+        },
+        "value": {
+          "type": "unknown"
+        },
+        "size": {
+          "type": "unknown"
+        }
+      },
+      "required": [
+        "name",
+        "items"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "allowedChildren": null,
+      "renderer": "components/Select.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "",
+        "group": "Forms"
+      },
+      "_extraction": "hand"
+    },
+    "CheckBoxGroup": {
+      "name": "CheckBoxGroup",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "name",
+        "items",
+        "rules",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "unknown"
+        },
+        "items": {
+          "type": "unknown"
+        },
+        "rules": {
+          "type": "unknown"
+        },
+        "value": {
+          "type": "unknown"
+        }
+      },
+      "required": [
+        "name",
+        "items"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "allowedChildren": null,
+      "renderer": "components/CheckBoxGroup.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "",
+        "group": "Forms"
+      },
+      "_extraction": "hand"
+    },
+    "SwitchGroup": {
+      "name": "SwitchGroup",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "name",
+        "items",
+        "rules",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "unknown"
+        },
+        "items": {
+          "type": "unknown"
+        },
+        "rules": {
+          "type": "unknown"
+        },
+        "value": {
+          "type": "unknown"
+        }
+      },
+      "required": [
+        "name",
+        "items"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "allowedChildren": null,
+      "renderer": "components/SwitchGroup.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "",
+        "group": "Forms"
+      },
+      "_extraction": "hand"
+    },
+    "BarChart": {
+      "name": "BarChart",
+      "version": "0.5.0",
+      "source": "Charts/BarChartCondensed.ts",
+      "propertyOrder": [
+        "labels",
+        "series",
+        "variant",
+        "xLabel",
+        "yLabel",
+        "height"
+      ],
+      "reactiveProps": [],
+      "properties": {
+        "labels": {
+          "type": "unknown"
+        },
+        "series": {
+          "type": "unknown"
+        },
+        "variant": {
+          "type": "unknown"
+        },
+        "xLabel": {
+          "type": "unknown"
+        },
+        "yLabel": {
+          "type": "unknown"
+        },
+        "height": {
+          "type": "unknown"
+        }
+      },
+      "required": [],
+      "allowedChildren": [],
+      "renderer": "components/BarChart.js",
+      "securityCapabilities": [],
+      "prompt": {
+        "description": "",
+        "group": ""
+      },
+      "_extraction": "refined"
+    },
+    "Card": {
+      "name": "Card",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "children",
+        "variant",
+        "direction",
+        "gap",
+        "align",
+        "justify",
+        "wrap"
+      ],
+      "properties": {
+        "children": {
+          "type": "unknown"
+        },
+        "variant": {
+          "type": "unknown"
+        },
+        "direction": {
+          "type": "unknown"
+        },
+        "gap": {
+          "type": "unknown"
+        },
+        "align": {
+          "type": "unknown"
+        },
+        "justify": {
+          "type": "unknown"
+        },
+        "wrap": {
+          "type": "unknown"
+        }
+      },
+      "required": [
+        "children"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "*registered*"
+      ],
+      "renderer": "components/Card.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "",
+        "group": "Layout"
+      },
+      "_extraction": "hand"
+    }
+  }
+}

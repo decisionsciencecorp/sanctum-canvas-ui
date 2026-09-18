@@ -1,0 +1,13 @@
+{
+  "id": "state-decl",
+  "input": "$count = 0\nroot = Title(\"n\")",
+  "expect": {
+    "errors": [],
+    "state": {
+      "count": 0
+    }
+  },
+  "parity": "exact",
+  "source": "serialize.test.ts",
+  "upstream_commit": "ee54f66"
+}

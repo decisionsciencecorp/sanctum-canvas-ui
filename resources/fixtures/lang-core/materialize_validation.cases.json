@@ -1,0 +1,67 @@
+{
+  "id": "materialize_validation",
+  "source": "old/packages/lang-core/src/parser/__tests__/materialize.validation.test.ts",
+  "case_count": 12,
+  "cases": [
+    {
+      "id": "materialize_validation/000",
+      "name": "accepts valid values and reports violations with JSON-pointer paths + distinct codes",
+      "parity": "exact"
+    },
+    {
+      "id": "materialize_validation/001",
+      "name": "reports container-shape mismatches and accumulates independent errors",
+      "parity": "exact"
+    },
+    {
+      "id": "materialize_validation/002",
+      "name": "messages are self-sufficient and attributed to the defining statement",
+      "parity": "exact"
+    },
+    {
+      "id": "materialize_validation/003",
+      "name": "prunes invalid values on OPTIONAL edges and ARRAY ITEMS \u2014 component survives",
+      "parity": "exact"
+    },
+    {
+      "id": "materialize_validation/004",
+      "name": "propagates through REQUIRED edges: parent pruned at an optional edge, or component dropped",
+      "parity": "exact"
+    },
+    {
+      "id": "materialize_validation/005",
+      "name": "substitutes schema defaults at every edge; absent/null required keys fill silently",
+      "parity": "exact"
+    },
+    {
+      "id": "materialize_validation/006",
+      "name": "elements in data slots follow the edge rule: drop on required, prune on optional/items",
+      "parity": "exact"
+    },
+    {
+      "id": "materialize_validation/007",
+      "name": "component slots ($ref/anyOf) stay unchecked; a misplaced component's own args still validate",
+      "parity": "exact"
+    },
+    {
+      "id": "materialize_validation/008",
+      "name": "skips dynamic values, composites, null/omitted args, and extra keys",
+      "parity": "exact"
+    },
+    {
+      "id": "materialize_validation/009",
+      "name": "skips malformed/uncheckable schemas and applies documented leaf edges (direct)",
+      "parity": "exact"
+    },
+    {
+      "id": "materialize_validation/010",
+      "name": "defers required-key and enum checks while partial, then reports them on completion",
+      "parity": "exact"
+    },
+    {
+      "id": "materialize_validation/011",
+      "name": "keeps scalar type checks on mid-stream (only structure and enums defer)",
+      "parity": "exact"
+    }
+  ]
+}

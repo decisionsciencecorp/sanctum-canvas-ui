@@ -1,0 +1,11 @@
+{
+  "id": "nested-stack",
+  "input": "header = Title(\"Hi\")\nroot = Stack([header])",
+  "expect": {
+    "errors": [],
+    "rootType": "Stack"
+  },
+  "parity": "exact",
+  "source": "serialize.test.ts",
+  "upstream_commit": "ee54f66"
+}

@@ -1,0 +1,9 @@
+{
+  "id": "no-side-effects-while-partial",
+  "parity": "sanctum_hardening",
+  "hardening": "H7",
+  "programPartial": "data = Query(get_item, {id: 1",
+  "expect": {
+    "queryExecuted": false
+  }
+}

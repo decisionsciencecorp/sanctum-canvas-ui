@@ -1,0 +1,8 @@
+{
+  "id": "mutation-halts-action-plan",
+  "parity": "exact",
+  "program": "save = Mutation(save_item, {name: $name})\nroot = Button(\"Go\", Action([@Run(save), @Set($done, true)]))",
+  "expect": {
+    "onMutationFailure": "stop_later_steps"
+  }
+}

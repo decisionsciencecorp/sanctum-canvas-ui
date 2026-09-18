@@ -1,0 +1,19 @@
+{
+  "name": "TextContent",
+  "version": "0.5.0",
+  "propertyOrder": ["text", "size", "weight"],
+  "properties": {
+    "text": { "type": "string", "required": true },
+    "size": { "type": "string", "enum": ["sm", "md", "lg"], "default": "md" },
+    "weight": { "type": "string", "enum": ["normal", "medium", "bold"], "default": "normal" }
+  },
+  "required": ["text"],
+  "reactiveProps": [],
+  "allowedChildren": null,
+  "renderer": "components/TextContent.js",
+  "securityCapabilities": ["none"],
+  "prompt": {
+    "description": "Plain text content block.",
+    "group": "Foundation"
+  }
+}

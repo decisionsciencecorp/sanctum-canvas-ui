@@ -1,0 +1,62 @@
+{
+  "id": "prompt",
+  "source": "old/packages/lang-core/src/parser/__tests__/prompt.test.ts",
+  "case_count": 11,
+  "cases": [
+    {
+      "id": "prompt/000",
+      "name": "renders a local prompt from a library spec",
+      "parity": "exact"
+    },
+    {
+      "id": "prompt/001",
+      "name": "starts with the byte-exact marker",
+      "parity": "exact"
+    },
+    {
+      "id": "prompt/002",
+      "name": "no library \u2192 JSON with only libraryVersion",
+      "parity": "exact"
+    },
+    {
+      "id": "prompt/003",
+      "name": "emitted keys are a subset of Cloud config keys",
+      "parity": "exact"
+    },
+    {
+      "id": "prompt/004",
+      "name": "appends extra prose after the block",
+      "parity": "exact"
+    },
+    {
+      "id": "prompt/005",
+      "name": "no instructions \u2192 sentinel + JSON only",
+      "parity": "exact"
+    },
+    {
+      "id": "prompt/006",
+      "name": "emits the library under chatLibrary, dropping components",
+      "parity": "exact"
+    },
+    {
+      "id": "prompt/007",
+      "name": "systemPromptOptions rides as a sibling key",
+      "parity": "exact"
+    },
+    {
+      "id": "prompt/008",
+      "name": "strips Cloud-unsupported prompt flags from the wire",
+      "parity": "exact"
+    },
+    {
+      "id": "prompt/009",
+      "name": "promptOptions without a library throws",
+      "parity": "exact"
+    },
+    {
+      "id": "prompt/010",
+      "name": "invalid library throws with every issue",
+      "parity": "exact"
+    }
+  ]
+}

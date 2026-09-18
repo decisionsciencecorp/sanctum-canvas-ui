@@ -1,0 +1,11 @@
+{
+  "id": "simple-title",
+  "input": "root = Title(\"Hello\")",
+  "expect": {
+    "errors": [],
+    "rootType": "Title"
+  },
+  "parity": "exact",
+  "source": "serialize.test.ts",
+  "upstream_commit": "ee54f66"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "parser.test-005",
+  "source_file": "old/packages/lang-core/src/parser/__tests__/parser.test.ts",
+  "input": "\\`\\`js\nroot = Title(\"hello\")\n\\`\\`\\`",
+  "upstream_commit": "ee54f66",
+  "parity": "exact",
+  "expect": {
+    "note": "golden outputs filled in A2 when parser exists; input frozen in A0"
+  },
+  "content_sha256_16": "814ceec54bd8d44b"
+}
