@@ -7,9 +7,7 @@
       "lang": "en",
       "issueCount": 0,
       "issues": [],
-      "notes": [
-        "no skip-to-canvas link (2.4.1 nicety for dense lab chrome)"
-      ],
+      "notes": [],
       "controlCount": 13
     },
     {
@@ -18,15 +16,8 @@
       "label": "lab-a5-baseline",
       "title": "OpenUI upstream baseline \u2014 A5 foundation (static)",
       "lang": "en",
-      "issueCount": 1,
-      "issues": [
-        {
-          "id": "focus-css",
-          "level": "AA",
-          "criterion": "2.4.7",
-          "detail": "no :focus / :focus-visible rules found in stylesheets"
-        }
-      ],
+      "issueCount": 0,
+      "issues": [],
       "notes": [],
       "controlCount": 10
     },
@@ -69,21 +60,8 @@
       "label": "lab-a6-baseline",
       "title": "OpenUI upstream baseline \u2014 A6 library (static)",
       "lang": "en",
-      "issueCount": 2,
-      "issues": [
-        {
-          "id": "control-name",
-          "level": "A",
-          "criterion": "4.1.2",
-          "detail": "3 interactive control(s) without accessible name"
-        },
-        {
-          "id": "focus-css",
-          "level": "AA",
-          "criterion": "2.4.7",
-          "detail": "no :focus / :focus-visible rules found in stylesheets"
-        }
-      ],
+      "issueCount": 0,
+      "issues": [],
       "notes": [],
       "controlCount": 17
     },
@@ -103,14 +81,15 @@
     "lab-main": {
       "first": {
         "ok": true,
-        "tag": "select",
-        "id": "lab-fixture",
-        "outline": "auto 1px rgb(16, 16, 16)",
+        "tag": "a",
+        "id": "",
+        "outline": "solid 3px oklch(0.546 0.215 262.881 / 0.55)",
         "boxShadow": "none",
         "ringOk": true,
-        "text": "lab-canvas-textcontent\ntext-message-basic\ntool-call-lifecycl"
+        "text": "Skip to canvas output"
       },
       "visitedIds": [
+        "A:",
         "lab-fixture",
         "lab-replay",
         "lab-reset",
@@ -121,20 +100,13 @@
         "lab-patch",
         "lab-patch-source",
         "lab-tool-echo",
-        "lab-tool-note-get",
-        "lab-tool-note-set"
+        "lab-tool-note-get"
       ],
       "tabStops": 12
     }
   },
-  "blockers": [
-    "/lab/a6-baseline.html: 4.1.2 control-name: 3 interactive control(s) without accessible name"
-  ],
-  "warnings": [
-    "no skip-to-canvas link (2.4.1 nicety for dense lab chrome)",
-    "/lab/a5-baseline.html: 2.4.7 focus-css: no :focus / :focus-visible rules found in stylesheets",
-    "/lab/a6-baseline.html: 2.4.7 focus-css: no :focus / :focus-visible rules found in stylesheets"
-  ],
+  "blockers": [],
+  "warnings": [],
   "screenshots": [
     "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-main-desktop-1280x800.png",
     "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-main-keyboard-focus.png",
@@ -154,5 +126,5 @@
     "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-a6-library-desktop-1280x800.png",
     "/root/projects/sanctum-canvas-ui/docs/track-a/screenshots/a8-a11y/lab-a6-library-mobile-390x844.png"
   ],
-  "blockerCount": 1
+  "blockerCount": 0
 }
