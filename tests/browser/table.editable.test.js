@@ -438,8 +438,7 @@ describe("A6.6 EditableTable", () => {
     assert.equal(el.getAttribute("data-changed-cells"), "0");
   });
 
-  // WIP A6.6 — skipped so parallel A6.1–A6.4 suite stays green (edit wiring incomplete).
-  it.skip("edit / commit / cancel keyboard on text cell", async () => {
+  it("edit / commit / cancel keyboard on text cell", async () => {
     const el = EditableTable.create(sampleProps(), ctx);
     let cell = findByAttr(el, "data-col-key", "name").find((n) => n.tagName === "TD");
     cell.firstChild.dispatchEvent({ type: "click" });
@@ -564,8 +563,7 @@ describe("A6.6 EditableTable", () => {
     assert.deepEqual(ids, ["r2", "r1", "r3"]);
   });
 
-  // WIP A6.6 — skipped so parallel A6.1–A6.4 suite stays green (edit wiring incomplete).
-  it.skip("select + number edit paths and destroy", async () => {
+  it("select + number edit paths and destroy", async () => {
     const el = EditableTable.create(sampleProps(), ctx);
     let roleTd = findByAttr(el, "data-col-key", "role").find((n) => n.tagName === "TD");
     roleTd.firstChild.dispatchEvent({ type: "click" });
