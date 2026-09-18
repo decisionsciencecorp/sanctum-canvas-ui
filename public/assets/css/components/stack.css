@@ -1,0 +1,139 @@
+/**
+ * A5.1 — Stack flex layout (plain CSS, --canvas-* tokens).
+ * Classes + data-* attrs set by src/Browser/components/layout/Stack.js
+ */
+
+.canvas-stack {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-width: 0;
+  gap: var(--canvas-space-m);
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+/* Direction */
+.canvas-stack--dir-row,
+.canvas-stack[data-direction="row"] {
+  flex-direction: row;
+}
+
+.canvas-stack--dir-column,
+.canvas-stack[data-direction="column"] {
+  flex-direction: column;
+}
+
+/* Gap → spacing tokens */
+.canvas-stack--gap-none,
+.canvas-stack[data-gap="none"] {
+  gap: var(--canvas-space-000);
+}
+
+.canvas-stack--gap-xs,
+.canvas-stack[data-gap="xs"] {
+  gap: var(--canvas-space-xs);
+}
+
+.canvas-stack--gap-s,
+.canvas-stack[data-gap="s"] {
+  gap: var(--canvas-space-s);
+}
+
+.canvas-stack--gap-m,
+.canvas-stack[data-gap="m"] {
+  gap: var(--canvas-space-m);
+}
+
+.canvas-stack--gap-l,
+.canvas-stack[data-gap="l"] {
+  gap: var(--canvas-space-l);
+}
+
+.canvas-stack--gap-xl,
+.canvas-stack[data-gap="xl"] {
+  gap: var(--canvas-space-xl);
+}
+
+.canvas-stack--gap-2xl,
+.canvas-stack[data-gap="2xl"] {
+  gap: var(--canvas-space-2xl);
+}
+
+/* Align */
+.canvas-stack--align-start,
+.canvas-stack[data-align="start"] {
+  align-items: flex-start;
+}
+
+.canvas-stack--align-center,
+.canvas-stack[data-align="center"] {
+  align-items: center;
+}
+
+.canvas-stack--align-end,
+.canvas-stack[data-align="end"] {
+  align-items: flex-end;
+}
+
+.canvas-stack--align-stretch,
+.canvas-stack[data-align="stretch"] {
+  align-items: stretch;
+}
+
+.canvas-stack--align-baseline,
+.canvas-stack[data-align="baseline"] {
+  align-items: baseline;
+}
+
+/* Justify */
+.canvas-stack--justify-start,
+.canvas-stack[data-justify="start"] {
+  justify-content: flex-start;
+}
+
+.canvas-stack--justify-center,
+.canvas-stack[data-justify="center"] {
+  justify-content: center;
+}
+
+.canvas-stack--justify-end,
+.canvas-stack[data-justify="end"] {
+  justify-content: flex-end;
+}
+
+.canvas-stack--justify-between,
+.canvas-stack[data-justify="between"] {
+  justify-content: space-between;
+}
+
+.canvas-stack--justify-around,
+.canvas-stack[data-justify="around"] {
+  justify-content: space-around;
+}
+
+.canvas-stack--justify-evenly,
+.canvas-stack[data-justify="evenly"] {
+  justify-content: space-evenly;
+}
+
+/* Wrap */
+.canvas-stack--wrap,
+.canvas-stack[data-wrap="1"] {
+  flex-wrap: wrap;
+}
+
+.canvas-stack > * {
+  min-width: 0;
+}
+
+/* Partial / streaming placeholder */
+.canvas-stack[data-openui-partial="1"] {
+  min-height: var(--canvas-space-2xl);
+}
+
+@container canvas (min-width: 480px) {
+  .canvas-stack--dir-row.canvas-stack--responsive {
+    flex-wrap: nowrap;
+  }
+}

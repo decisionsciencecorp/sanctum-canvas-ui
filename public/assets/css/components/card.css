@@ -1,0 +1,226 @@
+/**
+ * A5.1 — Card + regions (plain CSS, --canvas-* tokens).
+ * Shell + header/content/source regions; progressive stream safe (no layout collapse).
+ */
+
+.canvas-card {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-width: 0;
+  flex: 1 1 auto;
+  width: 100%;
+  gap: var(--canvas-space-m);
+  color: var(--canvas-text-primary);
+  font-family: var(--canvas-font-body);
+  font-size: var(--canvas-font-size-md);
+  line-height: var(--canvas-line-height-body);
+  border: 1px solid transparent;
+}
+
+.canvas-card--full {
+  width: 100%;
+}
+
+/* Variants */
+.canvas-card--card {
+  background: var(--canvas-surface-foreground);
+  border-color: var(--canvas-border-default);
+  border-radius: var(--canvas-radius-3xl);
+  padding: var(--canvas-space-l);
+  box-shadow: var(--canvas-shadow-s);
+}
+
+.canvas-card--sunk {
+  background: var(--canvas-surface-sunk);
+  border-color: var(--canvas-border-default);
+  border-radius: var(--canvas-radius-3xl);
+  padding: var(--canvas-space-l);
+  box-shadow: var(--canvas-shadow-m);
+}
+
+.canvas-card--clear {
+  background: transparent;
+  border-color: transparent;
+  border-radius: var(--canvas-radius-3xl);
+  padding: 0 var(--canvas-space-l);
+  box-shadow: none;
+}
+
+/* Reuse Stack flex modifiers when Card carries direction/gap/align/justify */
+.canvas-card--dir-row,
+.canvas-card[data-direction="row"] {
+  flex-direction: row;
+}
+
+.canvas-card--dir-column,
+.canvas-card[data-direction="column"] {
+  flex-direction: column;
+}
+
+.canvas-card--gap-none,
+.canvas-card[data-gap="none"] {
+  gap: var(--canvas-space-000);
+}
+
+.canvas-card--gap-xs,
+.canvas-card[data-gap="xs"] {
+  gap: var(--canvas-space-xs);
+}
+
+.canvas-card--gap-s,
+.canvas-card[data-gap="s"] {
+  gap: var(--canvas-space-s);
+}
+
+.canvas-card--gap-m,
+.canvas-card[data-gap="m"] {
+  gap: var(--canvas-space-m);
+}
+
+.canvas-card--gap-l,
+.canvas-card[data-gap="l"] {
+  gap: var(--canvas-space-l);
+}
+
+.canvas-card--gap-xl,
+.canvas-card[data-gap="xl"] {
+  gap: var(--canvas-space-xl);
+}
+
+.canvas-card--gap-2xl,
+.canvas-card[data-gap="2xl"] {
+  gap: var(--canvas-space-2xl);
+}
+
+.canvas-card--align-start,
+.canvas-card[data-align="start"] {
+  align-items: flex-start;
+}
+
+.canvas-card--align-center,
+.canvas-card[data-align="center"] {
+  align-items: center;
+}
+
+.canvas-card--align-end,
+.canvas-card[data-align="end"] {
+  align-items: flex-end;
+}
+
+.canvas-card--align-stretch,
+.canvas-card[data-align="stretch"] {
+  align-items: stretch;
+}
+
+.canvas-card--justify-start,
+.canvas-card[data-justify="start"] {
+  justify-content: flex-start;
+}
+
+.canvas-card--justify-center,
+.canvas-card[data-justify="center"] {
+  justify-content: center;
+}
+
+.canvas-card--justify-between,
+.canvas-card[data-justify="between"] {
+  justify-content: space-between;
+}
+
+.canvas-card--wrap,
+.canvas-card[data-wrap="1"] {
+  flex-wrap: wrap;
+}
+
+/* Regions — keep flex column so streaming appends do not collapse the shell */
+.canvas-card__content,
+[data-canvas-region="content"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-m);
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.canvas-card__header,
+[data-canvas-region="header"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-xs);
+  min-width: 0;
+  margin-bottom: var(--canvas-space-2xs);
+}
+
+.canvas-card__sources,
+[data-canvas-region="source"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-s);
+  min-width: 0;
+  margin-top: var(--canvas-space-s);
+  padding-top: var(--canvas-space-m);
+  border-top: 1px solid var(--canvas-border-default);
+}
+
+.canvas-card__sources[hidden] {
+  display: none;
+}
+
+.canvas-card__sources-heading {
+  font-family: var(--canvas-font-label);
+  font-size: var(--canvas-font-size-sm);
+  font-weight: var(--canvas-font-weight-medium);
+  color: var(--canvas-text-secondary);
+  line-height: var(--canvas-line-height-label);
+}
+
+.canvas-card__sources-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--canvas-space-s);
+}
+
+.canvas-card__source-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-3xs);
+  padding: var(--canvas-space-s);
+  border-radius: var(--canvas-radius-m);
+  background: var(--canvas-surface-sunk);
+  border: 1px solid var(--canvas-border-default);
+  max-width: 100%;
+}
+
+.canvas-card__source-label {
+  color: var(--canvas-text-primary);
+  font-size: var(--canvas-font-size-sm);
+  font-weight: var(--canvas-font-weight-medium);
+}
+
+.canvas-card__source-name {
+  color: var(--canvas-text-secondary);
+  font-size: var(--canvas-font-size-xs);
+}
+
+.canvas-card__source-link {
+  color: var(--canvas-text-link);
+  font-size: var(--canvas-font-size-xs);
+  word-break: break-all;
+}
+
+.canvas-card[data-openui-partial="1"] {
+  min-height: var(--canvas-space-3xl);
+}
+
+@container canvas (max-width: 479px) {
+  .canvas-card--card,
+  .canvas-card--sunk {
+    padding: var(--canvas-space-m);
+    border-radius: var(--canvas-radius-xl);
+  }
+}

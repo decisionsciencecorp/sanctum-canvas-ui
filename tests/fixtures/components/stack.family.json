@@ -1,0 +1,144 @@
+{
+  "family": "Stack",
+  "library": "dashboard",
+  "root": "Stack",
+  "cases": [
+    {
+      "id": "stack-column-default",
+      "description": "Default column stack with two text children",
+      "vnode": {
+        "type": "Stack",
+        "id": "root",
+        "props": {
+          "direction": "column",
+          "gap": "md",
+          "align": "stretch",
+          "justify": "start"
+        },
+        "children": [
+          {
+            "type": "Text",
+            "id": "t1",
+            "props": {},
+            "children": [
+              "Alpha"
+            ]
+          },
+          {
+            "type": "Text",
+            "id": "t2",
+            "props": {},
+            "children": [
+              "Beta"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "stack-row-wrap",
+      "description": "Row + wrap + gap l",
+      "vnode": {
+        "type": "Stack",
+        "id": "row",
+        "props": {
+          "direction": "row",
+          "gap": "l",
+          "align": "center",
+          "justify": "between",
+          "wrap": true
+        },
+        "children": [
+          {
+            "type": "Text",
+            "id": "a",
+            "props": {},
+            "children": [
+              "One"
+            ]
+          },
+          {
+            "type": "Text",
+            "id": "b",
+            "props": {},
+            "children": [
+              "Two"
+            ]
+          },
+          {
+            "type": "Text",
+            "id": "c",
+            "props": {},
+            "children": [
+              "Three"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "stack-stream-append",
+      "description": "Progressive children for stream tests",
+      "chunks": [
+        {
+          "type": "Stack",
+          "id": "stream-root",
+          "props": {
+            "direction": "column",
+            "gap": "m"
+          },
+          "children": [
+            {
+              "type": "Text",
+              "id": "c1",
+              "props": {},
+              "children": [
+                "First"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Stack",
+          "id": "stream-root",
+          "props": {
+            "direction": "column",
+            "gap": "m"
+          },
+          "children": [
+            {
+              "type": "Text",
+              "id": "c1",
+              "props": {},
+              "children": [
+                "First"
+              ]
+            },
+            {
+              "type": "Text",
+              "id": "c2",
+              "props": {},
+              "children": [
+                "Second"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stack-partial",
+      "description": "Incomplete stack shows partial gate",
+      "vnode": {
+        "type": "Stack",
+        "id": "partial",
+        "partial": true,
+        "props": {
+          "partial": true,
+          "direction": "column"
+        },
+        "children": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+../../../../src/Browser/renderer/registry.js

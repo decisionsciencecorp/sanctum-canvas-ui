@@ -1,0 +1,208 @@
+{
+  "family": "Card",
+  "library": "chat",
+  "root": "Card",
+  "cases": [
+    {
+      "id": "card-basic-content",
+      "description": "Card with content region only",
+      "vnode": {
+        "type": "Card",
+        "id": "card-root",
+        "props": {
+          "variant": "card"
+        },
+        "children": [
+          {
+            "type": "CardContent",
+            "id": "body",
+            "children": [
+              {
+                "type": "Text",
+                "id": "line",
+                "props": {},
+                "children": [
+                  "Hello canvas"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "card-with-sources",
+      "description": "Card content + sources strip via props.sources (partition path)",
+      "mount": "props-children",
+      "props": {
+        "variant": "sunk",
+        "sources": [
+          {
+            "title": "OpenUI docs",
+            "sourceName": "Docs",
+            "url": "https://example.com/docs"
+          },
+          {
+            "title": "Spec",
+            "sourceName": "Spec",
+            "url": "https://example.com/spec"
+          }
+        ],
+        "children": [
+          {
+            "type": "CardContent",
+            "key": "body",
+            "children": [
+              {
+                "type": "Text",
+                "key": "t",
+                "props": {},
+                "children": [
+                  "Cited answer"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "card-stream-regions",
+      "description": "Stream append inside content region without collapsing shell",
+      "chunks": [
+        {
+          "type": "Card",
+          "id": "stream-card",
+          "props": {
+            "variant": "card"
+          },
+          "children": [
+            {
+              "type": "CardContent",
+              "id": "content",
+              "children": [
+                {
+                  "type": "Text",
+                  "id": "p1",
+                  "props": {},
+                  "children": [
+                    "Intro"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Card",
+          "id": "stream-card",
+          "props": {
+            "variant": "card"
+          },
+          "children": [
+            {
+              "type": "CardContent",
+              "id": "content",
+              "children": [
+                {
+                  "type": "Text",
+                  "id": "p1",
+                  "props": {},
+                  "children": [
+                    "Intro"
+                  ]
+                },
+                {
+                  "type": "Text",
+                  "id": "p2",
+                  "props": {},
+                  "children": [
+                    "More"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "CardSources",
+              "id": "sources",
+              "props": {
+                "sources": [
+                  {
+                    "title": "Ref",
+                    "sourceName": "Ref",
+                    "url": "https://example.com/r"
+                  }
+                ]
+              },
+              "children": [
+                {
+                  "type": "CardSourcesHeading",
+                  "key": "__sources-heading",
+                  "props": {},
+                  "children": [
+                    "Sources"
+                  ]
+                },
+                {
+                  "type": "CardSourceItem",
+                  "key": "src-0",
+                  "props": {
+                    "title": "Ref",
+                    "sourceName": "Ref",
+                    "url": "https://example.com/r",
+                    "index": 0
+                  },
+                  "children": [
+                    "Ref"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "card-partial",
+      "description": "Partial card marked non-interactive",
+      "vnode": {
+        "type": "Card",
+        "id": "partial-card",
+        "partial": true,
+        "props": {
+          "partial": true,
+          "variant": "clear"
+        },
+        "children": []
+      }
+    },
+    {
+      "id": "card-clear-variant",
+      "description": "Clear variant shell",
+      "vnode": {
+        "type": "Card",
+        "id": "clear",
+        "props": {
+          "variant": "clear",
+          "gap": "s"
+        },
+        "children": [
+          {
+            "type": "CardContent",
+            "id": "c",
+            "children": [
+              {
+                "type": "Text",
+                "id": "t",
+                "props": {},
+                "children": [
+                  "Clear"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

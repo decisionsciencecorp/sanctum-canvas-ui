@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="sanctum">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sanctum Canvas — A5.1 Stack / Card lab</title>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+    />
+    <link rel="stylesheet" href="../assets/css/tokens.css" />
+    <link rel="stylesheet" href="../assets/css/skins.css" />
+    <link rel="stylesheet" href="../assets/css/layout.css" />
+    <link rel="stylesheet" href="../assets/css/a11y.css" />
+    <link rel="stylesheet" href="../assets/css/components/stack.css" />
+    <link rel="stylesheet" href="../assets/css/components/card.css" />
+  </head>
+  <body>
+    <main class="canvas-root" id="canvas-root">
+      <h1>A5.1 Stack + Card</h1>
+      <p>Fixture mounts for later Playwright (A5.8). CSP-safe modules only.</p>
+      <div id="mount-stack" aria-label="Stack fixture"></div>
+      <div id="mount-card" aria-label="Card fixture"></div>
+      <p id="status" role="status">Loading…</p>
+    </main>
+    <script type="module" src="./a5-stack-card.js"></script>
+  </body>
+</html>
