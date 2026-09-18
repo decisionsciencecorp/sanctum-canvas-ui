@@ -1,0 +1,19 @@
+{
+  "component": "Form",
+  "cases": [
+    {
+      "name": "named form shell",
+      "props": { "name": "contact" },
+      "expect": {
+        "data-canvas-component": "Form",
+        "data-form-name": "contact",
+        "role": "form"
+      }
+    },
+    {
+      "name": "streaming disables",
+      "props": { "name": "contact", "isStreaming": true },
+      "expect": { "data-streaming": "1", "aria-busy": "true" }
+    }
+  ]
+}

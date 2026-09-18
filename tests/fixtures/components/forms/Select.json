@@ -1,0 +1,17 @@
+{
+  "component": "Select",
+  "cases": [
+    {
+      "name": "basic select",
+      "props": {
+        "name": "color",
+        "placeholder": "Pick",
+        "items": [
+          { "value": "red", "label": "Red" },
+          { "value": "blue", "label": "Blue" }
+        ]
+      },
+      "expect": { "data-canvas-component": "Select", "name": "color" }
+    }
+  ]
+}

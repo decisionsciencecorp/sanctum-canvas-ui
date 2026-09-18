@@ -1,0 +1,177 @@
+/**
+ * A6.1–A6.3 form controls — plain CSS using --canvas-* tokens.
+ */
+
+.canvas-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-m, 16px);
+  font-family: var(--canvas-font-body);
+  color: var(--canvas-text-primary);
+}
+
+.canvas-form__fields,
+.canvas-form__buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-m, 16px);
+}
+
+.canvas-form[data-streaming="1"],
+.canvas-form[data-disabled="1"] {
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+.canvas-form-control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-2, 6px);
+}
+
+.canvas-form-control__label,
+.canvas-label {
+  font-size: var(--canvas-font-size-sm);
+  font-weight: var(--canvas-font-weight-medium);
+  color: var(--canvas-text-primary);
+}
+
+.canvas-form-control__required,
+.canvas-label__required {
+  color: var(--canvas-danger, #b42318);
+}
+
+.canvas-form-control__message,
+.canvas-description {
+  font-size: var(--canvas-font-size-sm);
+  color: var(--canvas-text-secondary);
+  margin: 0;
+}
+
+.canvas-form-control--error .canvas-form-control__message,
+.canvas-description--error {
+  color: var(--canvas-danger, #b42318);
+}
+
+.canvas-input,
+.canvas-textarea,
+.canvas-select,
+.canvas-datepicker__input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  padding: var(--canvas-space-2, 8px) var(--canvas-space-3, 12px);
+  border: 1px solid var(--canvas-border-default);
+  border-radius: var(--canvas-radius-m);
+  background: var(--canvas-surface-foreground);
+  color: var(--canvas-text-primary);
+  font: inherit;
+}
+
+.canvas-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.canvas-input[data-disabled="1"],
+.canvas-textarea[data-disabled="1"],
+.canvas-select[data-disabled="1"] {
+  opacity: 0.6;
+}
+
+.canvas-datepicker {
+  display: flex;
+  gap: var(--canvas-space-2, 8px);
+  flex-wrap: wrap;
+}
+
+.canvas-slider {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-2, 6px);
+}
+
+.canvas-slider__input {
+  width: 100%;
+}
+
+.canvas-slider__value {
+  font-size: var(--canvas-font-size-sm);
+  color: var(--canvas-text-secondary);
+}
+
+.canvas-checkbox-group,
+.canvas-radio-group,
+.canvas-switch-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-2, 8px);
+}
+
+.canvas-checkbox-item,
+.canvas-radio-item,
+.canvas-switch-item {
+  display: flex;
+  gap: var(--canvas-space-2, 8px);
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.canvas-checkbox-item__label,
+.canvas-radio-item__label,
+.canvas-switch-item__label {
+  font-weight: var(--canvas-font-weight-medium);
+}
+
+.canvas-checkbox-item__description,
+.canvas-radio-item__description,
+.canvas-switch-item__description {
+  display: block;
+  font-size: var(--canvas-font-size-sm);
+  color: var(--canvas-text-secondary);
+}
+
+.canvas-chips,
+.canvas-option-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--canvas-space-2, 8px);
+}
+
+.canvas-option-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+.canvas-chip,
+.canvas-option-card {
+  appearance: none;
+  border: 1px solid var(--canvas-border-default);
+  border-radius: var(--canvas-radius-m);
+  background: var(--canvas-surface-foreground);
+  color: var(--canvas-text-primary);
+  font: inherit;
+  padding: var(--canvas-space-2, 8px) var(--canvas-space-3, 12px);
+  cursor: pointer;
+  text-align: left;
+}
+
+.canvas-chip[data-selected="1"],
+.canvas-option-card[data-selected="1"] {
+  border-color: var(--canvas-accent, #2563eb);
+  box-shadow: inset 0 0 0 1px var(--canvas-accent, #2563eb);
+}
+
+.canvas-option-card__title {
+  font-weight: var(--canvas-font-weight-medium);
+}
+
+.canvas-option-card__subtitle {
+  font-size: var(--canvas-font-size-sm);
+  color: var(--canvas-text-secondary);
+}
+
+.canvas-submit,
+.canvas-reset {
+  align-self: flex-start;
+}

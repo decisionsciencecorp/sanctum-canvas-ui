@@ -1,0 +1,15 @@
+{
+  "component": "Button",
+  "cases": [
+    {
+      "name": "primary label",
+      "props": { "label": "Save", "variant": "primary" },
+      "expect": { "data-canvas-component": "Button", "data-variant": "primary", "text": "Save" }
+    },
+    {
+      "name": "destructive",
+      "props": { "label": "Delete", "type": "destructive" },
+      "expect": { "data-destructive": "1" }
+    }
+  ]
+}

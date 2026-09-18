@@ -1,0 +1,17 @@
+{
+  "component": "Chips",
+  "cases": [
+    {
+      "name": "multi chips",
+      "props": {
+        "name": "tags",
+        "type": "multiple",
+        "items": [
+          { "value": "a", "label": "A" },
+          { "value": "b", "label": "B" }
+        ]
+      },
+      "expect": { "data-canvas-component": "Chips", "data-type": "multiple" }
+    }
+  ]
+}

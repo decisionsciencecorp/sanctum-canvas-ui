@@ -1,0 +1,105 @@
+/**
+ * A6.4 buttons — plain CSS using --canvas-* tokens.
+ */
+
+.canvas-buttons {
+  display: flex;
+  gap: var(--canvas-space-2, 8px);
+  flex-wrap: wrap;
+}
+
+.canvas-buttons--horizontal {
+  flex-direction: row;
+  align-items: center;
+}
+
+.canvas-buttons--vertical {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.canvas-button,
+.canvas-icon-button {
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: var(--canvas-radius-m);
+  font-family: var(--canvas-font-body);
+  font-weight: var(--canvas-font-weight-medium);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--canvas-space-2, 6px);
+  color: var(--canvas-text-primary);
+  background: var(--canvas-surface-foreground);
+}
+
+.canvas-button--primary {
+  background: var(--canvas-accent, #2563eb);
+  color: var(--canvas-text-on-accent, #fff);
+}
+
+.canvas-button--secondary {
+  border-color: var(--canvas-border-default);
+  background: var(--canvas-surface-foreground);
+}
+
+.canvas-button--tertiary {
+  background: transparent;
+  border-color: transparent;
+}
+
+.canvas-button--destructive {
+  background: var(--canvas-danger, #b42318);
+  color: #fff;
+}
+
+.canvas-button--extra-small,
+.canvas-icon-button--extra-small {
+  min-height: 28px;
+  padding: 2px 8px;
+  font-size: var(--canvas-font-size-sm);
+}
+
+.canvas-button--small,
+.canvas-icon-button--small {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: var(--canvas-font-size-sm);
+}
+
+.canvas-button--medium,
+.canvas-icon-button--medium {
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: var(--canvas-font-size-md);
+}
+
+.canvas-button--large,
+.canvas-icon-button--large {
+  min-height: 48px;
+  padding: 10px 18px;
+  font-size: var(--canvas-font-size-lg);
+}
+
+.canvas-button[disabled],
+.canvas-icon-button[disabled],
+.canvas-button[aria-disabled="true"],
+.canvas-icon-button[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.canvas-button[data-firing="1"],
+.canvas-icon-button[data-firing="1"] {
+  pointer-events: none;
+}
+
+.canvas-icon-button--round {
+  border-radius: 999px;
+}
+
+.canvas-icon-button__icon {
+  display: inline-flex;
+  line-height: 1;
+}

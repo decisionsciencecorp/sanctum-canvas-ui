@@ -1,0 +1,15 @@
+{
+  "component": "Input",
+  "cases": [
+    {
+      "name": "email input",
+      "props": { "name": "email", "type": "email", "placeholder": "you@example.com", "value": "" },
+      "expect": { "data-canvas-component": "Input", "type": "email", "name": "email" }
+    },
+    {
+      "name": "number with bounds",
+      "props": { "name": "qty", "type": "number", "min": 1, "max": 10, "step": 1, "value": 2 },
+      "expect": { "type": "number", "min": "1", "max": "10" }
+    }
+  ]
+}
