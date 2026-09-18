@@ -1,0 +1,100 @@
+/**
+ * A5.4 — Tabs (plain CSS, --canvas-* tokens).
+ * Roving tablist + persistent panels; clear variant matches upstream openui-tabs-clear.
+ */
+
+.canvas-tabs {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-l);
+  min-width: 0;
+  font-family: var(--canvas-font-body);
+  color: var(--canvas-text-primary);
+}
+
+.canvas-tabs[data-openui-partial="1"],
+.canvas-tabs[aria-disabled="true"] {
+  pointer-events: none;
+  opacity: 0.72;
+}
+
+.canvas-tabs__list {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: var(--canvas-space-l);
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--canvas-border-default);
+}
+
+.canvas-tabs__list::-webkit-scrollbar {
+  display: none;
+}
+
+.canvas-tabs__trigger {
+  box-sizing: border-box;
+  appearance: none;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: var(--canvas-text-secondary);
+  font-family: var(--canvas-font-label);
+  font-size: var(--canvas-font-size-sm);
+  font-weight: var(--canvas-font-weight-medium);
+  line-height: var(--canvas-line-height-label);
+  padding: var(--canvas-space-s) 0;
+  flex-shrink: 0;
+  min-height: var(--canvas-touch-target-min);
+  cursor: pointer;
+  border-bottom: 1.5px solid transparent;
+  margin-bottom: -1px;
+}
+
+.canvas-tabs__trigger:hover {
+  color: var(--canvas-text-primary);
+}
+
+.canvas-tabs__trigger:focus-visible {
+  outline: 2px solid var(--canvas-border-interactive-selected);
+  outline-offset: 2px;
+}
+
+.canvas-tabs__trigger[data-state="active"],
+.canvas-tabs__trigger[aria-selected="true"] {
+  color: var(--canvas-text-primary);
+  font-weight: var(--canvas-font-weight-heavy);
+  border-bottom-color: var(--canvas-border-interactive-selected);
+}
+
+.canvas-tabs__panels {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.canvas-tabs__panel {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.canvas-tabs__panel[hidden] {
+  display: none;
+}
+
+.canvas-tabs__panel-inner {
+  padding: var(--canvas-space-3xs) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-m);
+}
+
+.canvas-tabs--clear .canvas-tabs__list {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}

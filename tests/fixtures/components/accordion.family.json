@@ -1,0 +1,83 @@
+{
+  "family": "Accordion",
+  "library": "dashboard",
+  "component": "Accordion",
+  "cases": [
+    {
+      "id": "accordion-basic",
+      "description": "Two sections; stream auto-opens newest on first mount",
+      "props": {
+        "items": [
+          {
+            "value": "faq-1",
+            "trigger": "What is this?",
+            "content": ["Answer one"]
+          },
+          {
+            "value": "faq-2",
+            "trigger": "How does it work?",
+            "content": ["Answer two"]
+          }
+        ]
+      },
+      "expect": {
+        "data-canvas-component": "Accordion",
+        "data-item-count": "2",
+        "data-open": "faq-2"
+      }
+    },
+    {
+      "id": "accordion-stream-append",
+      "description": "New item during stream becomes open until user interacts",
+      "chunks": [
+        {
+          "props": {
+            "items": [
+              {
+                "id": "ai-1",
+                "value": "one",
+                "trigger": "One",
+                "content": ["First"]
+              }
+            ]
+          }
+        },
+        {
+          "props": {
+            "items": [
+              {
+                "id": "ai-1",
+                "value": "one",
+                "trigger": "One",
+                "content": ["First"]
+              },
+              {
+                "id": "ai-2",
+                "value": "two",
+                "trigger": "Two",
+                "content": ["Second"]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "accordion-variant-card",
+      "props": {
+        "variant": "card",
+        "items": [
+          {
+            "value": "only",
+            "trigger": "Solo",
+            "content": ["Body"]
+          }
+        ]
+      },
+      "expect": {
+        "data-variant": "card",
+        "data-open": "only"
+      }
+    }
+  ]
+}

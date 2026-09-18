@@ -1,30 +1,48 @@
 /**
- * A5.5 containers — SectionBlock, Steps (+ open/progress state helpers).
- *
- * A5.4 Tabs / Accordion export from their own modules; that agent extends
- * registerContainers / this index when merging.
+ * Containers barrel — A5.4 Tabs/Accordion plus sibling phase re-exports when present.
  */
 
+export { Tabs, TabItem, __tabsTestUtils } from "./Tabs.js";
+export { Accordion, AccordionItem, __accordionTestUtils } from "./Accordion.js";
 export {
+  registerContainers,
+  CONTAINER_COMPONENTS,
+} from "./registerContainers.js";
+
+export {
+  normalizeItem,
+  normalizeItems,
+  itemKey,
+  contentSize,
+  asText,
+  lifecycle,
+  requireDocument,
+  clearChildren,
+  normalizeSections,
+  normalizeSteps,
+  resolveIsStreaming,
+  renderPanelContent,
+} from "./shared.js";
+
+// A5.5 — SectionBlock / Steps (sibling card; keep importable from barrel)
+export {
+  registerSectionSteps,
+  SECTION_STEPS_COMPONENTS,
   SectionBlock,
+  SectionItem,
+  Steps,
+  StepsItem,
+} from "./registerSectionSteps.js";
+export {
   sectionUserSelect,
   getSectionOpenValues,
   didSectionUserIntervene,
 } from "./SectionBlock.js";
-export { SectionItem } from "./SectionItem.js";
 export {
-  Steps,
   stepsUserSelect,
   getStepsCurrentIndex,
   didStepsUserIntervene,
 } from "./Steps.js";
-export { StepsItem } from "./StepsItem.js";
-export {
-  registerContainers,
-  registerSectionSteps,
-  CONTAINER_COMPONENTS,
-  SECTION_STEPS_COMPONENTS,
-} from "./registerContainers.js";
 export {
   createSectionOpenState,
   applySectionStreamTick,
@@ -34,17 +52,3 @@ export {
   applyStepsStreamTick,
   applyStepsUserSelect,
 } from "./sectionOpenState.js";
-export {
-  normalizeSections,
-  normalizeSteps,
-  asText,
-  lifecycle,
-  resolveIsStreaming,
-  renderPanelContent,
-  requireDocument,
-  clearChildren,
-  normalizeItem,
-  normalizeItems,
-  itemKey,
-  contentSize,
-} from "./shared.js";

@@ -225,13 +225,14 @@ function resolveLifecycle(registry, type) {
   if (typeof registry.get === "function") {
     const got = registry.get(type);
     if (typeof got === "function") {
-      return { create: got, update() {}, destroy() {} };
+      return { create: got, update() {}, destroy() {}, ownsChildren: false };
     }
     if (got && typeof got.create === "function") {
       return {
         create: got.create,
         update: typeof got.update === "function" ? got.update : () => {},
         destroy: typeof got.destroy === "function" ? got.destroy : () => {},
+        ownsChildren: got.ownsChildren === true,
       };
     }
   }
@@ -261,7 +262,10 @@ function createElementFromVNode(vnode, ctx) {
   applyProps(el, vnode.props ?? {});
   const key = vnode.key ?? (vnode.id != null ? `${vnode.type}::${vnode.id}` : undefined);
   setMeta(el, { type: vnode.type, key, id: vnode.id });
-  reconcileChildren(el, vnode.children ?? [], ctx);
+  // Containers that own chrome (Tabs/Accordion) set ownsChildren — skip wipe.
+  if (!life.ownsChildren) {
+    reconcileChildren(el, vnode.children ?? [], ctx);
+  }
   return el;
 }
 
@@ -367,8 +371,10 @@ export function reconcileChildren(parentEl, nextChildren, ctx = {}) {
       const el = /** @type {Element} */ (existing);
       const snap = captureInteractiveState(el);
       const registry = ctx.registry;
+      let ownsChildren = false;
       if (registry) {
         const life = resolveLifecycle(registry, vnode.type);
+        ownsChildren = life.ownsChildren === true;
         if (typeof life.update === "function") {
           life.update(el, vnode.props ?? {}, ctx);
         }
@@ -379,7 +385,9 @@ export function reconcileChildren(parentEl, nextChildren, ctx = {}) {
         key: vnode.key ?? key,
         id: vnode.id,
       });
-      reconcileChildren(el, vnode.children ?? [], ctx);
+      if (!ownsChildren) {
+        reconcileChildren(el, vnode.children ?? [], ctx);
+      }
       restoreInteractiveState(snap);
       kept.add(el);
       nextNodes.push(el);

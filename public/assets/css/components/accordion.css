@@ -1,0 +1,128 @@
+/**
+ * A5.4 — Accordion (plain CSS, --canvas-* tokens).
+ * Disclosure triggers + regions; clear / card / sunk variants.
+ */
+
+.canvas-accordion {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-radius: var(--canvas-radius-2xl);
+  border: 1px solid var(--canvas-border-default);
+  padding: calc(var(--canvas-space-m) + 2px);
+  padding-bottom: 0;
+  font-family: var(--canvas-font-body);
+  color: var(--canvas-text-primary);
+}
+
+.canvas-accordion[data-openui-partial="1"],
+.canvas-accordion[aria-disabled="true"] {
+  pointer-events: none;
+  opacity: 0.72;
+}
+
+.canvas-accordion--clear {
+  border-color: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.canvas-accordion--card {
+  background: var(--canvas-surface-foreground);
+  box-shadow: var(--canvas-shadow-s);
+}
+
+.canvas-accordion--sunk {
+  background: var(--canvas-surface-sunk);
+}
+
+.canvas-accordion__item {
+  box-sizing: border-box;
+  overflow: hidden;
+  border-bottom: 1px solid var(--canvas-border-default);
+}
+
+.canvas-accordion__item:last-child {
+  border-bottom: none;
+}
+
+.canvas-accordion__item:focus-within {
+  position: relative;
+  z-index: 1;
+}
+
+.canvas-accordion__header {
+  display: flex;
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.canvas-accordion__trigger {
+  appearance: none;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--canvas-space-m);
+  width: 100%;
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: var(--canvas-font-body);
+  font-size: var(--canvas-font-size-md);
+  font-weight: var(--canvas-font-weight-medium);
+  line-height: var(--canvas-line-height-body);
+  text-align: left;
+  padding: var(--canvas-space-l) 0;
+  min-height: var(--canvas-touch-target-min);
+  cursor: pointer;
+}
+
+.canvas-accordion--clear .canvas-accordion__item:first-child .canvas-accordion__trigger {
+  padding-top: 0;
+}
+
+.canvas-accordion__trigger:focus-visible {
+  outline: 2px solid var(--canvas-border-interactive-selected);
+  outline-offset: 2px;
+}
+
+.canvas-accordion__trigger-label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.canvas-accordion__chevron {
+  flex: 0 0 auto;
+  color: var(--canvas-text-secondary);
+  transition: transform var(--canvas-motion-duration-default) var(--canvas-motion-ease-standard);
+}
+
+.canvas-accordion__trigger[data-state="open"] .canvas-accordion__chevron,
+.canvas-accordion__item[data-state="open"] .canvas-accordion__chevron {
+  transform: rotate(180deg);
+}
+
+.canvas-accordion__panel {
+  box-sizing: border-box;
+}
+
+.canvas-accordion__panel[hidden] {
+  display: none;
+}
+
+.canvas-accordion__panel-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-m);
+  padding: 0 0 var(--canvas-space-l);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas-accordion__chevron {
+    transition: none;
+  }
+}

@@ -530,13 +530,17 @@ describe("A5.5 SectionItem / StepsItem leaves", () => {
 });
 
 describe("A5.5 coverage gaps", () => {
-  it("registerContainers wires Tabs+Section family", () => {
+  it("registerSectionSteps wires Section family; registerContainers wires Tabs", () => {
     const reg = createComponentRegistry();
     registerContainers(reg);
+    assert.equal(reg.has("Tabs"), true);
+    assert.equal(reg.has("Accordion"), true);
+    registerSectionSteps(reg);
     assert.equal(reg.has("SectionBlock"), true);
     assert.equal(reg.has("Steps"), true);
-    assert.ok(Object.keys(CONTAINER_COMPONENTS).length >= 4);
+    assert.ok(Object.keys(SECTION_STEPS_COMPONENTS).length >= 4);
     assert.throws(() => registerContainers(null), /register/);
+    assert.throws(() => registerSectionSteps(null), /register/);
   });
 
   it("userChange string/null and reopen-after-filter edge", () => {

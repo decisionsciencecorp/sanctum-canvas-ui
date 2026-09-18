@@ -12,12 +12,14 @@
  *   create: RenderFn,
  *   update?: (el: Element, props: Record<string, unknown>, ctx: Record<string, unknown>) => void,
  *   destroy?: (el: Element, ctx: Record<string, unknown>) => void,
+ *   ownsChildren?: boolean,
  * }} ComponentLifecycle
  * @typedef {RenderFn | ComponentLifecycle} ComponentEntry
  * @typedef {{
  *   create: RenderFn,
  *   update: (el: Element, props: Record<string, unknown>, ctx: Record<string, unknown>) => void,
  *   destroy: (el: Element, ctx: Record<string, unknown>) => void,
+ *   ownsChildren: boolean,
  * }} NormalizedLifecycle
  */
 
@@ -48,6 +50,7 @@ function unknownLifecycle(type) {
     },
     update() {},
     destroy() {},
+    ownsChildren: false,
   };
 }
 
@@ -62,6 +65,7 @@ function wrapRenderFn(renderFn) {
     },
     update() {},
     destroy() {},
+    ownsChildren: false,
   };
 }
 
@@ -85,6 +89,8 @@ function normalizeEntry(entry, type) {
         typeof entry.destroy === "function"
           ? entry.destroy
           : () => {},
+      // Containers (Tabs/Accordion) own chrome DOM; skip reconciler child wipe.
+      ownsChildren: entry.ownsChildren === true,
     };
   }
   throw new Error(

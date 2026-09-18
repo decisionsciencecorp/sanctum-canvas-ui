@@ -1,0 +1,96 @@
+{
+  "family": "Tabs",
+  "library": "dashboard",
+  "component": "Tabs",
+  "cases": [
+    {
+      "id": "tabs-basic",
+      "description": "Two tabs; first selected by default",
+      "props": {
+        "items": [
+          {
+            "value": "line",
+            "trigger": "Line",
+            "content": ["Line chart body"]
+          },
+          {
+            "value": "bar",
+            "trigger": "Bar",
+            "content": ["Bar chart body"]
+          }
+        ]
+      },
+      "expect": {
+        "data-canvas-component": "Tabs",
+        "data-item-count": "2",
+        "data-selected": "line"
+      }
+    },
+    {
+      "id": "tabs-stream-grow",
+      "description": "Content growth auto-follows until user interacts",
+      "chunks": [
+        {
+          "props": {
+            "items": [
+              {
+                "id": "t-line",
+                "value": "line",
+                "trigger": "Line",
+                "content": ["A"]
+              },
+              {
+                "id": "t-bar",
+                "value": "bar",
+                "trigger": "Bar",
+                "content": ["B"]
+              }
+            ]
+          }
+        },
+        {
+          "props": {
+            "items": [
+              {
+                "id": "t-line",
+                "value": "line",
+                "trigger": "Line",
+                "content": ["A"]
+              },
+              {
+                "id": "t-bar",
+                "value": "bar",
+                "trigger": "Bar",
+                "content": ["B", "more bar detail"]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "tabs-keyed-preserve",
+      "description": "Statement-id keyed update preserves selection",
+      "vnode": {
+        "type": "Tabs",
+        "id": "tabs-root",
+        "props": {
+          "items": [
+            {
+              "id": "ti-a",
+              "value": "a",
+              "trigger": "Alpha",
+              "content": ["A1"]
+            },
+            {
+              "id": "ti-b",
+              "value": "b",
+              "trigger": "Beta",
+              "content": ["B1"]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
