@@ -1,0 +1,19 @@
+{
+  "component": "Image",
+  "cases": [
+    {
+      "name": "labelled image",
+      "props": { "src": "https://example.com/a.png", "alt": "A sample" },
+      "expect": {
+        "data-canvas-component": "Image",
+        "data-status": "ready",
+        "data-a11y": "labelled"
+      }
+    },
+    {
+      "name": "missing alt",
+      "props": { "src": "https://example.com/a.png" },
+      "expect": { "data-a11y": "missing-alt", "data-status": "error" }
+    }
+  ]
+}

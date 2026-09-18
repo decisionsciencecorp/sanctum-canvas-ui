@@ -13,6 +13,11 @@ export {
   MetricIndicatorWithStrikethrough,
   MetricIndicatorInline,
 } from "./MetricIndicator.js";
+export { ListBlock, normalizeListItems } from "./ListBlock.js";
+export { ListItem } from "./ListItem.js";
+export { CodeBlock, copyTextNoFocusSteal } from "./CodeBlock.js";
+export { Image, resolveImageAccessibility, resolveSafeSrc } from "./Image.js";
+export { ImageBlock } from "./ImageBlock.js";
 export {
   SURFACE_STATUS,
   requireDocument,

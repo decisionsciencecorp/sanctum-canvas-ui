@@ -1,0 +1,18 @@
+{
+  "component": "ImageBlock",
+  "cases": [
+    {
+      "name": "with alt",
+      "props": { "src": "https://example.com/hero.png", "alt": "Hero" },
+      "expect": {
+        "data-canvas-component": "ImageBlock",
+        "data-a11y": "labelled"
+      }
+    },
+    {
+      "name": "unsafe src blocked",
+      "props": { "src": "javascript:alert(1)", "alt": "Bad" },
+      "expect": { "data-status": "error" }
+    }
+  ]
+}

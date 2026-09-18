@@ -1,6 +1,9 @@
 /**
  * Register A5.2 content primitives on a createComponentRegistry instance.
  * Path-isolated under components/content/ so A5.1 Stack/Card can own layout/.
+ *
+ * A5.3 carefully extends with List/Code/Image (shared dashboard+chat).
+ * Chat-only FollowUp / Citation live in registerChatContent.js.
  */
 
 import { TextContent } from "./TextContent.js";
@@ -17,6 +20,11 @@ import {
   MetricIndicatorInline,
   MetricIndicatorWithStrikethrough,
 } from "./MetricIndicator.js";
+import { ListBlock } from "./ListBlock.js";
+import { ListItem } from "./ListItem.js";
+import { CodeBlock } from "./CodeBlock.js";
+import { Image } from "./Image.js";
+import { ImageBlock } from "./ImageBlock.js";
 
 /** @type {Record<string, import("../../renderer/registry.js").ComponentEntry>} */
 export const CONTENT_COMPONENTS = {
@@ -32,6 +40,12 @@ export const CONTENT_COMPONENTS = {
   MetricIndicator,
   MetricIndicatorWithStrikethrough,
   MetricIndicatorInline,
+  // A5.3 shared media / lists
+  ListBlock,
+  ListItem,
+  CodeBlock,
+  Image,
+  ImageBlock,
 };
 
 /**
@@ -61,6 +75,11 @@ export {
   MetricIndicator,
   MetricIndicatorWithStrikethrough,
   MetricIndicatorInline,
+  ListBlock,
+  ListItem,
+  CodeBlock,
+  Image,
+  ImageBlock,
 };
 
 export default registerContent;

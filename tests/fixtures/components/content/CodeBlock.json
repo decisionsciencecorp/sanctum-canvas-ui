@@ -1,0 +1,14 @@
+{
+  "component": "CodeBlock",
+  "cases": [
+    {
+      "name": "js snippet",
+      "props": { "language": "javascript", "codeString": "const x = 1;" },
+      "expect": {
+        "data-canvas-component": "CodeBlock",
+        "data-language": "javascript",
+        "body": "const x = 1;"
+      }
+    }
+  ]
+}

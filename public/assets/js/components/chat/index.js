@@ -1,0 +1,1 @@
+../../../../../src/Browser/components/chat/index.js

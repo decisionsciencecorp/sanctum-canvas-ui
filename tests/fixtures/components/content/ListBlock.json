@@ -1,0 +1,25 @@
+{
+  "component": "ListBlock",
+  "cases": [
+    {
+      "name": "numbered items",
+      "props": {
+        "variant": "number",
+        "items": [
+          { "title": "Alpha", "subtitle": "First" },
+          { "title": "Beta" }
+        ]
+      },
+      "expect": {
+        "data-canvas-component": "ListBlock",
+        "data-variant": "number",
+        "data-item-count": "2"
+      }
+    },
+    {
+      "name": "small size",
+      "props": { "size": "small", "items": [{ "title": "One" }] },
+      "expect": { "data-size": "small", "data-item-count": "1" }
+    }
+  ]
+}

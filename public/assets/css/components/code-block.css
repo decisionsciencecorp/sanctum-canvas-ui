@@ -1,0 +1,56 @@
+/**
+ * A5.3 — CodeBlock with copy control.
+ */
+
+.canvas-code-block {
+  position: relative;
+  box-sizing: border-box;
+  font-family: var(--canvas-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  background: var(--canvas-surface-sunk);
+  border: 1px solid var(--canvas-border-default);
+  border-radius: var(--canvas-radius-m);
+  overflow: hidden;
+}
+
+.canvas-code-block__copy {
+  position: absolute;
+  right: var(--canvas-space-s);
+  top: var(--canvas-space-s);
+  z-index: 1;
+  appearance: none;
+  border: 1px solid var(--canvas-border-default);
+  border-radius: var(--canvas-radius-s);
+  background: var(--canvas-surface-foreground);
+  color: var(--canvas-text-secondary);
+  font-family: var(--canvas-font-body);
+  font-size: var(--canvas-font-size-sm);
+  padding: var(--canvas-space-2xs, 0.125rem) var(--canvas-space-s);
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.canvas-code-block:hover .canvas-code-block__copy,
+.canvas-code-block__copy:focus-visible {
+  opacity: 1;
+}
+
+.canvas-code-block__copy--copied {
+  color: var(--canvas-text-success, #0a7a3e);
+  background: var(--canvas-success-background, #e8f7ee);
+  border-color: transparent;
+}
+
+.canvas-code-block__pre {
+  margin: 0;
+  padding: var(--canvas-space-m);
+  padding-top: calc(var(--canvas-space-m) + 1.5rem);
+  overflow: auto;
+  font-size: var(--canvas-font-size-sm);
+  line-height: 1.5;
+  color: var(--canvas-text-primary);
+}
+
+.canvas-code-block__code {
+  font-family: inherit;
+  white-space: pre;
+}

@@ -1,0 +1,16 @@
+{
+  "component": "FollowUpBlock",
+  "cases": [
+    {
+      "name": "two suggestions",
+      "props": {
+        "items": [{ "text": "Tell me more" }, { "text": "Show prices" }]
+      },
+      "expect": {
+        "data-canvas-component": "FollowUpBlock",
+        "data-item-count": "2",
+        "body": "Related Queries"
+      }
+    }
+  ]
+}

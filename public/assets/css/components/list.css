@@ -1,0 +1,145 @@
+/**
+ * A5.3 — ListBlock / ListItem. Load after tokens.css.
+ */
+
+.canvas-list-block {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  gap: var(--canvas-space-l);
+  font-family: var(--canvas-font-body);
+}
+
+.canvas-list-block--small {
+  gap: var(--canvas-space-m);
+}
+
+.canvas-list-item-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-m);
+  width: 100%;
+}
+
+.canvas-list-item-wrapper--with-action {
+  border-bottom: 1px solid var(--canvas-border-default);
+  padding-bottom: var(--canvas-space-m);
+}
+
+.canvas-list-item-wrapper--with-action:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.canvas-list-item-wrapper--small {
+  gap: var(--canvas-space-s);
+}
+
+.canvas-list-item {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--canvas-space-m);
+  width: 100%;
+  color: var(--canvas-text-primary);
+}
+
+.canvas-list-item--clickable {
+  cursor: pointer;
+}
+
+.canvas-list-item--disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.canvas-list-item__indicator {
+  margin-top: var(--canvas-space-2xs, 0.125rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: var(--canvas-surface-sunk);
+  border-radius: var(--canvas-radius-m);
+  color: var(--canvas-text-secondary);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.canvas-list-item__indicator--no-subtitle {
+  height: 24px;
+  width: 24px;
+  margin-top: 0;
+  border-radius: var(--canvas-radius-s);
+}
+
+.canvas-list-item__indicator-number {
+  font-size: var(--canvas-font-size-sm);
+  font-weight: var(--canvas-font-weight-medium);
+  color: var(--canvas-text-secondary);
+}
+
+.canvas-list-item__indicator-image {
+  border-radius: var(--canvas-radius-s);
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.canvas-list-item__indicator-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.canvas-list-item__content-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 100%;
+  gap: var(--canvas-space-m);
+}
+
+.canvas-list-item__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-2xs, 0.125rem);
+  min-width: 0;
+}
+
+.canvas-list-item__title {
+  font-size: var(--canvas-font-size-md);
+  font-weight: var(--canvas-font-weight-medium);
+  color: var(--canvas-text-primary);
+}
+
+.canvas-list-item__subtitle {
+  font-size: var(--canvas-font-size-sm);
+  color: var(--canvas-text-secondary);
+}
+
+.canvas-list-item__action {
+  display: flex;
+  align-items: center;
+  gap: var(--canvas-space-xs, 0.25rem);
+  flex-shrink: 0;
+  color: var(--canvas-text-secondary);
+}
+
+.canvas-list-item__action-label {
+  font-size: var(--canvas-font-size-sm);
+}
+
+.canvas-list-item__action-icon {
+  font-size: var(--canvas-font-size-lg);
+  line-height: 1;
+}
