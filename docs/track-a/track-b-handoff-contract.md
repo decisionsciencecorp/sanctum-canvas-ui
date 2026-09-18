@@ -1,10 +1,11 @@
-# Track B handoff contract (A8.7 draft)
+# Track B handoff contract (A8.7)
 
-**Status:** draft — A7.2 SSE adapter verified; formal freeze waits on A8.6 mount acceptance + A8 audit close.  
+**Status:** **frozen** — A8.6 mount published; A7.2 SSE adapter verified.  
 **Version token:** `canvas-host-v1` (compatible with Track B `sanctum-companion-shell/contracts/canvas-host-v1/`).  
-**Audience:** Track B / Merge (#4100). Implement against fixtures under `tests/fixtures/handoff/` — do **not** read OpenUI/`old/` source.
+**Audience:** Track B / Merge (#4100). Implement against fixtures under `tests/fixtures/handoff/` — do **not** read OpenUI/`old/` source.  
+**Do not execute Merge from this freeze alone** — wait for both track gates + explicit Merge start.
 
-Related: [`mount-contract.md`](./mount-contract.md) · [`csp.md`](./csp.md) · companion `contracts/canvas-host-v1/api.md`.
+Related: [`mount-contract.md`](./mount-contract.md) · [`csp.md`](./csp.md) · companion `contracts/canvas-host-v1/api.md` · [`A8-evidence.md`](./A8-evidence.md).
 
 ---
 
@@ -12,9 +13,9 @@ Related: [`mount-contract.md`](./mount-contract.md) · [`csp.md`](./csp.md) · c
 
 | Layer | Owns |
 |-------|------|
-| **Track A runtime** | Lang parse/validate/evaluate, DOM renderer, URL policy, AG-UI event reducer + SSE/NDJSON adapters, PHP tool allowlist |
+| **Track A runtime** | Lang parse/validate/evaluate, DOM renderer, URL policy, AG-UI event reducer + SSE/NDJSON adapters, PHP tool allowlist, **`mount(canvasElement, options)`** |
 | **Track B host** | Broca identity/session, companion chrome, SMCP canvas initiation, `#sanctum-canvas-root` lease, chat turns |
-| **Out of contract** | Lab chrome (`#lab-chrome`, `#lab-debug`, `/lab/a7-lab.js`), fixture picker, raw Lang panes |
+| **Out of contract** | Lab chrome (`#lab-chrome`, `#lab-debug`, lab controllers), fixture picker, raw Lang panes |
 
 Naming: Track A speaks **AG-UI event `type` strings** and action step types (`OpenUrl`, `ToAssistant` / ContinueConversation). Track B may use different wire names on Broca/SMCP; the **adapter** maps into this vocabulary. The language kernel never imports Broca.
 
@@ -46,7 +47,8 @@ Before mount, Track B and the Track A adapter agree:
 | Unknown / future `canvas-host-v2` | Adapter refuses mount with structured error `{ code: "contract-mismatch" }` — do not silently adapt |
 | Missing capability | Host must not call that surface; adapter may no-op or reject the specific call |
 
-Fixture: `tests/fixtures/handoff/version-negotiation.json`.
+Fixture: `tests/fixtures/handoff/version-negotiation.json`.  
+Code: `negotiateContract()` / `CONTRACT` in `src/Browser/host/mount.js`.
 
 ---
 
@@ -102,7 +104,7 @@ Reducer state keys: `runId`, `messages[].id`, `tools[].id` — see `src/Browser/
 
 ## 5. AG-UI events Track B passes in
 
-Track B (or PHP `/api/chat.php`) feeds the **canonical reducer** via SSE or pre-normalized JS objects. Event `type` values:
+Track B (or PHP `/api/chat.php`) feeds the **canonical reducer** via SSE or pre-normalized JS objects (`handle.dispatchEvent`). Event `type` values:
 
 | Type | Required fields | Effect |
 |------|-----------------|--------|
@@ -199,17 +201,18 @@ Fixture: `tests/fixtures/handoff/cancel-and-errors.json`.
 
 ## 10. What Track B must not import
 
-- `public/lab/**` (a7-lab, a6-library chrome, CSP demo pages used only for lab)
-- Lab-only CSS that assumes `#lab-chrome` layout
-- Direct coupling to Venice keys or lab fixture dropdowns
+- Lab controllers / fixture pickers / debug pane scripts  
+- Lab-only CSS that assumes `#lab-chrome` layout  
+- Direct coupling to Venice keys or lab fixture dropdowns  
 
 Mount **only** into `#sanctum-canvas-root` with assets under `public/assets/{js,css}/` and the adapter API in [`mount-contract.md`](./mount-contract.md).
 
 ---
 
-## 11. Acceptance (when this card closes)
+## 11. Acceptance (met)
 
 1. Track B can implement mount + stream + callbacks from this doc + `tests/fixtures/handoff/` alone.  
 2. `canvas-host-v1` negotiation documented and fixture-covered.  
-3. A7.2 verified (done). A8.6 mount contract published.  
-4. No Broca imports inside `src/Browser/lang/**`.
+3. A7.2 verified. A8.6 mount contract published (`src/Browser/host/mount.js`).  
+4. No Broca imports inside `src/Browser/lang/**`.  
+5. Security handoff fixture smoke: `tests/security/handoff-fixtures.test.js`.

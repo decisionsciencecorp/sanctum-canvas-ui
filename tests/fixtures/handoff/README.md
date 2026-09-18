@@ -1,5 +1,6 @@
 # Handoff fixtures (A8.7)
 
+**Status:** frozen with `canvas-host-v1` (A8.6 mount published).  
 Frozen examples for Track B / Merge against `docs/track-a/track-b-handoff-contract.md`.
 
 | File | Covers |
