@@ -1,0 +1,126 @@
+/**
+ * A5.5 — SectionBlock / SectionItem (plain CSS, --canvas-* tokens).
+ * Load after tokens.css. Class prefix: canvas-section-*
+ */
+
+.canvas-section-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-l);
+  box-sizing: border-box;
+  width: 100%;
+  color: var(--canvas-text-primary);
+  font-family: var(--canvas-font-body);
+}
+
+.canvas-section-block__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-l);
+  width: 100%;
+}
+
+.canvas-section-block__header {
+  display: flex;
+  margin: 0;
+}
+
+.canvas-section-block__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--canvas-space-s);
+  width: 100%;
+  flex: 1;
+  padding: var(--canvas-space-m) 0 var(--canvas-space-xs) 0;
+  border: none;
+  background: transparent;
+  color: var(--canvas-text-primary);
+  font-family: var(--canvas-font-heading, var(--canvas-font-body));
+  font-size: var(--canvas-font-size-md);
+  font-weight: var(--canvas-font-weight-medium);
+  text-align: left;
+  cursor: pointer;
+  min-height: var(--canvas-touch-target-min, 44px);
+}
+
+.canvas-section-block__trigger:focus-visible {
+  outline: var(--canvas-focus-ring-width) solid var(--canvas-focus-ring);
+  outline-offset: var(--canvas-focus-ring-offset);
+}
+
+.canvas-section-block__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: var(--canvas-radius-s, 4px);
+  border: 1px solid var(--canvas-border-default);
+  background: var(--canvas-surface-elevated);
+  color: var(--canvas-text-secondary);
+  transition: transform var(--canvas-motion-duration-default, 200ms)
+    var(--canvas-motion-ease, ease);
+}
+
+.canvas-section-block__trigger[data-state="open"] .canvas-section-block__icon {
+  transform: rotate(90deg);
+}
+
+.canvas-section-block__trigger-text {
+  flex: 1;
+}
+
+.canvas-section-block__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-xl);
+  width: 100%;
+  padding: 0 0 0 28px;
+  box-sizing: border-box;
+}
+
+.canvas-section-block__content[data-state="closed"],
+.canvas-section-block__content[hidden] {
+  display: none;
+}
+
+/* Non-foldable / SectionItem static layout */
+.canvas-section-v2,
+.canvas-section-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--canvas-space-xl);
+  width: 100%;
+  margin-top: var(--canvas-space-m);
+  box-sizing: border-box;
+}
+
+.canvas-section-v2__header {
+  display: flex;
+  align-items: center;
+  gap: var(--canvas-space-s);
+  margin-bottom: var(--canvas-space-2xs);
+}
+
+.canvas-section-v2__trigger {
+  font-family: var(--canvas-font-heading, var(--canvas-font-body));
+  font-size: var(--canvas-font-size-md);
+  font-weight: var(--canvas-font-weight-medium);
+  color: var(--canvas-text-primary);
+}
+
+.canvas-section-v2__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-xl);
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas-section-block__icon {
+    transition: none;
+  }
+}

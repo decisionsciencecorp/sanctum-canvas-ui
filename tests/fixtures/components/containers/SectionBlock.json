@@ -1,0 +1,33 @@
+{
+  "component": "SectionBlock",
+  "cases": [
+    {
+      "name": "two foldable sections initial",
+      "props": {
+        "sections": [
+          { "value": "a", "trigger": "Alpha", "content": "A body" },
+          { "value": "b", "trigger": "Beta", "content": "B body" }
+        ]
+      },
+      "expect": {
+        "data-canvas-component": "SectionBlock",
+        "data-foldable": "true",
+        "data-section-count": "2",
+        "data-open-values": "a"
+      }
+    },
+    {
+      "name": "non-foldable static",
+      "props": {
+        "isFoldable": false,
+        "sections": [
+          { "value": "x", "trigger": "X", "content": "one" }
+        ]
+      },
+      "expect": {
+        "data-foldable": "false",
+        "data-open-values": "x"
+      }
+    }
+  ]
+}

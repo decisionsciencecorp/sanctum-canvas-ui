@@ -1,0 +1,22 @@
+{
+  "component": "Steps",
+  "cases": [
+    {
+      "name": "three steps progress",
+      "props": {
+        "items": [
+          { "title": "One", "details": "first" },
+          { "title": "Two", "details": "second" },
+          { "title": "Three", "details": "third" }
+        ]
+      },
+      "expect": {
+        "data-canvas-component": "Steps",
+        "data-step-count": "3",
+        "data-current-index": "0",
+        "aria-valuemax": "3",
+        "aria-valuenow": "1"
+      }
+    }
+  ]
+}

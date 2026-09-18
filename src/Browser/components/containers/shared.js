@@ -398,5 +398,7 @@ export function lifecycle(impl) {
     destroy(el, ctx = {}) {
       impl.unmount?.(el, ctx);
     },
+    // When true, keyed reconciler will not wipe this element's children.
+    ownsChildren: impl.ownsChildren === true,
   };
 }
