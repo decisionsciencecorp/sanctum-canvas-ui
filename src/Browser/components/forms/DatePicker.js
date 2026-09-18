@@ -31,6 +31,7 @@ function toDateString(v) {
 }
 
 export const DatePicker = lifecycle({
+  ownsChildren: true,
   mount(doc) {
     const el = doc.createElement("div");
     el.setAttribute("data-canvas-component", "DatePicker");

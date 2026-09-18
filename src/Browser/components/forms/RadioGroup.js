@@ -32,6 +32,7 @@ export const RadioItem = lifecycle({
 });
 
 export const RadioGroup = lifecycle({
+  ownsChildren: true,
   mount(doc) {
     const el = doc.createElement("div");
     el.setAttribute("data-canvas-component", "RadioGroup");

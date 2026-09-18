@@ -34,6 +34,7 @@ export const ChipItem = lifecycle({
 });
 
 export const Chips = lifecycle({
+  ownsChildren: true,
   mount(doc) {
     const el = doc.createElement("div");
     el.setAttribute("data-canvas-component", "Chips");

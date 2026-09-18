@@ -34,6 +34,8 @@ function resolveSize(props) {
 }
 
 export const Button = lifecycle({
+  // Label is textContent — reconciler must not wipe the text node.
+  ownsChildren: true,
   mount(doc) {
     const el = doc.createElement("button");
     el.setAttribute("data-canvas-component", "Button");

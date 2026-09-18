@@ -38,6 +38,8 @@ export const SelectItem = lifecycle({
 });
 
 export const Select = lifecycle({
+  // Options come from props.items — reconciler must not clear them.
+  ownsChildren: true,
   mount(doc) {
     const el = doc.createElement("select");
     el.setAttribute("data-canvas-component", "Select");

@@ -1,0 +1,33 @@
+/**
+ * A6.12 library lab — chart gallery spacing only.
+ * Family chrome comes from a5-foundation.css.
+ */
+
+.lab-charts-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-l);
+}
+
+.lab-chart-slot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-xs);
+  min-width: 0;
+}
+
+.lab-chart-slot > h3 {
+  margin: 0;
+  font-size: var(--canvas-font-size-sm);
+  font-weight: var(--canvas-font-weight-medium, 500);
+  color: var(--canvas-text-secondary);
+}
+
+.lab-selection-stack,
+.lab-card-stack,
+.lab-tools-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--canvas-space-m);
+  min-width: 0;
+}

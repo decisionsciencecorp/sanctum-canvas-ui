@@ -76,6 +76,7 @@ function patchActionButton(el, kind, props, ctx) {
 }
 
 export const Submit = lifecycle({
+  ownsChildren: true,
   mount(doc) {
     return makeButton(doc, "Submit");
   },
@@ -90,6 +91,7 @@ export const Submit = lifecycle({
 });
 
 export const Reset = lifecycle({
+  ownsChildren: true,
   mount(doc) {
     return makeButton(doc, "Reset");
   },

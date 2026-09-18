@@ -46,6 +46,7 @@ function buildAggregate(props, ctx, items) {
 }
 
 export const SwitchGroup = lifecycle({
+  ownsChildren: true,
   mount(doc) {
     const el = doc.createElement("div");
     el.setAttribute("data-canvas-component", "SwitchGroup");

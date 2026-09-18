@@ -88,6 +88,9 @@ function applyProps(el, props = {}) {
       else el.removeAttribute(name);
       continue;
     }
+    // Complex props (items, columns, action, …) are for create/update only —
+    // never stringify onto attributes ("[object Object]").
+    if (typeof value === "object") continue;
     el.setAttribute(name, String(value));
   }
 }

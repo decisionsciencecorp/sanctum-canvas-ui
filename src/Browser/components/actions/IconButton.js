@@ -18,6 +18,7 @@ import {
 const STATE = new WeakMap();
 
 export const IconButton = lifecycle({
+  ownsChildren: true,
   mount(doc) {
     const el = doc.createElement("button");
     el.setAttribute("data-canvas-component", "IconButton");

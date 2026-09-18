@@ -53,6 +53,8 @@ function buildAggregate(props, ctx, items) {
 }
 
 export const CheckBoxGroup = lifecycle({
+  // Items are rendered by patch from props.items — do not let reconciler wipe them.
+  ownsChildren: true,
   mount(doc) {
     const el = doc.createElement("div");
     el.setAttribute("data-canvas-component", "CheckBoxGroup");

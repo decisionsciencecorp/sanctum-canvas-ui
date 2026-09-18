@@ -27,6 +27,7 @@ function num(v, fallback) {
 }
 
 export const Slider = lifecycle({
+  ownsChildren: true,
   mount(doc) {
     const el = doc.createElement("div");
     el.setAttribute("data-canvas-component", "Slider");

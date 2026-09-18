@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OpenUI upstream baseline — A6 library (static)</title>
+    <!--
+      Baseline method (A6.12 / Doc #1381):
+      Storybook under old/packages/react-ui was not run in this environment.
+      This page is a static HTML fixture mirroring OpenUI structure/classes from
+      old/packages/react-ui/src/components/* with tokens from openui-defaults.scss.
+    -->
+    <link rel="stylesheet" href="./a5-baseline-tokens.css" />
+    <link rel="stylesheet" href="./a6-baseline.css" />
+  </head>
+  <body>
+    <main class="baseline-root baseline-page" id="baseline-root" data-baseline-ready="1">
+      <h1>OpenUI A6 baseline (static fixture)</h1>
+      <p class="baseline-lede">
+        Upstream visual reference constructed from <code>old/</code> class names and
+        token values. Same family ids as the Sanctum port lab for paired screenshots.
+      </p>
+
+      <section class="baseline-family" id="family-forms" data-family="forms">
+        <h2>Forms</h2>
+        <form class="openui-form" name="lab-contact">
+          <div class="openui-form-control">
+            <label class="openui-form-control-label">Full name *</label>
+            <input class="openui-input openui-input-medium" type="text" value="Ada Lovelace" />
+            <p class="openui-form-control-hint">As on your badge</p>
+          </div>
+          <div class="openui-form-control">
+            <label class="openui-form-control-label">Email *</label>
+            <input class="openui-input openui-input-medium" type="email" value="ada@example.com" />
+          </div>
+          <div class="openui-form-control">
+            <label class="openui-form-control-label">Notes</label>
+            <textarea class="openui-textarea openui-textarea-medium">Lab parity notes.</textarea>
+          </div>
+          <div class="openui-form-control">
+            <label class="openui-form-control-label">Start date</label>
+            <input class="openui-input openui-input-medium" type="date" value="2026-09-18" />
+          </div>
+          <div class="openui-form-control">
+            <label class="openui-form-control-label">Priority</label>
+            <div class="openui-slider">
+              <div class="openui-slider-track">
+                <div class="openui-slider-range" style="width: 60%"></div>
+                <div class="openui-slider-thumb" style="left: 60%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="openui-form-control">
+            <label class="openui-form-control-label">Region</label>
+            <button type="button" class="openui-select-trigger openui-select-trigger-medium">
+              United States
+            </button>
+          </div>
+          <div class="openui-buttons openui-buttons-horizontal">
+            <button type="submit" class="openui-button-base openui-button-primary">Save</button>
+            <button type="reset" class="openui-button-base openui-button-secondary">Reset</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="baseline-family" id="family-selection" data-family="selection">
+        <h2>Selection controls</h2>
+        <div class="openui-stack">
+          <div class="openui-checkbox-group">
+            <label class="openui-checkbox-item-container">
+              <span class="openui-checkbox-item-root" data-state="checked"></span>
+              <span>Analytics</span>
+            </label>
+            <label class="openui-checkbox-item-container">
+              <span class="openui-checkbox-item-root" data-state="unchecked"></span>
+              <span>Alerts</span>
+            </label>
+          </div>
+          <div class="openui-radio-group">
+            <label class="openui-radio-item-container">
+              <span class="openui-radio-item-root" data-state="unchecked"></span>
+              <span>Basic</span>
+            </label>
+            <label class="openui-radio-item-container">
+              <span class="openui-radio-item-root" data-state="checked"></span>
+              <span>Pro</span>
+            </label>
+          </div>
+          <div class="openui-switch-group">
+            <label class="openui-switch-item-container">
+              <span class="openui-switch-item-root" data-state="unchecked">
+                <span class="openui-switch-item-thumb"></span>
+              </span>
+              <span class="openui-switch-item-label">Dark mode</span>
+            </label>
+            <label class="openui-switch-item-container">
+              <span class="openui-switch-item-root" data-state="checked">
+                <span class="openui-switch-item-thumb"></span>
+              </span>
+              <span class="openui-switch-item-label">Compact</span>
+            </label>
+          </div>
+          <div class="openui-chips">
+            <button type="button" class="openui-chip openui-chip-selected">Ops</button>
+            <button type="button" class="openui-chip">Eng</button>
+            <button type="button" class="openui-chip">Design</button>
+          </div>
+          <div class="openui-option-cards">
+            <button type="button" class="openui-option-card openui-option-card-selected">
+              <strong>Starter</strong>
+              <span>Free forever</span>
+            </button>
+            <button type="button" class="openui-option-card">
+              <strong>Team</strong>
+              <span>$20 / seat</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="baseline-family" id="family-buttons" data-family="buttons">
+        <h2>Buttons</h2>
+        <div class="openui-buttons openui-buttons-horizontal">
+          <button type="button" class="openui-button-base openui-button-primary">Primary</button>
+          <button type="button" class="openui-button-base openui-button-secondary">Secondary</button>
+          <button type="button" class="openui-button-base openui-button-tertiary">Tertiary</button>
+          <button type="button" class="openui-button-base openui-button-destructive">Destructive</button>
+          <button type="button" class="openui-icon-button" aria-label="More actions">⋯</button>
+        </div>
+      </section>
+
+      <section class="baseline-family" id="family-table" data-family="table">
+        <h2>Table</h2>
+        <div class="openui-table-container">
+          <div class="openui-scrollable-table-wrapper">
+            <table class="openui-table">
+              <thead>
+                <tr class="openui-table-row">
+                  <th class="openui-table-head openui-table-align-left">
+                    <span class="openui-table-head-label">Name</span>
+                  </th>
+                  <th class="openui-table-head openui-table-align-right">
+                    <span class="openui-table-head-label">Score</span>
+                  </th>
+                  <th class="openui-table-head openui-table-align-left">
+                    <span class="openui-table-head-label">Role</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="openui-table-row">
+                  <td class="openui-table-cell">Ada</td>
+                  <td class="openui-table-cell openui-table-align-right">12</td>
+                  <td class="openui-table-cell">Engineer</td>
+                </tr>
+                <tr class="openui-table-row">
+                  <td class="openui-table-cell">Otto</td>
+                  <td class="openui-table-cell openui-table-align-right">9</td>
+                  <td class="openui-table-cell">Agent</td>
+                </tr>
+                <tr class="openui-table-row">
+                  <td class="openui-table-cell">Mark</td>
+                  <td class="openui-table-cell openui-table-align-right">15</td>
+                  <td class="openui-table-cell">Lead</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="baseline-family" id="family-editable-table" data-family="editable-table">
+        <h2>EditableTable</h2>
+        <div class="openui-table-container openui-editable-table">
+          <table class="openui-table">
+            <thead>
+              <tr class="openui-table-row">
+                <th class="openui-table-head">Name</th>
+                <th class="openui-table-head">Age</th>
+                <th class="openui-table-head">Joined</th>
+                <th class="openui-table-head">Role</th>
+                <th class="openui-table-head">Site</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="openui-table-row">
+                <td class="openui-table-cell openui-editable-cell">Ada</td>
+                <td class="openui-table-cell openui-editable-cell">36</td>
+                <td class="openui-table-cell openui-editable-cell">2020-01-15</td>
+                <td class="openui-table-cell openui-editable-cell">Engineer</td>
+                <td class="openui-table-cell openui-editable-cell">
+                  <a href="https://example.com">example.com</a>
+                </td>
+              </tr>
+              <tr class="openui-table-row">
+                <td class="openui-table-cell openui-editable-cell">Otto</td>
+                <td class="openui-table-cell openui-editable-cell">1</td>
+                <td class="openui-table-cell openui-editable-cell">2024-06-01</td>
+                <td class="openui-table-cell openui-editable-cell">Ops</td>
+                <td class="openui-table-cell openui-editable-cell">
+                  <a href="https://example.org">example.org</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="baseline-family" id="family-charts" data-family="charts">
+        <h2>Charts (gallery)</h2>
+        <div class="openui-charts-gallery">
+          <figure class="openui-chart-card">
+            <figcaption>BarChart</figcaption>
+            <svg class="openui-chart-svg" viewBox="0 0 320 140" role="img" aria-label="Bar chart">
+              <rect x="40" y="40" width="28" height="80" fill="var(--openui-text-brand)" opacity="0.85" />
+              <rect x="80" y="20" width="28" height="100" fill="var(--openui-text-brand)" opacity="0.55" />
+              <rect x="140" y="50" width="28" height="70" fill="var(--openui-text-brand)" opacity="0.85" />
+              <rect x="180" y="35" width="28" height="85" fill="var(--openui-text-brand)" opacity="0.55" />
+              <rect x="240" y="30" width="28" height="90" fill="var(--openui-text-brand)" opacity="0.85" />
+              <rect x="280" y="45" width="28" height="75" fill="var(--openui-text-brand)" opacity="0.55" />
+            </svg>
+          </figure>
+          <figure class="openui-chart-card">
+            <figcaption>LineChart</figcaption>
+            <svg class="openui-chart-svg" viewBox="0 0 320 120" role="img" aria-label="Line chart">
+              <polyline
+                fill="none"
+                stroke="var(--openui-text-brand)"
+                stroke-width="2"
+                points="20,90 90,40 160,60 230,30 300,50"
+              />
+            </svg>
+          </figure>
+          <figure class="openui-chart-card">
+            <figcaption>AreaChart</figcaption>
+            <svg class="openui-chart-svg" viewBox="0 0 320 120" role="img" aria-label="Area chart">
+              <polygon
+                fill="var(--openui-info-background)"
+                stroke="var(--openui-text-brand)"
+                points="20,100 20,90 90,40 160,60 230,30 300,50 300,100"
+              />
+            </svg>
+          </figure>
+          <figure class="openui-chart-card">
+            <figcaption>HorizontalBarChart</figcaption>
+            <svg class="openui-chart-svg" viewBox="0 0 320 100" role="img" aria-label="Horizontal bars">
+              <rect x="40" y="16" width="180" height="18" fill="var(--openui-text-brand)" opacity="0.85" />
+              <rect x="40" y="44" width="120" height="18" fill="var(--openui-text-brand)" opacity="0.55" />
+              <rect x="40" y="72" width="210" height="18" fill="var(--openui-text-brand)" opacity="0.85" />
+            </svg>
+          </figure>
+          <figure class="openui-chart-card">
+            <figcaption>PieChart</figcaption>
+            <svg class="openui-chart-svg" viewBox="0 0 160 120" role="img" aria-label="Pie chart">
+              <circle cx="70" cy="60" r="40" fill="var(--openui-text-brand)" />
+              <path d="M70 60 L70 20 A40 40 0 0 1 105 85 Z" fill="var(--openui-success-background)" />
+              <path d="M70 60 L105 85 A40 40 0 0 1 40 85 Z" fill="var(--openui-alert-background)" />
+            </svg>
+          </figure>
+          <figure class="openui-chart-card">
+            <figcaption>SingleStackedBarChart</figcaption>
+            <div class="openui-single-stacked-bar">
+              <span style="flex: 40; background: var(--openui-text-brand)"></span>
+              <span style="flex: 35; background: var(--openui-success-background)"></span>
+              <span style="flex: 25; background: var(--openui-alert-background)"></span>
+            </div>
+          </figure>
+          <figure class="openui-chart-card">
+            <figcaption>RadarChart</figcaption>
+            <svg class="openui-chart-svg" viewBox="0 0 160 140" role="img" aria-label="Radar chart">
+              <polygon
+                fill="var(--openui-info-background)"
+                stroke="var(--openui-text-brand)"
+                points="80,20 130,55 110,110 50,110 30,55"
+              />
+            </svg>
+          </figure>
+          <figure class="openui-chart-card">
+            <figcaption>RadialChart</figcaption>
+            <svg class="openui-chart-svg" viewBox="0 0 120 120" role="img" aria-label="Radial chart">
+              <circle
+                cx="60"
+                cy="60"
+                r="40"
+                fill="none"
+                stroke="var(--openui-border-default)"
+                stroke-width="10"
+              />
+              <circle
+                cx="60"
+                cy="60"
+                r="40"
+                fill="none"
+                stroke="var(--openui-text-brand)"
+                stroke-width="10"
+                stroke-dasharray="180 251"
+                transform="rotate(-90 60 60)"
+              />
+            </svg>
+          </figure>
+          <figure class="openui-chart-card">
+            <figcaption>ScatterChart</figcaption>
+            <svg class="openui-chart-svg" viewBox="0 0 320 120" role="img" aria-label="Scatter chart">
+              <circle cx="60" cy="80" r="5" fill="var(--openui-text-brand)" />
+              <circle cx="120" cy="50" r="5" fill="var(--openui-text-brand)" />
+              <circle cx="180" cy="65" r="5" fill="var(--openui-text-brand)" />
+              <circle cx="240" cy="30" r="5" fill="var(--openui-text-brand)" />
+            </svg>
+          </figure>
+        </div>
+      </section>
+
+      <section class="baseline-family" id="family-card-blocks" data-family="card-blocks">
+        <h2>Card blocks</h2>
+        <div class="openui-stack">
+          <div class="openui-snippet-card-block openui-card-grid">
+            <div class="openui-snippet-card">
+              <span>★ Alpha</span><strong>1</strong>
+            </div>
+            <div class="openui-snippet-card">
+              <span>⚡ Beta</span><strong>2</strong>
+            </div>
+          </div>
+          <div class="openui-overview-card-block openui-card-grid">
+            <div class="openui-overview-card">
+              <div>Revenue</div>
+              <div class="openui-metric">$12k ↑4</div>
+            </div>
+            <div class="openui-overview-card">
+              <div>Users</div>
+              <div class="openui-metric">820 ↓2</div>
+            </div>
+          </div>
+          <div class="openui-context-card">
+            <strong>Context</strong>
+            <p>Operator-facing summary for parity.</p>
+          </div>
+          <div class="openui-context-card">
+            <strong>Follow-up</strong>
+            <p>Second card satisfies minItems=2.</p>
+          </div>
+          <div class="openui-composite-card">
+            <header>📦 Kit</header>
+            <div>Includes tools <span class="openui-tag">new</span></div>
+            <footer><strong>$40</strong></footer>
+          </div>
+          <div class="openui-composite-card">
+            <header>🧰 Pro</header>
+            <div>Includes more <span class="openui-tag">pro</span></div>
+            <footer><strong>$90</strong></footer>
+          </div>
+          <div class="openui-visual-card">
+            <strong>Trail</strong>
+          </div>
+          <div class="openui-visual-card">
+            <strong>Lake</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="baseline-family" id="family-image-gallery" data-family="image-gallery">
+        <h2>Image gallery</h2>
+        <div class="openui-image-gallery openui-image-gallery-default">
+          <img src="./lab-image.svg" alt="One" />
+          <img src="./lab-image.svg" alt="Two" />
+          <img src="./lab-image.svg" alt="Three" />
+          <img src="./lab-image.svg" alt="Four" />
+          <img src="./lab-image.svg" alt="Five" />
+        </div>
+      </section>
+
+      <section class="baseline-family" id="family-tool-activity" data-family="tool-activity">
+        <h2>Tool activity / Run status</h2>
+        <div class="openui-stack">
+          <div class="openui-tool-activity" data-status="streaming">
+            <strong>search</strong> — streaming args…
+            <pre class="openui-tool-activity-args">{"q":"hel</pre>
+          </div>
+          <div class="openui-tool-activity" data-status="executing">
+            <strong>search</strong> — executing
+          </div>
+          <div class="openui-tool-activity" data-status="complete">
+            <strong>search</strong> — complete
+            <pre class="openui-tool-activity-result">{"hits":2}</pre>
+          </div>
+          <div class="openui-run-status" data-status="finish">Run finished</div>
+          <div class="openui-run-status openui-run-status-error" data-status="error">
+            Run failed: timeout
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

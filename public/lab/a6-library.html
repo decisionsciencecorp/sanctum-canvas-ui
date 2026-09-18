@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sanctum Canvas — A6 library lab</title>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+    />
+    <link rel="stylesheet" href="../assets/css/tokens.css" />
+    <link rel="stylesheet" href="../assets/css/skins.css" />
+    <link rel="stylesheet" href="../assets/css/layout.css" />
+    <link rel="stylesheet" href="../assets/css/a11y.css" />
+    <link rel="stylesheet" href="../assets/css/components/forms.css" />
+    <link rel="stylesheet" href="../assets/css/components/buttons.css" />
+    <link rel="stylesheet" href="../assets/css/components/table.css" />
+    <link rel="stylesheet" href="../assets/css/components/charts.css" />
+    <link rel="stylesheet" href="../assets/css/components/card-blocks.css" />
+    <link rel="stylesheet" href="../assets/css/components/tool-activity.css" />
+    <link rel="stylesheet" href="../assets/css/components/content.css" />
+    <link rel="stylesheet" href="../assets/css/components/stack.css" />
+    <link rel="stylesheet" href="./a5-foundation.css" />
+    <link rel="stylesheet" href="./a6-library.css" />
+  </head>
+  <body>
+    <main class="canvas-root lab-page" id="canvas-root">
+      <h1>A6 library components</h1>
+      <p class="lab-lede">
+        Playwright visual-parity target (A6.12). One mount per A6 family via
+        registerForms / registerActions / registerTable / registerCharts /
+        registerCards / registerTools.
+      </p>
+
+      <section class="lab-family" id="family-forms" data-family="forms" aria-label="Forms">
+        <h2>Forms</h2>
+        <div class="lab-mount" id="mount-forms"></div>
+      </section>
+
+      <section
+        class="lab-family"
+        id="family-selection"
+        data-family="selection"
+        aria-label="Selection controls"
+      >
+        <h2>Selection controls</h2>
+        <div class="lab-mount" id="mount-selection"></div>
+      </section>
+
+      <section class="lab-family" id="family-buttons" data-family="buttons" aria-label="Buttons">
+        <h2>Buttons</h2>
+        <div class="lab-mount" id="mount-buttons"></div>
+      </section>
+
+      <section class="lab-family" id="family-table" data-family="table" aria-label="Table">
+        <h2>Table</h2>
+        <div class="lab-mount" id="mount-table"></div>
+      </section>
+
+      <section
+        class="lab-family"
+        id="family-editable-table"
+        data-family="editable-table"
+        aria-label="Editable table"
+      >
+        <h2>EditableTable</h2>
+        <div class="lab-mount" id="mount-editable-table"></div>
+      </section>
+
+      <section class="lab-family" id="family-charts" data-family="charts" aria-label="Charts">
+        <h2>Charts (gallery)</h2>
+        <div class="lab-mount lab-charts-gallery" id="mount-charts"></div>
+      </section>
+
+      <section
+        class="lab-family"
+        id="family-card-blocks"
+        data-family="card-blocks"
+        aria-label="Card blocks"
+      >
+        <h2>Card blocks</h2>
+        <div class="lab-mount" id="mount-card-blocks"></div>
+      </section>
+
+      <section
+        class="lab-family"
+        id="family-image-gallery"
+        data-family="image-gallery"
+        aria-label="Image gallery"
+      >
+        <h2>Image gallery</h2>
+        <div class="lab-mount" id="mount-image-gallery"></div>
+      </section>
+
+      <section
+        class="lab-family"
+        id="family-tool-activity"
+        data-family="tool-activity"
+        aria-label="Tool activity and run status"
+      >
+        <h2>Tool activity / Run status</h2>
+        <div class="lab-mount" id="mount-tool-activity"></div>
+      </section>
+
+      <p id="status" class="lab-status" role="status">Loading…</p>
+    </main>
+    <script type="module" src="./a6-library.js"></script>
+  </body>
+</html>
