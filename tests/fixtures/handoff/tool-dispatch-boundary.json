@@ -1,0 +1,23 @@
+{
+  "id": "handoff-tool-dispatch-boundary",
+  "description": "Model may only name allowlisted tools; PHP rejects hostile/unknown before handlers.",
+  "allowlistExample": ["echo_read", "note_get", "note_set"],
+  "rejectNames": [
+    "system",
+    "exec",
+    "eval",
+    "http://evil.test/x",
+    "mcp://server/tool",
+    "../etc/passwd",
+    "Foo::bar",
+    "unknown_tool_xyz"
+  ],
+  "invariants": [
+    "Partial programs cannot invoke tools (H7)",
+    "TOOL_CALL_ARGS never executes",
+    "Browser POST /api/tools.php requires CSRF for writes",
+    "Lang kernel has no Broca/SMCP imports"
+  ],
+  "hostPath": "POST /api/tools.php",
+  "registry": "src/Php/Tools/ToolRegistry.php"
+}

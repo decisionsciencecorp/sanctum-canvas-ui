@@ -1,0 +1,49 @@
+{
+  "id": "handoff-continue-conversation",
+  "description": "ContinueConversation / ToAssistant callback contract for Track B.",
+  "callback": "continueConversation",
+  "signature": {
+    "message": "string",
+    "context": "string|undefined"
+  },
+  "cases": [
+    {
+      "id": "ok-gesture",
+      "props": {
+        "action": {
+          "type": "continue_conversation",
+          "message": "Show me more detail"
+        }
+      },
+      "opts": { "userGesture": true, "streaming": false },
+      "expect": { "ok": true }
+    },
+    {
+      "id": "reject-no-gesture",
+      "props": {
+        "action": {
+          "type": "continue_conversation",
+          "message": "x"
+        }
+      },
+      "opts": { "userGesture": false },
+      "expect": { "ok": false, "reason": "gesture-required" }
+    },
+    {
+      "id": "reject-while-streaming",
+      "props": {
+        "action": {
+          "type": "continue_conversation",
+          "message": "x"
+        }
+      },
+      "opts": { "userGesture": true, "streaming": true },
+      "expect": { "ok": false, "reason": "streaming" }
+    },
+    {
+      "id": "bound-length",
+      "maxChars": 4000,
+      "note": "MAX_CONTINUE_CHARS in continueConversation.js"
+    }
+  ]
+}

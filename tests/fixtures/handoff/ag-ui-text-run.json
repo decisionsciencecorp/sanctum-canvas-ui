@@ -1,0 +1,26 @@
+{
+  "id": "handoff-ag-ui-text-run",
+  "description": "Minimal AG-UI text run Track B may pass into the reducer (mirrors stream/text-message-basic).",
+  "parity": "exact",
+  "events": [
+    { "type": "RUN_STARTED", "runId": "r_handoff_1" },
+    {
+      "type": "TEXT_MESSAGE_START",
+      "messageId": "m_handoff_1",
+      "role": "assistant"
+    },
+    {
+      "type": "TEXT_MESSAGE_CONTENT",
+      "messageId": "m_handoff_1",
+      "delta": "root = TextContent(\"Hello from handoff\")\n"
+    },
+    { "type": "TEXT_MESSAGE_END", "messageId": "m_handoff_1" },
+    { "type": "RUN_FINISHED", "runId": "r_handoff_1" }
+  ],
+  "expect": {
+    "messages": 1,
+    "runStatus": "finished",
+    "messageIds": ["m_handoff_1"],
+    "runId": "r_handoff_1"
+  }
+}

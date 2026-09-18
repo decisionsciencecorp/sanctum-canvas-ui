@@ -1,0 +1,18 @@
+{
+  "id": "handoff-mount-lease-expectations",
+  "description": "Track A expectations matching companion fixtures/canvas-host/mount-lease.json.",
+  "compatibleContract": "canvas-host-v1",
+  "root_id": "sanctum-canvas-root",
+  "steps": ["register", "mount", "unmount", "mount"],
+  "mustNotImport": [
+    "public/lab/a7-lab.js",
+    "public/lab/a6-library.js",
+    "#lab-chrome",
+    "#lab-debug"
+  ],
+  "dispose": {
+    "abortSignal": true,
+    "clearRoot": true,
+    "noLeakedTimers": true
+  }
+}

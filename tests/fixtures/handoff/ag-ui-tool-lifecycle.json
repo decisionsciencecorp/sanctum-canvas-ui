@@ -1,0 +1,34 @@
+{
+  "id": "handoff-ag-ui-tool-lifecycle",
+  "description": "Tool call IDs and states Track B must preserve; args never execute until END+host dispatch.",
+  "parity": "exact",
+  "events": [
+    { "type": "RUN_STARTED", "runId": "r_tool_1" },
+    {
+      "type": "TOOL_CALL_START",
+      "toolCallId": "tc_1",
+      "toolName": "note_get"
+    },
+    {
+      "type": "TOOL_CALL_ARGS",
+      "toolCallId": "tc_1",
+      "delta": "{\"key\":\"demo\"}"
+    },
+    { "type": "TOOL_CALL_END", "toolCallId": "tc_1" },
+    {
+      "type": "TOOL_CALL_RESULT",
+      "toolCallId": "tc_1",
+      "content": "{\"ok\":true,\"value\":\"demo\"}"
+    },
+    { "type": "RUN_FINISHED", "runId": "r_tool_1" }
+  ],
+  "expect": {
+    "toolStatus": "complete",
+    "toolCallId": "tc_1",
+    "toolName": "note_get"
+  },
+  "invariants": [
+    "TOOL_CALL_ARGS must not invoke PHP or browser tools",
+    "unknown toolName rejected at PHP ToolRegistry before handler"
+  ]
+}

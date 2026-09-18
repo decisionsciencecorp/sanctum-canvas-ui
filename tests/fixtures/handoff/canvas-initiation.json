@@ -1,0 +1,34 @@
+{
+  "id": "handoff-canvas-initiation",
+  "description": "Normalized initiation Track A receives on mount (not Broca wire shape).",
+  "valid": {
+    "schema": "sanctum.canvas.initiation",
+    "version": 1,
+    "eventId": "evt_01HAND0FF",
+    "sessionId": "sess_demo",
+    "runId": null,
+    "surface": "primary",
+    "title": "Demo canvas",
+    "libraryId": "chat",
+    "programId": null,
+    "seed": {
+      "messages": [],
+      "programSource": null,
+      "stateHydration": null
+    }
+  },
+  "reject": [
+    {
+      "reason": "html-in-title",
+      "title": "<script>x</script>"
+    },
+    {
+      "reason": "oversized-title",
+      "titleLength": 121
+    },
+    {
+      "reason": "bad-event-id",
+      "eventId": "bad id"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "handoff-version-negotiation",
+  "contract": "canvas-host-v1",
+  "description": "Host and adapter must agree on canvas-host-v1 before mount.",
+  "hostAdvertisement": {
+    "contract": "canvas-host-v1",
+    "capabilities": [
+      "ag-ui-events",
+      "sse",
+      "continue-conversation",
+      "open-url-policy",
+      "tool-dispatch-host"
+    ]
+  },
+  "adapterAccept": {
+    "contract": "canvas-host-v1",
+    "runtime": "sanctum-canvas",
+    "runtimeVersion": "0.1.0"
+  },
+  "reject": [
+    {
+      "contract": "canvas-host-v2",
+      "expectError": "contract-mismatch"
+    },
+    {
+      "contract": "unknown",
+      "expectError": "contract-mismatch"
+    }
+  ]
+}

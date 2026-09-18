@@ -1,0 +1,39 @@
+{
+  "id": "handoff-cancel-and-errors",
+  "description": "Cancel and terminal error shapes Track B must handle without wiping last-good UI.",
+  "sequences": [
+    {
+      "id": "cooperative-cancel",
+      "events": [
+        { "type": "RUN_STARTED", "runId": "r_cancel" },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "m1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "m1",
+          "delta": "root = TextContent(\"partial\")\n"
+        },
+        { "type": "RUN_CANCELLED", "runId": "r_cancel" }
+      ],
+      "expect": { "cancelled": true }
+    },
+    {
+      "id": "terminal-run-error",
+      "ref": "../stream/interrupted-run-error.json",
+      "expect": { "runStatus": "error" }
+    },
+    {
+      "id": "malformed-skip",
+      "ref": "../stream/malformed-line-skip.json",
+      "expect": { "diagnostics.skippedMalformed": ">=1", "canvasPreserved": true }
+    }
+  ],
+  "errorShape": {
+    "code": "string",
+    "message": "string",
+    "forbid": ["api_key", "password", "stack", "Authorization"]
+  }
+}

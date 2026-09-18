@@ -1,0 +1,11 @@
+{
+  "name": "sanctum-canvas-ui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:browser": "node --test tests/browser/*.test.js tests/browser/*.golden.test.js",
+    "test:security": "node --test tests/security/*.test.js",
+    "test:php": "vendor/bin/phpunit",
+    "test": "npm run test:php && npm run test:browser && npm run test:security"
+  }
+}

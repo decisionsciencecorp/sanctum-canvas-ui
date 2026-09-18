@@ -1,0 +1,36 @@
+{
+  "id": "handoff-open-url-callback",
+  "description": "OpenUrl steps are policy-filtered before host.openUrl.",
+  "callback": "openUrl",
+  "cases": [
+    {
+      "id": "allow-https",
+      "step": { "type": "OpenUrl", "url": "https://example.com/docs" },
+      "expectSafeUrl": "https://example.com/docs"
+    },
+    {
+      "id": "reject-javascript",
+      "step": { "type": "OpenUrl", "url": "javascript:alert(1)" },
+      "expectSafeUrl": null,
+      "expectReason": "url-policy"
+    },
+    {
+      "id": "reject-data",
+      "step": { "type": "OpenUrl", "url": "data:text/html,hi" },
+      "expectSafeUrl": null
+    },
+    {
+      "id": "require-gesture",
+      "step": { "type": "OpenUrl", "url": "https://example.com" },
+      "userGesture": false,
+      "expectReason": "gesture-required"
+    },
+    {
+      "id": "block-while-incomplete",
+      "step": { "type": "OpenUrl", "url": "https://example.com" },
+      "programComplete": false,
+      "expectReason": "incomplete-program"
+    }
+  ],
+  "trackBNote": "Companion dispatchAction defaults to unsupported-action; Merge must wire a filtered openUrl or keep reject."
+}
