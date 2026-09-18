@@ -482,3 +482,22 @@
 .canvas-metric-indicator__trend--down::before {
   content: "↓ ";
 }
+
+/* —— Icon (A8 library parity) —— */
+.canvas-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: currentColor;
+  line-height: 0;
+  vertical-align: middle;
+}
+
+.canvas-icon[data-status="empty"] {
+  display: none;
+}
+
+.canvas-icon__svg {
+  display: block;
+}

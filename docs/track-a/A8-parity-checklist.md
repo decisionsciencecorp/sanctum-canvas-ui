@@ -130,7 +130,7 @@
 |-----------|----------|-------|
 | `TagBlock` | present | JS `register*` map |
 | `Tag` | present | JS `register*` map |
-| `Icon` | **missing** | No renderer registration |
+| `Icon` | present | JS `register*` map |
 | `EntityList` | present | JS `register*` map |
 | `ListBlock` | present | JS `register*` map |
 | `ListItem` | present | JS `register*` map |
@@ -175,17 +175,16 @@
 
 | Status | Count |
 |--------|------:|
-| present | 80 |
+| present | 81 |
 | present (module) | 1 |
 | data-contract | 4 |
-| missing | 1 |
+| missing | 0 |
 | **Doc #1380 names checked** | **86** |
 
 ## Gaps to close before A8 parity accept
 
-1. **`Icon`** — listed under Doc #1380 lists; no dedicated `Icon` registry entry (icon glyphs today ride `IconText` / `IconButton` / allowlist helpers).
-2. **Library JSON manifests** (`resources/libraries/{chat,dashboard}/library.v1.json`) remain intentionally slim (H21) — registry presence ≠ prompt/schema contract completeness.
-3. Chart **Series / Slice / Point / ScatterSeries** stay data-contracts unless A8 decides to promote them to registerable item types.
+1. **Library JSON manifests** (`resources/libraries/{chat,dashboard}/library.v1.json`) remain intentionally slim (H21) — registry presence ≠ prompt/schema contract completeness.
+2. Chart **Series / Slice / Point / ScatterSeries** stay data-contracts unless A8 decides to promote them to registerable item types.
 
 ## Extra registry names (not in Doc #1380 §2–3 list)
 

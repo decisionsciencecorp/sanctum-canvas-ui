@@ -25,6 +25,7 @@ import { ListItem } from "./ListItem.js";
 import { CodeBlock } from "./CodeBlock.js";
 import { Image } from "./Image.js";
 import { ImageBlock } from "./ImageBlock.js";
+import { Icon } from "./Icon.js";
 
 /** @type {Record<string, import("../../renderer/registry.js").ComponentEntry>} */
 export const CONTENT_COMPONENTS = {
@@ -34,6 +35,7 @@ export const CONTENT_COMPONENTS = {
   Separator,
   Tag,
   TagBlock,
+  Icon,
   EntityList,
   InlineHeader,
   CardHeader,
@@ -80,6 +82,7 @@ export {
   CodeBlock,
   Image,
   ImageBlock,
+  Icon,
 };
 
 export default registerContent;

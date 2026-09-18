@@ -19,6 +19,21 @@ export { CodeBlock, copyTextNoFocusSteal } from "./CodeBlock.js";
 export { Image, resolveImageAccessibility, resolveSafeSrc } from "./Image.js";
 export { ImageBlock } from "./ImageBlock.js";
 export {
+  Icon,
+  resolveIconSize,
+  resolveIconDecorative,
+  humanizeIconName,
+} from "./Icon.js";
+export {
+  ICON_GLYPHS,
+  CATEGORY_FALLBACKS,
+  DEFAULT_FALLBACK_ICON,
+  resolveIconGlyph,
+  isAllowlistedIcon,
+  getFallbackIconName,
+  toKebabIconCandidates,
+} from "./iconAllowlist.js";
+export {
   SURFACE_STATUS,
   requireDocument,
   resolveStatus,
