@@ -1,0 +1,37 @@
+{
+  "id": "tool-call-lifecycle",
+  "parity": "exact",
+  "source": "processStreamedMessageToolStatus.test.ts",
+  "events": [
+    {
+      "type": "RUN_STARTED",
+      "runId": "r2"
+    },
+    {
+      "type": "TOOL_CALL_START",
+      "toolCallId": "t1",
+      "toolName": "get_data"
+    },
+    {
+      "type": "TOOL_CALL_ARGS",
+      "toolCallId": "t1",
+      "delta": "{\"q\":1}"
+    },
+    {
+      "type": "TOOL_CALL_END",
+      "toolCallId": "t1"
+    },
+    {
+      "type": "TOOL_CALL_RESULT",
+      "toolCallId": "t1",
+      "content": "{\"ok\":true}"
+    },
+    {
+      "type": "RUN_FINISHED",
+      "runId": "r2"
+    }
+  ],
+  "expect": {
+    "toolStatus": "complete"
+  }
+}

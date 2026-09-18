@@ -1,0 +1,1 @@
+../../../../src/Browser/transport/ndjsonAdapter.js
