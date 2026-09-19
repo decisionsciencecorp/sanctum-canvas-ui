@@ -148,9 +148,21 @@ def run(base: str, tag: str) -> list[str]:
         assert dash_count >= 80 and chat_count >= 80, (dash_count, chat_count)
         assert page.locator("#groups .cat-group").count() >= 8, "catalog groups missing"
         assert page.locator("#comp-Stack .cat-comp__badge--root").count() == 1, "Stack not marked root"
-        assert page.locator("#comp-FormControl .cat-comp__sig").inner_text().find("Input | TextArea") >= 0
+        assert page.locator("#comp-FormControl .cat-comp__sig").text_content().find("Input | TextArea") >= 0
+        # Live draws — not just JSON contracts
+        for name in ("Stack", "BarChart", "Form", "Tag", "SnippetCardBlock", "Modal"):
+            mount = page.locator(f'#comp-{name} .cat-comp__mount')
+            assert mount.count() == 1, f"missing live mount for {name}"
+            assert mount.locator("[data-canvas-component]").count() >= 1, f"{name} did not paint"
+        assert page.locator("#comp-Modal .cat-comp__open-modal").count() == 1
+        assert page.locator("#comp-Series .cat-comp__preview-note").count() == 1
         shot = OUT / f"a9-catalog-desktop-{tag}.png"
         page.screenshot(path=str(shot), full_page=False)
+        written.append(str(shot))
+        # Crop a chart entry so the live SVG is reviewable
+        page.locator("#comp-BarChart").scroll_into_view_if_needed()
+        shot = OUT / f"a9-catalog-barchart-desktop-{tag}.png"
+        page.locator("#comp-BarChart").screenshot(path=str(shot))
         written.append(str(shot))
         page.fill("#filter", "chart")
         page.wait_for_function("() => document.querySelectorAll('#groups .cat-comp:not(.is-hidden)').length < 30")
@@ -159,9 +171,19 @@ def run(base: str, tag: str) -> list[str]:
         page.wait_for_selector("#comp-FollowUpBlock", timeout=5000, state="attached")
         assert page.locator("#comp-Card .cat-comp__badge--root").count() == 1, "chat root is Card"
         assert page.locator("#comp-Modal").count() == 0, "Modal must not be in the chat catalog"
+        assert page.locator('#comp-FollowUpBlock [data-canvas-component="FollowUpBlock"]').count() >= 1
+        assert page.locator('#comp-SectionBlock [data-canvas-component="SectionBlock"]').count() >= 1
         shot = OUT / f"a9-catalog-chat-desktop-{tag}.png"
         page.screenshot(path=str(shot), full_page=False)
         written.append(str(shot))
+        page.set_viewport_size({"width": 390, "height": 844})
+        page.goto(f"{base}/lab/catalog.html", wait_until="networkidle", timeout=30000)
+        page.wait_for_selector('#status[data-lab-ready="1"]', timeout=15000, state="attached")
+        page.locator("#comp-Tag").scroll_into_view_if_needed()
+        shot = OUT / f"a9-catalog-tag-mobile-{tag}.png"
+        page.locator("#comp-Tag").screenshot(path=str(shot))
+        written.append(str(shot))
+        page.set_viewport_size({"width": 1280, "height": 800})
 
         # ---- A6 gallery: the small-parts section renders every piece ----
         page.goto(f"{base}/lab/a6-library.html", wait_until="networkidle", timeout=30000)

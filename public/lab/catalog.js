@@ -1,8 +1,16 @@
 /**
- * Catalog page — renders the two library.v1.json files the host hands the
- * model. Lab chrome only; nothing here is imported by the runtime.
+ * Catalog page — every component the model may draw, with a live sample.
+ * Lab chrome only; nothing here is imported by the runtime.
  */
 import { loadLibraryJson } from "../assets/js/lang/contractLoader.js";
+import { createComponentRegistry } from "../assets/js/renderer/registry.js";
+import { createRenderContext } from "../assets/js/renderer/context.js";
+import { render } from "../assets/js/renderer/reconciler.js";
+import { createStore } from "../assets/js/runtime/store.js";
+import { createBindingManager } from "../assets/js/runtime/bindings.js";
+import { registerAllComponents } from "../assets/js/host/mount.js";
+import * as urlPolicy from "../assets/js/security/urlPolicy.js";
+import { demoFor } from "./catalog-demos.js";
 
 const URLS = {
   dashboard: "/assets/libraries/dashboard/library.v1.json",
@@ -15,90 +23,35 @@ const NOTE = {
   chat: "Chat replies start with a Card and stack top to bottom. It adds follow-up questions and collapsible sections and drops the free-form layout pieces.",
 };
 
-/** Where a human can see each component drawn. Regenerate with tools/build-library-manifests.mjs helpers if pages move. */
-const SHOWN_AT = {
-  Card: ["a5-stack-card.html", "a5-foundation.html"],
-  Stack: ["a5-stack-card.html", "a5-foundation.html"],
-  Text: ["a6-library.html#family-card-blocks", "a5-foundation.html"],
-  CardHeader: ["a5-foundation.html"],
-  TextContent: ["a5-foundation.html"],
-  Callout: ["a5-foundation.html"],
-  TextCallout: ["a5-foundation.html"],
-  Image: ["a5-foundation.html"],
-  ImageBlock: ["a5-foundation.html"],
-  CodeBlock: ["a5-foundation.html"],
-  InlineHeader: ["a5-foundation.html"],
-  Tabs: ["a5-foundation.html"],
-  Accordion: ["a5-foundation.html"],
-  Steps: ["a5-foundation.html"],
-  Carousel: ["a5-carousel-modal.html", "a5-foundation.html"],
-  Separator: ["a5-foundation.html"],
-  TagBlock: ["a5-foundation.html", "a6-library.html#family-card-blocks"],
-  EntityList: ["a5-foundation.html"],
-  ListBlock: ["a5-foundation.html"],
-  Modal: ["a5-carousel-modal.html", "a5-foundation.html"],
-  SectionBlock: ["a5-foundation.html"],
-  MarkDownRenderer: ["a6-library.html#family-small-parts"],
-  ImageGallery: ["a6-library.html#family-image-gallery"],
-  Table: ["a6-library.html#family-table"],
-  EditableTable: ["a6-library.html#family-editable-table"],
-  BarChart: ["a6-library.html#family-charts"],
-  LineChart: ["a6-library.html#family-charts"],
-  AreaChart: ["a6-library.html#family-charts"],
-  RadarChart: ["a6-library.html#family-charts"],
-  HorizontalBarChart: ["a6-library.html#family-charts"],
-  PieChart: ["a6-library.html#family-charts"],
-  RadialChart: ["a6-library.html#family-charts"],
-  SingleStackedBarChart: ["a6-library.html#family-charts"],
-  ScatterChart: ["a6-library.html#family-charts"],
-  Form: ["a6-library.html#family-forms"],
-  FormControl: ["a6-library.html#family-forms"],
-  Input: ["a6-library.html#family-forms"],
-  TextArea: ["a6-library.html#family-forms"],
-  Select: ["a6-library.html#family-forms"],
-  DatePicker: ["a6-library.html#family-forms"],
-  Slider: ["a6-library.html#family-forms"],
-  CheckBoxGroup: ["a6-library.html#family-selection"],
-  RadioGroup: ["a6-library.html#family-selection"],
-  SwitchGroup: ["a6-library.html#family-selection"],
-  Chips: ["a6-library.html#family-selection"],
-  OptionCards: ["a6-library.html#family-selection"],
-  Button: ["a6-library.html#family-buttons"],
-  Buttons: ["a6-library.html#family-buttons"],
-  IconButton: ["a6-library.html#family-buttons"],
-  Tag: ["a6-library.html#family-small-parts"],
-  Icon: ["a6-library.html#family-small-parts"],
-  BoldText: ["a6-library.html#family-card-blocks"],
-  IconText: ["a6-library.html#family-small-parts", "a6-library.html#family-card-blocks"],
-  ImageText: ["a6-library.html#family-small-parts"],
-  ImageTextLarge: ["a6-library.html#family-small-parts"],
-  MetricIndicatorInline: ["a6-library.html#family-small-parts"],
-  MetricIndicatorWithStrikethrough: ["a6-library.html#family-small-parts"],
-  SnippetCardBlock: ["a6-library.html#family-card-blocks"],
-  OverviewCardBlock: ["a6-library.html#family-card-blocks"],
-  ContextCardBlock: ["a6-library.html#family-card-blocks"],
-  CompositeCardBlock: ["a6-library.html#family-card-blocks"],
-  VisualCardBlock: ["a6-library.html#family-card-blocks"],
-  FollowUpBlock: ["/walkthrough.php"],
-};
-
-const PAGE_LABEL = {
-  "a5-stack-card.html": "Stack and Card",
-  "a5-foundation.html": "Text, cards, and layout",
-  "a5-carousel-modal.html": "Carousel and Modal",
-  "a6-library.html": "Forms, tables, charts, and buttons",
-  "/walkthrough.php": "Guided walkthrough",
-};
-
 const $ = (sel) => document.querySelector(sel);
 const groupsEl = $("#groups");
 const statusEl = $("#status");
 const filterEl = $("#filter");
 const noteEl = $("#variant-note");
 
+const registry = createComponentRegistry();
+registerAllComponents(registry);
+const store = createStore({});
+const bindings = createBindingManager(store);
+const ctx = createRenderContext({
+  document,
+  registry,
+  urlPolicy,
+  bindings,
+  state: store,
+  actions: {
+    run() {
+      /* catalog samples are inert */
+    },
+  },
+});
+
 /** @type {Record<string, any>} */
 const libraries = {};
 let current = "dashboard";
+
+/** Modal open state keyed by mount element id so switching catalogs is safe. */
+const modalOpenByMount = new Map();
 
 function typeStr(schema) {
   if (!schema || typeof schema !== "object") return "any";
@@ -137,7 +90,6 @@ function signature(comp) {
   return el;
 }
 
-/** Which components mention `name` in a $ref anywhere in their props. */
 function parentsOf(lib, name) {
   const out = [];
   const needle = `"$ref":"${name}"`;
@@ -160,21 +112,96 @@ function linkList(names) {
   return frag;
 }
 
-function pageLinks(name) {
-  const pages = SHOWN_AT[name];
-  if (!pages || !pages.length) return null;
-  const p = document.createElement("p");
-  p.className = "cat-comp__where";
-  p.append("See it drawn: ");
-  pages.forEach((href, i) => {
-    if (i > 0) p.append(" · ");
-    const a = document.createElement("a");
-    a.href = href.startsWith("/") ? href : `./${href}`;
-    const base = href.split("#")[0];
-    a.textContent = PAGE_LABEL[base] || base;
-    p.append(a);
-  });
-  return p;
+/**
+ * Live draw for one component. Modal gets an Open sample control.
+ * @param {string} name
+ * @returns {HTMLElement}
+ */
+function previewPane(name) {
+  const wrap = document.createElement("div");
+  wrap.className = "cat-comp__preview";
+  wrap.setAttribute("data-preview-for", name);
+
+  const demo = demoFor(name);
+  if (!demo) {
+    const miss = document.createElement("p");
+    miss.className = "cat-comp__preview-miss";
+    miss.textContent = "No live sample yet for this name.";
+    wrap.append(miss);
+    return wrap;
+  }
+
+  if (demo.note) {
+    const note = document.createElement("p");
+    note.className = "cat-comp__preview-note";
+    note.textContent = demo.note;
+    wrap.append(note);
+  }
+
+  const mount = document.createElement("div");
+  mount.className = "cat-comp__mount";
+  mount.id = `preview-${name}`;
+  wrap.append(mount);
+
+  if (name === "Modal") {
+    const openBtn = document.createElement("button");
+    openBtn.type = "button";
+    openBtn.className = "cat-comp__open-modal";
+    openBtn.textContent = "Open sample dialog";
+    wrap.insertBefore(openBtn, mount);
+
+    const paint = () => {
+      const open = modalOpenByMount.get(mount.id) === true;
+      render(
+        mount,
+        {
+          type: "Modal",
+          id: "d-modal",
+          props: {
+            title: "Sample dialog",
+            open: {
+              get: () => modalOpenByMount.get(mount.id) === true,
+              set: (v) => {
+                modalOpenByMount.set(mount.id, !!v);
+                paint();
+              },
+            },
+            size: "md",
+            children: [
+              {
+                type: "TextContent",
+                id: "d-modal-body",
+                props: {
+                  text: open
+                    ? "This is the dialog body. Close it with the × or Escape."
+                    : "Modal body.",
+                  variant: "clear",
+                },
+              },
+            ],
+          },
+        },
+        ctx,
+      );
+    };
+    openBtn.addEventListener("click", () => {
+      modalOpenByMount.set(mount.id, true);
+      paint();
+    });
+    paint();
+    return wrap;
+  }
+
+  try {
+    render(mount, demo.vnode, ctx);
+  } catch (err) {
+    mount.replaceChildren();
+    const fail = document.createElement("p");
+    fail.className = "cat-comp__preview-miss";
+    fail.textContent = `Could not draw sample: ${err instanceof Error ? err.message : String(err)}`;
+    mount.append(fail);
+  }
+  return wrap;
 }
 
 function renderComponent(lib, comp) {
@@ -207,7 +234,16 @@ function renderComponent(lib, comp) {
   for (const c of caps) {
     const b = document.createElement("span");
     b.className = "cat-comp__badge";
-    b.textContent = c === "links" ? "checks URLs" : c === "images" ? "checks images" : c === "markdown" ? "safe markdown" : c === "actions" ? "can run actions" : c;
+    b.textContent =
+      c === "links"
+        ? "checks URLs"
+        : c === "images"
+          ? "checks images"
+          : c === "markdown"
+            ? "safe markdown"
+            : c === "actions"
+              ? "can run actions"
+              : c;
     head.append(b);
   }
   wrap.append(head);
@@ -217,7 +253,14 @@ function renderComponent(lib, comp) {
   desc.textContent = comp.prompt?.description || "";
   wrap.append(desc);
 
-  wrap.append(signature(comp));
+  wrap.append(previewPane(comp.name));
+
+  const details = document.createElement("details");
+  details.className = "cat-comp__contract";
+  const summary = document.createElement("summary");
+  summary.textContent = "Contract (argument order)";
+  details.append(summary);
+  details.append(signature(comp));
 
   if (Array.isArray(comp.allowedChildren) && comp.allowedChildren.length) {
     const p = document.createElement("p");
@@ -228,7 +271,7 @@ function renderComponent(lib, comp) {
       p.append(`Can hold (${comp.allowedChildren.length}): `);
       p.append(linkList(comp.allowedChildren));
     }
-    wrap.append(p);
+    details.append(p);
   }
 
   const parents = parentsOf(lib, comp.name);
@@ -237,20 +280,22 @@ function renderComponent(lib, comp) {
     p.className = "cat-comp__kids";
     p.append("Goes inside: ");
     p.append(linkList(parents));
-    wrap.append(p);
+    details.append(p);
   }
 
-  const where = pageLinks(comp.name);
-  if (where) wrap.append(where);
+  wrap.append(details);
   return wrap;
 }
 
 function renderLibrary(lib) {
   groupsEl.replaceChildren();
+  modalOpenByMount.clear();
   const seen = new Set();
   const groups = Array.isArray(lib.componentGroups) ? lib.componentGroups : [];
   const ordered = [...groups];
-  const leftovers = Object.keys(lib.components).filter((n) => !groups.some((g) => g.components.includes(n)));
+  const leftovers = Object.keys(lib.components).filter(
+    (n) => !groups.some((g) => g.components.includes(n)),
+  );
   if (leftovers.length) ordered.push({ name: "Other", components: leftovers });
 
   for (const group of ordered) {
@@ -291,7 +336,9 @@ function applyFilter() {
     group.classList.toggle("is-hidden", !any);
   }
   const total = Object.keys(libraries[current].components).length;
-  statusEl.textContent = q ? `${visible} of ${total} components match “${q}”.` : `${total} components. Type to narrow the list.`;
+  statusEl.textContent = q
+    ? `${visible} of ${total} components match “${q}”.`
+    : `${total} components, each with a live sample. Type to narrow the list.`;
 }
 
 function switchTo(variant) {
@@ -311,7 +358,9 @@ async function boot() {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`${variant} catalog HTTP ${res.status}`);
     libraries[variant] = loadLibraryJson(await res.text());
-    $(`#count-${variant}`).textContent = String(Object.keys(libraries[variant].components).length);
+    $(`#count-${variant}`).textContent = String(
+      Object.keys(libraries[variant].components).length,
+    );
   }
   for (const btn of document.querySelectorAll(".cat-switch__btn")) {
     btn.addEventListener("click", () => switchTo(btn.dataset.variant));

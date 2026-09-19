@@ -4,13 +4,37 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sanctum Canvas — What the model can draw</title>
+    <!--
+      style-src includes 'unsafe-inline' so component-owned style attrs
+      (charts, ImageBlock bg, Callout duration) apply in this lab page.
+    -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
     />
     <link rel="stylesheet" href="../assets/css/tokens.css" />
     <link rel="stylesheet" href="../assets/css/skins.css" />
+    <link rel="stylesheet" href="../assets/css/layout.css" />
     <link rel="stylesheet" href="../assets/css/a11y.css" />
+    <link rel="stylesheet" href="../assets/css/components/stack.css" />
+    <link rel="stylesheet" href="../assets/css/components/card.css" />
+    <link rel="stylesheet" href="../assets/css/components/content.css" />
+    <link rel="stylesheet" href="../assets/css/components/list.css" />
+    <link rel="stylesheet" href="../assets/css/components/code-block.css" />
+    <link rel="stylesheet" href="../assets/css/components/image.css" />
+    <link rel="stylesheet" href="../assets/css/components/tabs.css" />
+    <link rel="stylesheet" href="../assets/css/components/accordion.css" />
+    <link rel="stylesheet" href="../assets/css/components/section-block.css" />
+    <link rel="stylesheet" href="../assets/css/components/steps.css" />
+    <link rel="stylesheet" href="../assets/css/components/carousel.css" />
+    <link rel="stylesheet" href="../assets/css/components/modal.css" />
+    <link rel="stylesheet" href="../assets/css/components/forms.css" />
+    <link rel="stylesheet" href="../assets/css/components/buttons.css" />
+    <link rel="stylesheet" href="../assets/css/components/table.css" />
+    <link rel="stylesheet" href="../assets/css/components/charts.css" />
+    <link rel="stylesheet" href="../assets/css/components/card-blocks.css" />
+    <link rel="stylesheet" href="../assets/css/components/follow-up.css" />
+    <link rel="stylesheet" href="../assets/css/components/tool-activity.css" />
     <link rel="stylesheet" href="./gallery.css" />
     <link rel="stylesheet" href="./catalog.css" />
   </head>
@@ -18,15 +42,16 @@
     <header class="gal-top">
       <a href="/index.php">&larr; Home</a>
       <span class="gal-top__title">What the model can draw</span>
-      <span class="gal-top__sub">Read live from the two catalog files</span>
+      <span class="gal-top__sub">Live samples from the two catalogs</span>
     </header>
     <main class="gal-main" id="catalog-root">
       <h1>What the model can draw</h1>
       <p class="gal-lede">
         Before the model answers, the host hands it this list. Every name below is
-        a component it is allowed to use, in the order its arguments go. Anything
-        not on this list is rejected before it reaches the screen. This page reads
-        the same two files the host sends, so it cannot drift from them.
+        a component it is allowed to use — drawn live here so you can see what it
+        looks like, not only the contract. Open “Contract” under any sample for
+        argument order. Anything not on this list is rejected before it reaches
+        the screen.
       </p>
 
       <div class="cat-switch" role="tablist" aria-label="Which catalog">
