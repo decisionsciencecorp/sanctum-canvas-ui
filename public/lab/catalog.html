@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sanctum Canvas — What the model can draw</title>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+    />
+    <link rel="stylesheet" href="../assets/css/tokens.css" />
+    <link rel="stylesheet" href="../assets/css/skins.css" />
+    <link rel="stylesheet" href="../assets/css/a11y.css" />
+    <link rel="stylesheet" href="./gallery.css" />
+    <link rel="stylesheet" href="./catalog.css" />
+  </head>
+  <body class="gal-body">
+    <header class="gal-top">
+      <a href="/index.php">&larr; Home</a>
+      <span class="gal-top__title">What the model can draw</span>
+      <span class="gal-top__sub">Read live from the two catalog files</span>
+    </header>
+    <main class="gal-main" id="catalog-root">
+      <h1>What the model can draw</h1>
+      <p class="gal-lede">
+        Before the model answers, the host hands it this list. Every name below is
+        a component it is allowed to use, in the order its arguments go. Anything
+        not on this list is rejected before it reaches the screen. This page reads
+        the same two files the host sends, so it cannot drift from them.
+      </p>
+
+      <div class="cat-switch" role="tablist" aria-label="Which catalog">
+        <button type="button" class="cat-switch__btn is-active" role="tab" aria-selected="true" data-variant="dashboard" id="tab-dashboard">
+          Dashboard <span class="cat-switch__count" id="count-dashboard">…</span>
+        </button>
+        <button type="button" class="cat-switch__btn" role="tab" aria-selected="false" data-variant="chat" id="tab-chat">
+          Chat <span class="cat-switch__count" id="count-chat">…</span>
+        </button>
+      </div>
+      <p class="gal-note" id="variant-note"></p>
+
+      <label class="cat-filter">
+        <span>Find a component</span>
+        <input type="search" id="filter" placeholder="e.g. chart, form, tag" autocomplete="off" />
+      </label>
+
+      <div id="groups" aria-live="polite"></div>
+
+      <p id="status" class="gal-note" role="status">Loading…</p>
+    </main>
+    <script type="module" src="./catalog.js"></script>
+  </body>
+</html>

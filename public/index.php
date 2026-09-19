@@ -30,9 +30,17 @@ $tiles = [
         'kicker' => 'Start here',
         'title' => 'Guided walkthrough',
         'what' => 'A scripted conversation, on rails. An ops lead asks the assistant how the restaurant did this week and the canvas fills in step by step: text, numbers, charts, a table, a form that fires a tool, follow-up questions, and a confirmation dialog.',
-        'expect' => 'About 18 short steps. Press Next or let it auto-play. Every component family appears in context.',
+        'expect' => 'About 18 short steps. Press Next or let it auto-play. Every component family appears in context, and the program shown at each step is a real one the parser accepts.',
         'featured' => true,
         'tag' => 'Story',
+    ],
+    [
+        'href' => '/lab/catalog.html',
+        'kicker' => 'Reference',
+        'title' => 'What the model can draw',
+        'what' => 'The full list of components the model is allowed to use — the same two catalog files the host sends it, one for dashboard replies and one for chat replies — with each component\'s arguments in order, what it can hold, and where to see it drawn.',
+        'expect' => 'Around eighty names per catalog, grouped the way OpenUI groups them. Type in the box to narrow the list. Nothing here is a sample; it is the contract.',
+        'tag' => 'Catalog',
     ],
     [
         'href' => '/stream.php',
@@ -54,8 +62,8 @@ $tiles = [
         'href' => '/lab/a6-library.html',
         'kicker' => 'Components',
         'title' => 'Forms, tables, charts, and buttons',
-        'what' => 'A full form with every field type, selection controls, button variants, a sortable table, an editable table, nine chart types, card blocks, an image gallery, and tool-activity rows.',
-        'expect' => 'Static samples you can type into and sort. Charts are SVG drawn by the runtime.',
+        'what' => 'A full form with every field type, selection controls, button variants, a sortable table, an editable table, nine chart types, card blocks, an image gallery, tool-activity rows, and the small parts a model may place on their own: markdown, metrics, tags, icons.',
+        'expect' => 'Static samples you can type into and sort. Charts are SVG drawn by the runtime. Every piece here is a name in the catalog.',
         'tag' => 'Gallery',
     ],
     [
@@ -111,7 +119,7 @@ function h(string $s): string
         <h1>What do you want to look at?</h1>
         <p class="home-lede">
           This site is the review surface for the ported chat-to-screen renderer.
-          A model writes a short program; the canvas turns it into live UI.
+          A model writes a short program using the full OpenUI component catalog; the canvas turns it into live UI.
           Nothing here talks to a real model &mdash; every page runs on saved or scripted data,
           so what you see is the renderer, not a model&rsquo;s mood.
         </p>

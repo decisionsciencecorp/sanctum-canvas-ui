@@ -124,14 +124,54 @@ def run(base: str, tag: str) -> list[str]:
         page = browser.new_page(viewport={"width": 1280, "height": 800})
         page.on("console", lambda m: console_errors.append(m.text) if m.type == "error" else None)
         page.on("pageerror", lambda e: console_errors.append(f"pageerror: {e}"))
+        # "Failed to load resource" console lines omit the URL; record it from the response.
+        page.on(
+            "response",
+            lambda r: console_errors.append(f"http {r.status}: {r.url}") if r.status >= 400 else None,
+        )
 
         # ---- home ----
         page.goto(f"{base}/index.php", wait_until="networkidle", timeout=30000)
         assert page.locator(".home-tile").count() >= 6, "home tiles missing"
         assert page.locator('.home-tile[href="/walkthrough.php"]').count() == 1
         assert page.locator('.home-tile[href="/stream.php"]').count() == 1
+        assert page.locator('.home-tile[href="/lab/catalog.html"]').count() == 1, "catalog tile missing"
         shot = OUT / f"a9-home-desktop-{tag}.png"
         page.screenshot(path=str(shot), full_page=True)
+        written.append(str(shot))
+
+        # ---- catalog page reads the real library files ----
+        page.goto(f"{base}/lab/catalog.html", wait_until="networkidle", timeout=30000)
+        page.wait_for_selector('#status[data-lab-ready="1"]', timeout=15000, state="attached")
+        dash_count = int(page.locator("#count-dashboard").inner_text())
+        chat_count = int(page.locator("#count-chat").inner_text())
+        assert dash_count >= 80 and chat_count >= 80, (dash_count, chat_count)
+        assert page.locator("#groups .cat-group").count() >= 8, "catalog groups missing"
+        assert page.locator("#comp-Stack .cat-comp__badge--root").count() == 1, "Stack not marked root"
+        assert page.locator("#comp-FormControl .cat-comp__sig").inner_text().find("Input | TextArea") >= 0
+        shot = OUT / f"a9-catalog-desktop-{tag}.png"
+        page.screenshot(path=str(shot), full_page=False)
+        written.append(str(shot))
+        page.fill("#filter", "chart")
+        page.wait_for_function("() => document.querySelectorAll('#groups .cat-comp:not(.is-hidden)').length < 30")
+        assert page.locator("#groups .cat-comp:not(.is-hidden)").count() >= 9, "chart filter too narrow"
+        page.click("#tab-chat")
+        page.wait_for_selector("#comp-FollowUpBlock", timeout=5000, state="attached")
+        assert page.locator("#comp-Card .cat-comp__badge--root").count() == 1, "chat root is Card"
+        assert page.locator("#comp-Modal").count() == 0, "Modal must not be in the chat catalog"
+        shot = OUT / f"a9-catalog-chat-desktop-{tag}.png"
+        page.screenshot(path=str(shot), full_page=False)
+        written.append(str(shot))
+
+        # ---- A6 gallery: the small-parts section renders every piece ----
+        page.goto(f"{base}/lab/a6-library.html", wait_until="networkidle", timeout=30000)
+        page.wait_for_selector('#status[data-lab-ready="1"]', timeout=15000, state="attached")
+        for comp in ("MarkDownRenderer", "MetricIndicatorInline", "MetricIndicatorWithStrikethrough", "IconText", "ImageText", "ImageTextLarge", "Icon", "Tag"):
+            assert page.locator(f'#mount-small-parts [data-canvas-component="{comp}"]').count() >= 1, comp
+        assert page.locator('#mount-small-parts [data-canvas-component="MarkDownRenderer"] strong').count() == 1
+        page.locator("#family-small-parts").scroll_into_view_if_needed()
+        shot = OUT / f"a9-a6-small-parts-desktop-{tag}.png"
+        page.locator("#family-small-parts").screenshot(path=str(shot))
         written.append(str(shot))
 
         # ---- stream lab still serves ----
@@ -188,6 +228,13 @@ def run(base: str, tag: str) -> list[str]:
 
             for sel in EXPECT[step_id]:
                 page.wait_for_selector(canvas + sel, timeout=10000, state="attached")
+            if step_id in ("ask", "done"):
+                assert page.locator('#wt-links a[href="/lab/catalog.html"]').count() == 1, f"{step_id}: catalog link"
+                assert not page.locator("#wt-links-wrap").is_hidden()
+            if step_id == "program":
+                program_text = page.locator("#wt-program").inner_text()
+                assert "root = Stack([" in program_text, program_text[:80]
+                assert "Callout(\"warning\"" in page.locator(canvas + '[data-canvas-component="CodeBlock"]').inner_text()
             seen_steps.append(step_id)
 
             if step_id in ("headline", "charts", "form", "tool", "followup-reply", "done"):

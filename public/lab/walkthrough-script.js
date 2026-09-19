@@ -215,22 +215,19 @@ function sourcesCard() {
   return {
     type: "Card",
     id: "wt-sources",
-    props: { variant: "card" },
+    // OpenUI chat-catalog shape: sources ride on the Card itself.
+    props: {
+      variant: "card",
+      sources: [
+        { title: "Square sales export, Sep 11–17", sourceName: "Square", url: "https://squareup.com/" },
+        { title: "Kitchen POS inventory count", sourceName: "pos.empanadaempire.us", url: "https://pos.empanadaempire.us/" },
+      ],
+    },
     children: [
       {
         type: "CardHeader",
         id: "wt-sources-h",
         props: { title: "Where these numbers came from", subtitle: "Two systems, read this morning" },
-      },
-      {
-        type: "CardSources",
-        id: "wt-sources-list",
-        props: {
-          sources: [
-            { title: "Square sales export, Sep 11–17", sourceName: "Square", url: "https://squareup.com/" },
-            { title: "Kitchen POS inventory count", sourceName: "pos.empanadaempire.us", url: "https://pos.empanadaempire.us/" },
-          ],
-        },
       },
     ],
   };
@@ -552,38 +549,106 @@ function recap() {
       variant: "number",
       items: [
         { title: "Text and headers", subtitle: "InlineHeader, TextContent" },
-        { title: "Numbers", subtitle: "OverviewCardBlock, MetricIndicatorInline" },
-        { title: "Charts inside tabs", subtitle: "Tabs, BarChart, LineChart, PieChart, SingleStackedBarChart" },
-        { title: "Data", subtitle: "Table, Callout, TagBlock, Card, CardSources" },
-        { title: "Input that does something", subtitle: "Form, Input, Select, DatePicker, Slider, Submit, Button" },
-        { title: "Work in flight", subtitle: "ToolActivity, RunStatus" },
-        { title: "Structure", subtitle: "Steps, Accordion, Carousel, Image, Modal" },
-        { title: "Keeping the conversation going", subtitle: "FollowUpBlock" },
+        { title: "Numbers", subtitle: "OverviewCardBlock, OverviewCardItem, Text, MetricIndicatorInline" },
+        { title: "Charts inside tabs", subtitle: "Tabs, TabItem, BarChart, LineChart, PieChart, SingleStackedBarChart, Series" },
+        { title: "Data", subtitle: "Table, Col, Callout, TagBlock, Card, CardHeader (sources: chat catalog)" },
+        { title: "Input that does something", subtitle: "Form, FormControl, Input, Select, SelectItem, DatePicker, Slider, Buttons, Button" },
+        { title: "Work in flight", subtitle: "ToolActivity, RunStatus (host events, not catalog components)" },
+        { title: "Structure", subtitle: "Steps, StepsItem, Accordion, AccordionItem, Carousel, Image, Modal" },
+        { title: "Keeping the conversation going", subtitle: "FollowUpBlock, FollowUpItem (chat catalog)" },
+        {
+          title: "Everything else the model may use",
+          subtitle: "This story used about a third of the catalog. The rest — nine chart types, editable tables, card blocks, selection controls, markdown — is listed with its arguments on the catalog page (link in the left column).",
+        },
       ],
     },
   };
 }
 
-/* ---------- Lang snippets shown in the narration panel (illustrative) ---------- */
+/* ---------- Lang snippets shown in the narration panel ----------
+ * Real programs, not sketches. tests/browser/walkthrough.programs.test.js
+ * parses every one against the catalog the model is given. Dashboard
+ * replies start with Stack; `sources` and `followups` are chat-catalog
+ * shapes (Card sources, FollowUpBlock) and are parsed against that library.
+ */
 
-const PROGRAM = {
+/** Snippets that belong to the chat catalog rather than the dashboard one. */
+export const CHAT_ONLY_PROGRAMS = new Set(["sources", "followups"]);
+
+export const PROGRAM = {
   header: 'header = InlineHeader("This week at Empanada Empire", "Thu Sep 11 – Wed Sep 17")',
-  summary: 'summary = TextContent("Solid week. Sales came in at $18,420, up 12% …")',
-  kpis: 'kpis = OverviewCardBlock([\n  { top: Text("Sales"), bottom: MetricIndicatorInline("$18,420", { direction: "up", value: 12 }) },\n  …\n])',
-  charts: 'charts = Tabs([\n  { trigger: "Sales by day", content: BarChart(days, [{ category: "This week", values: sales }]) },\n  { trigger: "Versus last week", content: LineChart(days, [thisWeek, lastWeek]) },\n  { trigger: "Channel mix", content: PieChart(channels, share) }\n])',
-  table: 'top = Table([\n  { label: "Item", data: items },\n  { label: "Sold", data: sold, type: "number" },\n  { label: "Revenue", data: revenue }\n])',
-  alert: 'alert = Callout("Beef dough runs out Tuesday", "You have 14 trays left …", "warning")\ntags = TagBlock([{ text: "Inventory" }, { text: "Beef dough" }, { text: "Act today", variant: "warning" }])',
-  sources: 'sources = Card([CardHeader("Where these numbers came from"), CardSources(sourceList)])',
-  form: 'reorder = Form("reorder-dough",\n  [ FormControl("Trays", Input("trays", { type: "number", value: "30" })),\n    FormControl("Supplier", Select("supplier", suppliers)),\n    FormControl("Deliver by", DatePicker("deliverBy")),\n    FormControl("Urgency", Slider("urgency", 0, 100)) ],\n  Action([ Run("reorder_supplies", { sku: "beef-dough-tray" }) ]))',
+  summary: 'summary = TextContent("Solid week. Sales came in at $18,420, up 12% on last week …")',
+  kpis: `kpis = OverviewCardBlock([
+  OverviewCardItem("sales", Text("text", "Sales"), MetricIndicatorInline("$18,420", "vs last week", { direction: "up", value: 12 })),
+  OverviewCardItem("orders", Text("text", "Orders"), MetricIndicatorInline("612", "vs last week", { direction: "up", value: 8 })),
+  OverviewCardItem("ticket", Text("text", "Average ticket"), MetricIndicatorInline("$30.10", "vs last week", { direction: "up", value: 3 })),
+  OverviewCardItem("refunds", Text("text", "Refunds"), MetricIndicatorInline("$140", "vs last week", { direction: "down", value: 22 }))
+])`,
+  charts: `days = ["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"]
+thisWeek = Series("This week", [2400, 3100, 3900, 3300, 1800, 1900, 2020])
+lastWeek = Series("Last week", [2100, 2800, 3500, 3000, 1700, 1750, 1600])
+charts = Tabs([
+  TabItem("by-day", "Sales by day", [BarChart(days, [thisWeek])]),
+  TabItem("vs-last", "Versus last week", [LineChart(days, [thisWeek, lastWeek])]),
+  TabItem("channels", "Channel mix", [PieChart(["Walk-in", "Online", "Catering"], [58, 31, 11], "donut")])
+])`,
+  table: `top = Table([
+  Col("Item", ["Beef & chimichurri", "Chicken tinga", "Guava & cheese", "Spinach & feta"]),
+  Col("Sold", [412, 388, 301, 240], "number"),
+  Col("Revenue", ["$2,060", "$1,940", "$1,204", "$960"])
+])`,
+  alert: `alert = Callout("warning", "Beef dough runs out Tuesday", "You have 14 trays left and Friday alone used 9. Reorder today to be safe.")
+tags = TagBlock(["Inventory", "Beef dough", "Act today"])`,
+  sources: `// chat catalog shape: Card(children, sources)
+sources = Card([CardHeader("Where these numbers came from", "Two systems, read this morning")], [
+  { title: "Square sales export, Sep 11–17", sourceName: "Square", url: "https://squareup.com/" },
+  { title: "Kitchen POS inventory count", sourceName: "pos.empanadaempire.us", url: "https://pos.empanadaempire.us/" }
+])`,
+  form: `reorder = Form("reorder-dough", Buttons([Button("Place reorder", Action([@Run("reorder_supplies", { sku: "beef-dough-tray" })]))]), [
+  FormControl("Trays", Input("trays", "30", "number")),
+  FormControl("Supplier", Select("supplier", [SelectItem("lonestar", "Lone Star Foods"), SelectItem("metro", "Metro Wholesale")])),
+  FormControl("Deliver by", DatePicker("deliverBy")),
+  FormControl("Urgency", Slider("urgency", "continuous", 0, 100))
+])`,
   tool: '// host emits TOOL_CALL_START → TOOL_CALL_ARGS → TOOL_CALL_END → TOOL_CALL_RESULT\n// canvas shows ToolActivity for each phase, then RunStatus("finish", …)',
-  steps: 'plan = Steps([\n  { title: "Supplier confirms", details: "…" },\n  { title: "Update the prep sheet", details: "…" },\n  { title: "Recheck Thursday", details: "…" }\n])',
-  accordion: 'details = Accordion([\n  { trigger: "Order details", content: "30 trays · Lone Star · Mon Sep 22 …" },\n  { trigger: "Why 30 trays", content: "…" },\n  { trigger: "Delivery window", content: "…" }\n])',
-  followups: 'next = FollowUpBlock([\n  "How does this compare with August?",\n  "Which shifts were short-staffed?",\n  "Draft a note to the kitchen about the dough"\n])',
-  followupReply: 'august = TextContent("August finished at $71,300 …")\ntrend = SingleStackedBarChart(weeks, totals)',
-  modal: 'confirm = Modal("Send this note to the kitchen?", $noteOpen, [\n  TextContent(noteBody),\n  Buttons([ Button("Send it", Action([Run("send_kitchen_note")])), Button("Cancel", …) ])\n])',
-  carousel: 'specials = Carousel([\n  [Image(fridayPhoto), TextContent("Friday: chimichurri beef …")],\n  [Image(saturdayPhoto), TextContent("Saturday: chicken tinga …")],\n  [Image(sundayPhoto), TextContent("Sunday: guava & cheese …")]\n])',
-  root: "root = Stack([header, summary, kpis, charts, top, alert, sources, reorder, plan, details, next, specials])",
+  steps: `plan = Steps([
+  StepsItem("Supplier confirms", "Lone Star usually confirms within the hour."),
+  StepsItem("Update the prep sheet", "Add 30 trays to Monday's receiving list."),
+  StepsItem("Recheck Thursday", "If Friday sells like last week you will want a second order.")
+])`,
+  accordion: `details = Accordion([
+  AccordionItem("order", "Order details", [TextContent("30 trays · Lone Star Foods · deliver Mon Sep 22 · about $840")]),
+  AccordionItem("why", "Why 30 trays", [TextContent("Two weeks of cover at this week's pace, plus a Friday buffer.")]),
+  AccordionItem("window", "Delivery window", [TextContent("Lone Star delivers 6–8am; the kitchen opens at 7.")])
+])`,
+  followups: `next = FollowUpBlock([
+  FollowUpItem("How does this compare with August?"),
+  FollowUpItem("Which shifts were short-staffed?"),
+  FollowUpItem("Draft a note to the kitchen about the dough")
+])`,
+  followupReply: `august = TextContent("August finished at $71,300 across four weeks …")
+trend = SingleStackedBarChart(["Wk 1", "Wk 2", "Wk 3", "Wk 4"], [16800, 17200, 18900, 18400])`,
+  modal: `$noteOpen = false
+confirm = Modal("Send this note to the kitchen?", $noteOpen, [
+  TextContent("Team — beef dough is down to 14 trays. 30 more land Monday. Go easy on the specials until then."),
+  Buttons([Button("Send it", Action([@Run("send_kitchen_note")])), Button("Cancel", Action([@Set($noteOpen, false)]), "secondary")])
+])`,
+  carousel: `specials = Carousel([
+  [Image("Friday special", "/lab/lab-image.svg"), TextContent("Friday: chimichurri beef")],
+  [Image("Saturday special", "/lab/lab-image.svg"), TextContent("Saturday: chicken tinga")],
+  [Image("Sunday special", "/lab/lab-image.svg"), TextContent("Sunday: guava & cheese")]
+])`,
+  root: "root = Stack([header, summary, kpis, charts, top, alert, tags, reorder, plan, details, specials, confirm])",
 };
+
+/**
+ * The whole dashboard reply as one program (what the "program" step shows and
+ * what the test parses as a complete Stack). Chat-only snippets are left out.
+ */
+export const DASHBOARD_PROGRAM = [
+  PROGRAM.header, PROGRAM.summary, PROGRAM.kpis, PROGRAM.charts, PROGRAM.table, PROGRAM.alert,
+  PROGRAM.form, PROGRAM.steps, PROGRAM.accordion, PROGRAM.modal, PROGRAM.carousel, PROGRAM.root,
+].join("\n\n");
 
 /* ---------- canvas composition per step ---------- */
 
@@ -714,8 +779,9 @@ export const STEPS = [
     title: "You ask a question",
     says: [
       "The ops lead types a normal question. Nothing special about the wording.",
-      "Behind the scenes the host sends that text to the model along with a short description of every component the canvas can draw. The model answers with a tiny program instead of prose.",
+      "Behind the scenes the host sends that text to the model along with the catalog: every component the canvas can draw, with its arguments in order. It is the full OpenUI library, not a sample. The model answers with a tiny program instead of prose.",
     ],
+    links: [{ href: "/lab/catalog.html", label: "Read the catalog the model is given" }],
     components: [],
     program: "// prompt → model\n\"How did Empanada Empire do this week?\"",
     apply(state, api) {
@@ -804,8 +870,9 @@ export const STEPS = [
     title: "Where the numbers came from",
     says: [
       "A card that lists the two systems the assistant read. Links go through the URL policy, so only allowed destinations render as links.",
+      "Sources are a chat-catalog feature: there, a Card carries them directly and TextContent can cite them as [1]. The dashboard catalog has no sources, so a pure dashboard reply would list them another way.",
     ],
-    components: ["Card", "CardHeader", "CardSources"],
+    components: ["Card", "CardHeader"],
     program: PROGRAM.sources,
     apply(state) {
       state.show = { header: true, summary: true, kpis: true, charts: true, table: true, alert: true, sources: true };
@@ -907,9 +974,10 @@ export const STEPS = [
     title: "Suggested follow-up questions",
     says: [
       "The assistant offers three things you might ask next. Clicking one sends it back into the conversation exactly as if you had typed it.",
+      "Follow-ups live in the chat catalog, where every reply is a Card; the dashboard catalog leaves them out. This canvas shows both so you can see the whole surface.",
       "Click the first one, “How does this compare with August?” (Auto-play does this for you.)",
     ],
-    components: ["FollowUpBlock"],
+    components: ["FollowUpBlock", "FollowUpItem"],
     program: PROGRAM.followups,
     waitFor: { selector: '#sanctum-canvas-root [data-canvas-component="FollowUpItem"]', hint: "Click a follow-up chip on the canvas to continue." },
     apply(state) {
@@ -1020,16 +1088,14 @@ export const STEPS = [
     actor: "Guide",
     title: "The program behind the screen",
     says: [
-      "Everything you just watched came from a program about this long. The model writes it; the canvas parses, validates it against the component library, and renders it. Unknown components and unsafe URLs are rejected before they reach the DOM.",
+      "Everything you just watched came from a program about this long. The model writes it; the canvas parses, validates it against the catalog, and renders it. Unknown components and unsafe URLs are rejected before they reach the DOM.",
+      "The snippets in this panel are not sketches. Each one is a real program the parser accepts against the dashboard catalog (the sources card and follow-ups against the chat catalog), and the test suite checks that on every run.",
     ],
     components: ["CodeBlock"],
     program: PROGRAM.root,
     apply(state) {
       state.show = { header: true, summary: true, kpis: true, charts: true, table: true, alert: true, sources: true, form: true, tool: true, steps: true, accordion: true, followups: true, followupReply: true, noteResult: true, carousel: true, code: true };
-      state.program = [
-        PROGRAM.header, PROGRAM.summary, PROGRAM.kpis, PROGRAM.charts, PROGRAM.table, PROGRAM.alert,
-        PROGRAM.sources, PROGRAM.form, PROGRAM.steps, PROGRAM.accordion, PROGRAM.followups, PROGRAM.carousel, PROGRAM.root,
-      ].join("\n\n");
+      state.program = DASHBOARD_PROGRAM;
     },
   },
   {
@@ -1038,9 +1104,15 @@ export const STEPS = [
     title: "That's the whole surface",
     says: [
       "Every component family appeared at least once, in the order a real answer would use it. The list on the canvas names them.",
-      "To poke at individual components, use the galleries from the home page. To see the raw event stream that produces a screen like this, open the stream lab.",
+      "This story used about a third of what the model may draw. The catalog page lists all of it — the same list the model is given — and the galleries let you poke at each piece. The stream lab shows the raw events that produce a screen like this.",
     ],
-    components: ["ListBlock"],
+    links: [
+      { href: "/lab/catalog.html", label: "What the model can draw (full catalog)" },
+      { href: "/lab/a5-foundation.html", label: "Gallery: text, cards, and layout" },
+      { href: "/lab/a6-library.html", label: "Gallery: forms, tables, charts, and buttons" },
+      { href: "/stream.php", label: "Stream lab" },
+    ],
+    components: ["ListBlock", "ListItem"],
     apply(state) {
       state.show = { header: true, summary: true, kpis: true, charts: true, table: true, alert: true, sources: true, form: true, tool: true, steps: true, accordion: true, followups: true, followupReply: true, noteResult: true, carousel: true, code: true, recap: true };
     },

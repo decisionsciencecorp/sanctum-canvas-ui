@@ -56,6 +56,38 @@
   background: transparent;
 }
 
+/* MarkDownRenderer — same three surfaces as TextContent (OpenUI variant enum). */
+.canvas-markdown {
+  box-sizing: border-box;
+  color: var(--canvas-text-primary);
+  font-family: var(--canvas-font-body);
+  font-size: var(--canvas-font-size-md);
+  line-height: var(--canvas-line-height-body);
+  border: 1px solid transparent;
+}
+
+.canvas-markdown--sunk {
+  padding: var(--canvas-space-m);
+  background: var(--canvas-surface-sunk);
+  border-radius: var(--canvas-radius-m);
+  border-color: var(--canvas-border-default);
+}
+
+.canvas-markdown--card {
+  padding: var(--canvas-space-m);
+  border-radius: var(--canvas-radius-m);
+  border-color: var(--canvas-border-default);
+  background: var(--canvas-surface-foreground);
+}
+
+.canvas-markdown > :first-child {
+  margin-top: 0;
+}
+
+.canvas-markdown > :last-child {
+  margin-bottom: 0;
+}
+
 .canvas-text-content--size-sm {
   font-size: var(--canvas-font-size-sm);
 }

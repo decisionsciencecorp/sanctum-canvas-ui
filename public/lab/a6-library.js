@@ -583,6 +583,69 @@ mount("mount-tool-activity", {
   ],
 });
 
+/* Small parts the model can place on their own — until the H21 catalog close
+ * these only ever appeared inside a card block, so no page showed them. */
+mount("mount-small-parts", {
+  type: "Stack",
+  id: "small-parts",
+  props: { direction: "column", gap: "m" },
+  children: [
+    {
+      type: "MarkDownRenderer",
+      id: "sp-markdown",
+      props: {
+        textMarkdown:
+          "**Markdown block.** Bold, _italic_, `code`, a [link](https://example.com), and a list:\n\n- first\n- second",
+        variant: "card",
+      },
+    },
+    {
+      type: "Stack",
+      id: "sp-metrics",
+      props: { direction: "row", gap: "l", wrap: true },
+      children: [
+        {
+          type: "MetricIndicatorInline",
+          id: "sp-metric-inline",
+          props: { value: "$18,420", subtext: "sales this week", trend: { direction: "up", value: 12 } },
+        },
+        {
+          type: "MetricIndicatorWithStrikethrough",
+          id: "sp-metric-strike",
+          props: { value: "$34", previousValue: "$42", subtext: "average ticket", trend: { direction: "down", value: 19 } },
+        },
+      ],
+    },
+    {
+      type: "Stack",
+      id: "sp-icon-image",
+      props: { direction: "row", gap: "l", wrap: true },
+      children: [
+        { type: "IconText", id: "sp-icontext", props: { icon: "package", title: "IconText", subtitle: "icon + title + subtitle" } },
+        { type: "ImageText", id: "sp-imagetext", props: { src: LAB_IMG, alt: "Thumb", title: "ImageText", subtitle: "thumbnail + title" } },
+        { type: "Icon", id: "sp-icon", props: { name: "circle-check", category: "status" } },
+      ],
+    },
+    {
+      type: "ImageTextLarge",
+      id: "sp-imagetext-large",
+      props: { src: LAB_IMG, alt: "Banner", title: "ImageTextLarge", subtitle: "full-width banner above a bold title" },
+    },
+    {
+      type: "Stack",
+      id: "sp-tags",
+      props: { direction: "row", gap: "s", wrap: true },
+      children: [
+        { type: "Tag", id: "sp-tag-neutral", props: { text: "neutral" } },
+        { type: "Tag", id: "sp-tag-info", props: { text: "info", variant: "info" } },
+        { type: "Tag", id: "sp-tag-success", props: { text: "success", variant: "success", icon: { type: "Icon", props: { name: "circle-check" } } } },
+        { type: "Tag", id: "sp-tag-warning", props: { text: "warning", variant: "warning" } },
+        { type: "Tag", id: "sp-tag-danger", props: { text: "danger", variant: "danger", size: "lg" } },
+      ],
+    },
+  ],
+});
+
 const status = document.getElementById("status");
 if (status) {
   status.textContent = "Ready";

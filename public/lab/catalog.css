@@ -1,0 +1,166 @@
+/**
+ * Catalog page chrome. Lab only — not part of the canvas runtime.
+ */
+
+.cat-switch {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cat-switch__btn {
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--canvas-border, #d8dde6);
+  background: var(--canvas-surface-raised, #fff);
+  color: inherit;
+  cursor: pointer;
+}
+
+.cat-switch__btn.is-active {
+  border-color: var(--canvas-accent, #3b6ced);
+  background: var(--canvas-accent, #3b6ced);
+  color: #fff;
+}
+
+.cat-switch__btn:focus-visible,
+.cat-filter input:focus-visible {
+  outline: 2px solid var(--canvas-focus-ring, #3b6ced);
+  outline-offset: 2px;
+}
+
+.cat-switch__count {
+  opacity: 0.8;
+  font-size: 0.85em;
+  margin-left: 0.25rem;
+}
+
+.cat-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  max-width: 28rem;
+  font-size: 0.9rem;
+}
+
+.cat-filter input {
+  font: inherit;
+  padding: 0.45rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--canvas-border, #d8dde6);
+  background: var(--canvas-surface-raised, #fff);
+}
+
+.cat-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem 1.1rem 1.2rem;
+  margin-top: 1rem;
+  border: 1px solid var(--canvas-border, #d8dde6);
+  border-radius: 12px;
+  background: var(--canvas-surface-raised, #fff);
+}
+
+.cat-group > h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.cat-group__count {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--canvas-text-muted, #5b6472);
+}
+
+.cat-comp {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.25rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--canvas-border, #e6e9ef);
+}
+
+.cat-comp:first-of-type {
+  border-top: 0;
+}
+
+.cat-comp__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.cat-comp__name {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.cat-comp__badge {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--canvas-surface-page, #f6f7f9);
+  border: 1px solid var(--canvas-border, #d8dde6);
+  color: var(--canvas-text-muted, #5b6472);
+}
+
+.cat-comp__badge--root {
+  border-color: var(--canvas-accent, #3b6ced);
+  color: var(--canvas-accent, #3b6ced);
+}
+
+.cat-comp__desc {
+  margin: 0;
+  font-size: 0.92rem;
+  max-width: 78ch;
+}
+
+.cat-comp__sig {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--canvas-text, #1a1a1a);
+  background: var(--canvas-surface-page, #f6f7f9);
+  border-radius: 8px;
+  padding: 0.45rem 0.6rem;
+}
+
+.cat-comp__sig .opt {
+  color: var(--canvas-text-muted, #5b6472);
+}
+
+.cat-comp__kids {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--canvas-text-muted, #5b6472);
+}
+
+.cat-comp__kids a {
+  color: var(--canvas-accent, #3b6ced);
+}
+
+.cat-comp__where {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.cat-comp__where a {
+  color: var(--canvas-accent, #3b6ced);
+}
+
+.cat-empty {
+  margin-top: 1rem;
+}
+
+.cat-comp.is-hidden,
+.cat-group.is-hidden {
+  display: none;
+}

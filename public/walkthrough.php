@@ -89,8 +89,13 @@ header('Referrer-Policy: no-referrer');
       </div>
 
       <div class="wt-block" id="wt-program-wrap" hidden>
-        <p class="wt-block__label">What the model writes (illustrative)</p>
+        <p class="wt-block__label">What the model writes (a real program — parsed in tests)</p>
         <pre class="wt-program" id="wt-program"></pre>
+      </div>
+
+      <div class="wt-block" id="wt-links-wrap" hidden>
+        <p class="wt-block__label">Go further</p>
+        <ul class="wt-links" id="wt-links"></ul>
       </div>
 
       <p class="wt-hint" id="wt-hint" hidden></p>

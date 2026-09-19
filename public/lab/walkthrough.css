@@ -226,6 +226,24 @@
   gap: 0.35rem;
 }
 
+.wt-links {
+  margin: 0;
+  padding: 0 0 0 1.1rem;
+  font-size: 0.92rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.wt-links a {
+  color: var(--canvas-accent, #3b6ced);
+}
+
+.wt-links a:focus-visible {
+  outline: 2px solid var(--canvas-focus-ring, #3b6ced);
+  outline-offset: 2px;
+}
+
 .wt-chip {
   font-family: var(--canvas-font-mono, ui-monospace, monospace);
   font-size: 0.76rem;

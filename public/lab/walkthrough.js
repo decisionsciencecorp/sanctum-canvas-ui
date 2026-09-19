@@ -26,6 +26,8 @@ const els = {
   says: $("#wt-says"),
   why: $("#wt-why"),
   whyWrap: $("#wt-why-wrap"),
+  links: $("#wt-links"),
+  linksWrap: $("#wt-links-wrap"),
   comps: $("#wt-components"),
   compsWrap: $("#wt-components-wrap"),
   program: $("#wt-program"),
@@ -281,6 +283,22 @@ function paintNarration(step, i) {
     els.whyWrap.hidden = false;
   } else {
     els.whyWrap.hidden = true;
+  }
+
+  if (step.links && step.links.length) {
+    els.links.replaceChildren(
+      ...step.links.map((l) => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = l.href;
+        a.textContent = l.label;
+        li.appendChild(a);
+        return li;
+      }),
+    );
+    els.linksWrap.hidden = false;
+  } else {
+    els.linksWrap.hidden = true;
   }
 
   if (step.components && step.components.length) {
