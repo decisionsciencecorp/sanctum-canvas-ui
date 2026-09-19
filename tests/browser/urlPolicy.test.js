@@ -218,4 +218,16 @@ describe("urlPolicy.toCssUrl", () => {
     const css = toCssUrl("https://x.com/a\nb");
     assert.ok(css?.includes("\\a "));
   });
+
+  it("resolves relative paths against the document, not the consuming stylesheet", () => {
+    // Inline `--var: url(./x.svg)` consumed by /assets/css/components/*.css
+    // would otherwise resolve under the stylesheet path in Chromium.
+    const base = "https://canvas.test/lab/a6-library.html";
+    assert.equal(toCssUrl("./lab-image.svg", { baseUrl: base }), 'url("https://canvas.test/lab/lab-image.svg")');
+    assert.equal(toCssUrl("../img/a.png", { baseUrl: base }), 'url("https://canvas.test/img/a.png")');
+    assert.equal(toCssUrl("/assets/a.png", { baseUrl: base }), 'url("https://canvas.test/assets/a.png")');
+    assert.equal(toCssUrl("https://cdn.test/a.png", { baseUrl: base }), 'url("https://cdn.test/a.png")');
+    // No document and no base in node: left as written.
+    assert.equal(toCssUrl("./lab-image.svg"), 'url("./lab-image.svg")');
+  });
 });

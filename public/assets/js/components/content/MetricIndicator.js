@@ -115,7 +115,9 @@ export const MetricIndicator = lifecycle({
 /** Alias lifecycle matching library MetricIndicatorWithStrikethrough. */
 export const MetricIndicatorWithStrikethrough = {
   create(props = {}, ctx = {}) {
-    return MetricIndicator.create({ ...props, variant: "with-strikethrough" }, ctx);
+    const el = MetricIndicator.create({ ...props, variant: "with-strikethrough" }, ctx);
+    el.setAttribute("data-canvas-component", "MetricIndicatorWithStrikethrough");
+    return el;
   },
   update(el, props = {}, ctx = {}) {
     return MetricIndicator.update(el, { ...props, variant: "with-strikethrough" }, ctx);
@@ -128,7 +130,9 @@ export const MetricIndicatorWithStrikethrough = {
 /** Alias lifecycle matching library MetricIndicatorInline. */
 export const MetricIndicatorInline = {
   create(props = {}, ctx = {}) {
-    return MetricIndicator.create({ ...props, variant: "inline" }, ctx);
+    const el = MetricIndicator.create({ ...props, variant: "inline" }, ctx);
+    el.setAttribute("data-canvas-component", "MetricIndicatorInline");
+    return el;
   },
   update(el, props = {}, ctx = {}) {
     return MetricIndicator.update(el, { ...props, variant: "inline" }, ctx);

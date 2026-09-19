@@ -163,6 +163,31 @@ export function safeOpenUrl(url, target = "_blank", features = "noopener,norefer
 export function toCssUrl(url, opts = {}) {
   const safe = safeUrl(url, opts);
   if (!safe) return undefined;
-  const escaped = safe.replace(/[\\"\n\r]/g, (c) => `\\${c.charCodeAt(0).toString(16)} `);
+  const resolved = resolveAgainstDocument(safe, opts);
+  const escaped = resolved.replace(/[\\"\n\r]/g, (c) => `\\${c.charCodeAt(0).toString(16)} `);
   return `url("${escaped}")`;
+}
+
+/**
+ * CSS `url()` values are emitted into inline custom properties that the
+ * component stylesheets consume via `var()`. Chromium resolves a relative
+ * `url()` there against the *stylesheet* (`/assets/css/components/…`), not
+ * the page, so a model-supplied `./photo.png` would 404. Resolve relative
+ * paths against the document base first; absolute URLs pass through.
+ * @param {string} url — already passed safeUrl
+ * @param {UrlPolicyOptions & { baseUrl?: string }} [opts]
+ * @returns {string}
+ */
+function resolveAgainstDocument(url, opts = {}) {
+  if (hasAbsoluteScheme(url)) return url;
+  const base =
+    typeof opts.baseUrl === "string" && opts.baseUrl
+      ? opts.baseUrl
+      : globalThis.document?.baseURI ?? globalThis.location?.href;
+  if (!base) return url;
+  try {
+    return new URL(url, base).href;
+  } catch {
+    return url;
+  }
 }

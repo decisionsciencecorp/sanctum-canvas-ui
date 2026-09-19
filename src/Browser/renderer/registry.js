@@ -13,13 +13,16 @@
  *   update?: (el: Element, props: Record<string, unknown>, ctx: Record<string, unknown>) => void,
  *   destroy?: (el: Element, ctx: Record<string, unknown>) => void,
  *   ownsChildren?: boolean,
+ *   partitionChildren?: PartitionFn,
  * }} ComponentLifecycle
+ * @typedef {(children: unknown[], props: Record<string, unknown>, ctx: Record<string, unknown>) => unknown[]} PartitionFn
  * @typedef {RenderFn | ComponentLifecycle} ComponentEntry
  * @typedef {{
  *   create: RenderFn,
  *   update: (el: Element, props: Record<string, unknown>, ctx: Record<string, unknown>) => void,
  *   destroy: (el: Element, ctx: Record<string, unknown>) => void,
  *   ownsChildren: boolean,
+ *   partitionChildren?: PartitionFn,
  * }} NormalizedLifecycle
  */
 
@@ -91,6 +94,11 @@ function normalizeEntry(entry, type) {
           : () => {},
       // Containers (Tabs/Accordion) own chrome DOM; skip reconciler child wipe.
       ownsChildren: entry.ownsChildren === true,
+      // Components that derive extra child nodes from props (Card → sources
+      // strip) reshape vnode.children before the reconciler applies them.
+      ...(typeof entry.partitionChildren === "function"
+        ? { partitionChildren: entry.partitionChildren }
+        : {}),
     };
   }
   throw new Error(

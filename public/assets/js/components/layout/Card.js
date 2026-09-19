@@ -204,5 +204,20 @@ function update(el, props = {}, ctx = {}) {
  */
 function destroy(_el, _ctx = {}) {}
 
-export const Card = { create, update, destroy };
+/**
+ * Reconciler hook: reshape vnode.children into header / content / sources
+ * regions so `Card(children, sources)` (OpenUI chat-catalog shape) keeps its
+ * sources strip when the reconciler — not props.children — owns the list.
+ * @param {unknown[]} children
+ * @param {Record<string, unknown>} props
+ */
+function partitionChildren(children, props = {}) {
+  if (!Array.isArray(children)) return children;
+  if (!children.length && !(Array.isArray(props.sources) && props.sources.length)) {
+    return children;
+  }
+  return partitionCardChildren(children, props);
+}
+
+export const Card = { create, update, destroy, partitionChildren };
 export default Card;

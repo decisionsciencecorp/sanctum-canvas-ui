@@ -210,7 +210,8 @@ describe("A6.10 card block fixtures", () => {
     const el = OverviewCardBlock.create(case_.props, c);
     assert.equal(el.getAttribute("data-layout"), "carousel");
     assert.equal(el.getAttribute("data-count"), "2");
-    assert.equal(find(el, "data-canvas-component", "MetricIndicator").length, 2);
+    // Bottom slot is the catalog's MetricIndicatorInline, stamped by name.
+    assert.equal(find(el, "data-canvas-component", "MetricIndicatorInline").length, 2);
   });
 
   it("context-bg-url-policy uses safe backgrounds + markdown body", () => {

@@ -257,6 +257,46 @@ describe("A5.1 Card", () => {
     assert.match(sources.textContent, /Docs/);
   });
 
+  it("reconciler keeps the sources strip for Card(children, sources) in both vnode shapes", () => {
+    // Chat-catalog shape: sources ride on the Card. The reconciler owns
+    // vnode.children, so Card.partitionChildren must add the strip there too.
+    const sources = [{ title: "Docs", sourceName: "Docs", url: "https://example.com/docs" }];
+    const header = { type: "Text", id: "t", children: ["Cited"] };
+    const shapes = {
+      hostPath: {
+        type: "Card",
+        id: "c",
+        props: { variant: "card", sources, children: [header] },
+        children: [header],
+      },
+      vnodeOnly: {
+        type: "Card",
+        id: "c",
+        props: { variant: "card", sources },
+        children: [header],
+      },
+    };
+    for (const [name, vnode] of Object.entries(shapes)) {
+      const { document, root } = createTestDom();
+      const registry = foundationRegistry();
+      const ctx = createRenderContext({ document, registry, urlPolicy });
+      render(root, vnode, ctx);
+      const card = root.firstChild;
+      const regions = [...card.childNodes].filter((n) => n.nodeType === 1);
+      const strip = regions.find((n) => n.getAttribute("data-canvas-region") === "source");
+      assert.ok(strip, `${name}: sources strip rendered`);
+      assert.equal(strip.getAttribute("data-source-count"), "1", name);
+      assert.match(strip.textContent, /Docs/, name);
+      assert.ok(regions.some((n) => n.getAttribute("data-canvas-region") === "content"), name);
+      // Re-render with the same vnode: strip must survive the update path too.
+      render(root, vnode, ctx);
+      const again = [...root.firstChild.childNodes].filter(
+        (n) => n.nodeType === 1 && n.getAttribute("data-canvas-region") === "source",
+      );
+      assert.equal(again.length, 1, `${name}: exactly one strip after update`);
+    }
+  });
+
   it("stream append preserves card shell and content region identity", () => {
     const { document, root } = createTestDom();
     const registry = foundationRegistry();

@@ -242,10 +242,28 @@ function resolveLifecycle(registry, type) {
         update: typeof got.update === "function" ? got.update : () => {},
         destroy: typeof got.destroy === "function" ? got.destroy : () => {},
         ownsChildren: got.ownsChildren === true,
+        partitionChildren:
+          typeof got.partitionChildren === "function" ? got.partitionChildren : undefined,
       };
     }
   }
   throw new Error(`reconciler: cannot resolve component "${type}"`);
+}
+
+/**
+ * Children the reconciler should apply for `vnode`. Lifecycles that derive
+ * nodes from props (Card's sources strip) reshape the list here so the
+ * reconciler does not wipe what the component rendered.
+ * @param {ReturnType<typeof resolveLifecycle>} life
+ * @param {VNode} vnode
+ * @param {Record<string, unknown>} ctx
+ * @returns {Array<VNode|string|number|null|undefined>}
+ */
+function childrenFor(life, vnode, ctx) {
+  const raw = vnode.children ?? [];
+  if (typeof life.partitionChildren !== "function") return raw;
+  const out = life.partitionChildren(raw, vnode.props ?? {}, ctx);
+  return Array.isArray(out) ? out : raw;
 }
 
 /**
@@ -273,7 +291,7 @@ function createElementFromVNode(vnode, ctx) {
   setMeta(el, { type: vnode.type, key, id: vnode.id });
   // Containers that own chrome (Tabs/Accordion) set ownsChildren — skip wipe.
   if (!life.ownsChildren) {
-    reconcileChildren(el, vnode.children ?? [], ctx);
+    reconcileChildren(el, childrenFor(life, vnode, ctx), ctx);
   }
   return el;
 }
@@ -381,12 +399,14 @@ export function reconcileChildren(parentEl, nextChildren, ctx = {}) {
       const snap = captureInteractiveState(el);
       const registry = ctx.registry;
       let ownsChildren = false;
+      let nextChildren = vnode.children ?? [];
       if (registry) {
         const life = resolveLifecycle(registry, vnode.type);
         ownsChildren = life.ownsChildren === true;
         if (typeof life.update === "function") {
           life.update(el, vnode.props ?? {}, ctx);
         }
+        nextChildren = childrenFor(life, vnode, ctx);
       }
       applyProps(el, vnode.props ?? {});
       setMeta(el, {
@@ -395,7 +415,7 @@ export function reconcileChildren(parentEl, nextChildren, ctx = {}) {
         id: vnode.id,
       });
       if (!ownsChildren) {
-        reconcileChildren(el, vnode.children ?? [], ctx);
+        reconcileChildren(el, nextChildren, ctx);
       }
       restoreInteractiveState(snap);
       kept.add(el);
