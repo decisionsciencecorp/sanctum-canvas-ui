@@ -144,6 +144,16 @@ final class PromptCompiler
             }
             return $ref === 'Component' ? 'Component' : $ref;
         }
+        if (isset($schema['anyOf']) && is_array($schema['anyOf'])) {
+            $parts = [];
+            foreach ($schema['anyOf'] as $option) {
+                if (is_array($option)) {
+                    $parts[] = self::schemaTypeStr($option);
+                }
+            }
+            $parts = array_values(array_unique($parts));
+            return $parts === [] ? 'any' : implode(' | ', $parts);
+        }
         $type = $schema['type'] ?? 'any';
         if ($type === 'string') {
             if (!empty($schema['enum']) && is_array($schema['enum'])) {
@@ -160,7 +170,8 @@ final class PromptCompiler
         if ($type === 'array') {
             $items = is_array($schema['items'] ?? null) ? $schema['items'] : null;
             if ($items) {
-                return self::schemaTypeStr($items) . '[]';
+                $inner = self::schemaTypeStr($items);
+                return (str_contains($inner, ' | ') ? '(' . $inner . ')' : $inner) . '[]';
             }
             return 'any[]';
         }

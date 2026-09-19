@@ -100,6 +100,65 @@ describe("library manifests match the OpenUI paint vocabulary", () => {
     assert.equal(result.root.typeName, "Stack");
   });
 
+  it("component-typed props are $ref / anyOf, not opaque objects (Zod unions resolved)", () => {
+    // z.union([Input.ref, TextArea.ref, …])
+    const input = dashboard.components.FormControl.properties.input;
+    assert.ok(Array.isArray(input.anyOf), "FormControl.input is a union");
+    assert.deepEqual(
+      input.anyOf.map((o) => o.$ref),
+      ["Input", "TextArea", "Select", "DatePicker", "Slider", "CheckBoxGroup", "RadioGroup", "Chips", "OptionCards"],
+    );
+    // z.optional(Icon.ref) — wrapper form, must not be required
+    assert.deepEqual(dashboard.components.Tag.properties.icon, { $ref: "Icon" });
+    assert.equal(dashboard.components.Tag.required.includes("icon"), false);
+    // z.union([IconText.ref, ImageText.ref, Text.ref])
+    assert.deepEqual(
+      dashboard.components.OverviewCardItem.properties.top.anyOf.map((o) => o.$ref),
+      ["IconText", "ImageText", "Text"],
+    );
+    // z.union([z.string(), Tag.ref])
+    assert.deepEqual(dashboard.components.ContextCardItem.properties.title.anyOf, [
+      { type: "string" },
+      { $ref: "Tag" },
+    ]);
+    // z.array(SeriesSchema) where Series is a library component: object or Series(...)
+    assert.deepEqual(dashboard.components.BarChart.properties.series.items, {
+      anyOf: [{ type: "object" }, { $ref: "Series" }],
+    });
+  });
+
+  it("container child lists follow the upstream unions, not a wildcard", () => {
+    const chatCard = chat.components.Card.allowedChildren;
+    for (const n of ["FollowUpBlock", "SectionBlock", "ListBlock", "Tabs", "Carousel", "EditableTable"]) {
+      assert.ok(chatCard.includes(n), `chat Card allows ${n}`);
+    }
+    assert.equal(chatCard.includes("Stack"), false, "chat Card has no Stack");
+    assert.ok(dashboard.components.Card.allowedChildren.includes("Stack"));
+    assert.equal(dashboard.components.Card.allowedChildren.includes("FollowUpBlock"), false);
+    // Nested chat containers cannot hold SectionBlock (ChatNestedContentUnion filter)
+    assert.equal(chat.components.TabItem.allowedChildren.includes("SectionBlock"), false);
+    assert.ok(chat.components.TabItem.allowedChildren.includes("Accordion"));
+    // Stack.children is z.array(z.any()) → any registered component
+    assert.deepEqual(dashboard.components.Stack.allowedChildren, ["*"]);
+  });
+
+  it("the parser accepts component values in union slots (form fields, KPI tops, chart series)", () => {
+    const parser = createParser(libraryToJsonSchema(dashboard), "Stack");
+    const result = parser.parse(
+      [
+        'trays = FormControl("Trays", Input("trays", "30", "number"))',
+        'reorder = Form("reorder", Buttons([Button("Go", Action([@Run("reorder_supplies")]))]), [trays])',
+        'kpi = OverviewCardBlock([OverviewCardItem("sales", Text("text", "Sales"), MetricIndicatorInline("$18,420", "vs last week", { direction: "up", value: 12 }))])',
+        'chart = LineChart(["Mon", "Tue"], [Series("This week", [1, 2]), Series("Last week", [2, 1])])',
+        'tag = TagBlock(["Inventory", "Act today"])',
+        "root = Stack([reorder, kpi, chart, tag])",
+        "",
+      ].join("\n"),
+    );
+    assert.deepEqual(result.meta?.errors || [], []);
+    assert.equal(result.root.typeName, "Stack");
+  });
+
   it("the public copies match the resources catalogs", () => {
     const pubDash = readFileSync(join(root, "public/assets/libraries/dashboard/library.v1.json"), "utf8");
     const pubChat = readFileSync(join(root, "public/assets/libraries/chat/library.v1.json"), "utf8");

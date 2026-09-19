@@ -152,77 +152,224 @@ function splitTop(body) {
   return parts.map((p) => p.trim()).filter(Boolean);
 }
 
-function parseDefault(expr) {
-  const m = expr.match(/\.default\(\s*([\s\S]*?)\s*\)(?:\s*\.|$)/);
-  if (!m) return undefined;
-  const raw = m[1].trim();
-  if (raw === "true") return true;
-  if (raw === "false") return false;
-  if (raw === "null") return null;
-  if (/^-?\d+(\.\d+)?$/.test(raw)) return Number(raw);
-  if (/^\[\]$/.test(raw)) return [];
-  if (/^"([^"]*)"$/.test(raw) || /^'([^']*)'$/.test(raw)) {
-    return raw.slice(1, -1);
+/* ---------- Zod expression resolver ----------
+ * Walks `z.union([...])`, `X.ref`, `...Union.options`, `z.optional(X)`,
+ * `z.array(...)`, `.optional()/.default()/.nullable()`, and named aliases so
+ * that component-typed props come out as `$ref` / `anyOf` (composite), not a
+ * bare `object` the parser then refuses to fill with a component.
+ */
+
+/** Split a chained expression into [{ name, args|null }] segments. */
+function segments(expr) {
+  const out = [];
+  let i = 0;
+  const s = expr.trim();
+  let spread = false;
+  if (s.startsWith("...")) {
+    spread = true;
+    i = 3;
   }
+  while (i < s.length) {
+    const m = /^[A-Za-z_$][A-Za-z0-9_$]*/.exec(s.slice(i));
+    if (!m) break;
+    const name = m[0];
+    i += name.length;
+    let args = null;
+    while (s[i] === " " || s[i] === "\n") i += 1;
+    if (s[i] === "(") {
+      args = balanced(s, i, "(", ")");
+      i += args.length + 2;
+    }
+    out.push({ name, args });
+    while (s[i] === " " || s[i] === "\n") i += 1;
+    if (s[i] === ".") {
+      i += 1;
+      continue;
+    }
+    break; // `as [...]` casts, trailing junk
+  }
+  return { segs: out, spread };
+}
+
+function literalValue(raw) {
+  const t = raw.trim();
+  if (t === "true") return true;
+  if (t === "false") return false;
+  if (t === "null") return null;
+  if (/^-?\d+(\.\d+)?$/.test(t)) return Number(t);
+  if (t === "[]") return [];
+  if (/^"([^"]*)"$/.test(t) || /^'([^']*)'$/.test(t)) return t.slice(1, -1);
   return undefined;
 }
 
-function parseEnum(expr) {
-  const i = expr.indexOf("z.enum(");
-  if (i < 0) return null;
-  const bracket = expr.indexOf("[", i);
-  if (bracket < 0) return null;
-  const inner = balanced(expr, bracket, "[", "]");
-  const values = [];
-  for (const part of splitTop(inner)) {
-    const m = part.match(/^["']([^"']+)["']$/);
-    if (m) values.push(m[1]);
+function dedupe(list) {
+  const seen = new Set();
+  const out = [];
+  for (const item of list) {
+    const k = JSON.stringify(item);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(item);
   }
-  return values.length ? values : null;
+  return out;
 }
 
-function childNames(expr, known) {
-  const found = new Set();
-  for (const name of known) {
-    const re = new RegExp(`\\b${name}\\b`);
-    if (re.test(expr)) found.add(name);
+/**
+ * @returns {{ spec: object, optional: boolean, reactive: boolean, def: unknown, members: string[] }}
+ *   members = component names reachable as direct children (through arrays / unions)
+ */
+function resolveType(expr, ctx, depth = 0) {
+  const base = { optional: false, reactive: false, def: undefined, members: [] };
+  if (!expr || depth > 12) return { ...base, spec: { type: "any" } };
+  const trimmed = expr.trim();
+
+  // Array literal of union members: [A.ref, B.ref, ...X.options]
+  if (trimmed.startsWith("[")) {
+    const inner = balanced(trimmed, 0, "[", "]");
+    const options = [];
+    const members = [];
+    for (const part of splitTop(inner)) {
+      const r = resolveType(part, ctx, depth + 1);
+      if (r.spec.anyOf) options.push(...r.spec.anyOf);
+      else options.push(r.spec);
+      members.push(...r.members);
+    }
+    return { ...base, spec: { anyOf: dedupe(options) }, members: [...new Set(members)] };
   }
-  return [...found];
+
+  const { segs, spread } = segments(trimmed);
+  if (!segs.length) return { ...base, spec: { type: "any" } };
+
+  let result;
+  let rest;
+  const head = segs[0];
+
+  if (head.name === "z" && segs[1]) {
+    const op = segs[1];
+    rest = segs.slice(2);
+    switch (op.name) {
+      case "string":
+      case "literal":
+      case "templateLiteral":
+        result = { ...base, spec: { type: "string" } };
+        break;
+      case "number":
+      case "int":
+        result = { ...base, spec: { type: "number" } };
+        break;
+      case "boolean":
+        result = { ...base, spec: { type: "boolean" } };
+        break;
+      case "enum": {
+        const values = [];
+        for (const part of splitTop(balanced(op.args, op.args.indexOf("["), "[", "]"))) {
+          const v = literalValue(part);
+          if (typeof v === "string") values.push(v);
+        }
+        result = { ...base, spec: { type: "string", enum: values } };
+        break;
+      }
+      case "array": {
+        const inner = resolveType(op.args, ctx, depth + 1);
+        const spec = { type: "array" };
+        if (inner.spec && !(inner.spec.type === "any" && !inner.spec.anyOf)) spec.items = inner.spec;
+        result = { ...base, spec, members: inner.members };
+        break;
+      }
+      case "union": {
+        const inner = resolveType(op.args, ctx, depth + 1);
+        result = inner;
+        break;
+      }
+      case "optional": {
+        const inner = resolveType(op.args, ctx, depth + 1);
+        result = { ...inner, optional: true };
+        break;
+      }
+      case "lazy": {
+        const arrow = op.args.match(/=>\s*([\s\S]+)$/);
+        result = arrow ? resolveType(arrow[1], ctx, depth + 1) : { ...base, spec: { type: "any" } };
+        break;
+      }
+      case "object":
+      case "record":
+        result = { ...base, spec: { type: "object" } };
+        break;
+      default:
+        result = { ...base, spec: { type: "any" } };
+    }
+  } else if (head.name === "reactive" && head.args != null) {
+    const inner = resolveType(head.args, ctx, depth + 1);
+    result = { ...inner, reactive: true };
+    rest = segs.slice(1);
+  } else if (segs[1]?.name === "ref") {
+    const rec = ctx.resolveComponent(head.name);
+    if (rec) result = { ...base, spec: { $ref: rec.name }, members: [rec.name] };
+    else result = { ...base, spec: { type: "object" } };
+    rest = segs.slice(2);
+  } else if (segs[1]?.name === "options") {
+    // ...Union.options  |  Union.options.filter((o) => o !== X.ref)
+    const alias = ctx.resolveAlias(head.name);
+    const inner = alias ? resolveType(alias, ctx, depth + 1) : { ...base, spec: { type: "any" } };
+    const filter = segs[2]?.name === "filter" ? segs[2].args : null;
+    if (filter) {
+      const drop = [...filter.matchAll(/!==\s*([A-Za-z0-9_]+)\.ref/g)]
+        .map((h) => ctx.resolveComponent(h[1])?.name)
+        .filter(Boolean);
+      const options = (inner.spec.anyOf || [inner.spec]).filter((o) => !drop.includes(o.$ref));
+      result = {
+        ...base,
+        spec: { anyOf: options },
+        members: inner.members.filter((n) => !drop.includes(n)),
+      };
+    } else result = inner;
+    rest = segs.slice(filter ? 3 : 2);
+  } else if (head.args != null && /^create[A-Za-z0-9]+$/.test(head.name) && schemas.has(head.name)) {
+    result = { ...base, spec: { type: "object" } };
+    rest = segs.slice(1);
+  } else {
+    const alias = ctx.resolveAlias(head.name) ?? (schemas.has(head.name) ? schemas.get(head.name) : null);
+    if (alias) {
+      const inner = resolveType(alias, ctx, depth + 1);
+      if (/^\s*z\s*\.\s*object\s*\(/.test(alias)) {
+        // Named object schemas (rules, trend, source) stay opaque objects —
+        // unless a library component is defined by that very schema (Series,
+        // Slice, ScatterSeries, Point). Then the model may write either the
+        // inline object or the component call, exactly as OpenUI accepts.
+        const owner = ctx.schemaOwner(head.name);
+        result = owner
+          ? { ...inner, spec: { anyOf: [{ type: "object" }, { $ref: owner }] }, members: [owner] }
+          : { ...inner, spec: { type: "object" } };
+      } else result = inner;
+    } else result = { ...base, spec: { type: "any" } };
+    rest = segs.slice(1);
+  }
+
+  for (const seg of rest || []) {
+    if (seg.name === "optional" || seg.name === "nullable" || seg.name === "nullish") result.optional = true;
+    else if (seg.name === "default") {
+      result.optional = true;
+      const v = literalValue(seg.args ?? "");
+      if (v !== undefined) result.def = v;
+    } else if (seg.name === "array") {
+      result = {
+        ...result,
+        spec: { type: "array", items: result.spec },
+      };
+    }
+  }
+  if (spread && result.spec.$ref) result.spec = { anyOf: [result.spec] };
+  return result;
 }
 
-function propSpec(key, expr, known) {
-  const optionalBySchema =
-    /^[A-Za-z0-9_]+$/.test(expr.trim()) &&
-    schemas.has(expr.trim()) &&
-    /\.optional\(\)\s*;?\s*$/.test(schemas.get(expr.trim()).trim());
-  const optional = /\.optional\(\)/.test(expr) || /\.default\(/.test(expr) || optionalBySchema;
-  const reactive = /\breactive\(/.test(expr);
-  const enm = parseEnum(expr);
-  const def = parseDefault(expr);
-  /** @type {Record<string, unknown>} */
-  const spec = {};
-  if (enm) {
-    spec.type = "string";
-    spec.enum = enm;
-  } else if (/z\.array\(/.test(expr) || /\.array\(/.test(expr)) {
-    spec.type = "array";
-    const kids = childNames(expr, known);
-    if (kids.length === 1) spec.items = { $ref: kids[0] };
-    else if (kids.length > 1) spec.items = { anyOf: kids.map((n) => ({ $ref: n })) };
-  } else if (/z\.number\(/.test(expr)) spec.type = "number";
-  else if (/z\.boolean\(/.test(expr)) spec.type = "boolean";
-  else if (/z\.string\(/.test(expr)) spec.type = "string";
-  else if (/z\.literal\(/.test(expr)) spec.type = "string";
-  else if (/z\.object\(/.test(expr) || /z\.record\(/.test(expr) || /Schema\b/.test(expr) || /actionPropSchema/.test(expr) || /rulesSchema/.test(expr)) {
-    spec.type = "object";
-  } else if (/\.ref\b/.test(expr)) {
-    const kids = childNames(expr, known);
-    spec.type = kids.length ? "object" : "any";
-    if (kids.length === 1) spec.$ref = kids[0];
-  } else spec.type = "any";
-  if (!optional) spec.required = true;
-  if (def !== undefined) spec.default = def;
-  return { spec, reactive, optional, expr };
+function propSpec(key, expr, ctx) {
+  const r = resolveType(expr, ctx);
+  const spec = { ...r.spec };
+  if (spec.anyOf) spec.anyOf = dedupe(spec.anyOf);
+  if (spec.anyOf && spec.anyOf.length === 1) Object.assign(spec, spec.anyOf[0]), delete spec.anyOf;
+  if (!r.optional) spec.required = true;
+  if (r.def !== undefined) spec.default = r.def;
+  return { spec, reactive: r.reactive, optional: r.optional, expr, members: r.members };
 }
 
 function objectBody(expr) {
@@ -236,9 +383,13 @@ function objectBody(expr) {
 
 const files = walk(genui);
 files.push(join(root, "old/packages/react-ui/src/components/_shared/icons/schema.ts"));
+files.push(join(root, "old/packages/react-ui/src/components/Sources/SourceContext.tsx"));
 const schemas = new Map();
 const componentsByFile = new Map();
 const exportedComponents = new Map();
+const aliasesByFile = new Map();
+const exportedAliases = new Map();
+const anyFileAliases = new Map(); // file-local helpers inside schema.ts files
 
 function takeExpr(src, start) {
   let depthParen = 0;
@@ -273,6 +424,17 @@ for (const file of files) {
   while ((m = assignRe.exec(src))) {
     const expr = takeExpr(src, m.index + m[0].length);
     if (/z\s*\.\s*object\s*\(/.test(expr)) schemas.set(m[1], expr);
+    // Named unions / aliases (ContentChildUnion, ChatCardChildUnion, …) are
+    // what the container child lists are made of. Keep them per file so the
+    // chat library's re-declared idents win over the base ones.
+    if (!/defineComponent\(/.test(expr) && /\bz\s*\./.test(expr)) {
+      if (!aliasesByFile.has(file)) aliasesByFile.set(file, new Map());
+      aliasesByFile.get(file).set(m[1], expr);
+      if (!anyFileAliases.has(m[1])) anyFileAliases.set(m[1], expr);
+      if (src.slice(Math.max(0, m.index - 1), m.index + 7).includes("export")) {
+        exportedAliases.set(m[1], expr);
+      }
+    }
   }
   const fnRe = /export function\s+(create[A-Za-z0-9]+)\s*\([^)]*\)\s*\{/g;
   while ((m = fnRe.exec(src))) {
@@ -320,7 +482,16 @@ function resolveComponent(file, ident) {
   return null;
 }
 
-function parsePropsFromExpr(expr, known, depth = 0) {
+function makeCtx(file, schemaOwners = new Map()) {
+  return {
+    schemaOwner: (ident) => schemaOwners.get(ident) ?? null,
+    resolveComponent: (ident) => resolveComponent(file, ident),
+    resolveAlias: (ident) =>
+      aliasesByFile.get(file)?.get(ident) ?? exportedAliases.get(ident) ?? anyFileAliases.get(ident) ?? null,
+  };
+}
+
+function parsePropsFromExpr(expr, ctx, depth = 0) {
   if (!expr || depth > 6) return [];
   const trimmed = expr.trim();
   const merge = trimmed.match(/\.merge\(\s*([A-Za-z0-9_]+)\s*\)/);
@@ -330,15 +501,15 @@ function parsePropsFromExpr(expr, known, depth = 0) {
     for (const part of splitTop(body)) {
       const km = part.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*:([\s\S]+)$/);
       if (!km) continue;
-      props.push({ key: km[1], ...propSpec(km[1], km[2], known) });
+      props.push({ key: km[1], ...propSpec(km[1], km[2], ctx) });
     }
   } else if (/^create[A-Za-z0-9]+\(/.test(trimmed) && schemas.has(trimmed.slice(0, trimmed.indexOf("(")))) {
-    props = parsePropsFromExpr(schemas.get(trimmed.slice(0, trimmed.indexOf("("))), known, depth + 1);
+    props = parsePropsFromExpr(schemas.get(trimmed.slice(0, trimmed.indexOf("("))), ctx, depth + 1);
   } else if (/^[A-Za-z0-9_]+$/.test(trimmed) && schemas.has(trimmed)) {
-    props = parsePropsFromExpr(schemas.get(trimmed), known, depth + 1);
+    props = parsePropsFromExpr(schemas.get(trimmed), ctx, depth + 1);
   }
   if (merge && schemas.has(merge[1])) {
-    const extra = parsePropsFromExpr(schemas.get(merge[1]), known, depth + 1);
+    const extra = parsePropsFromExpr(schemas.get(merge[1]), ctx, depth + 1);
     const seen = new Set(props.map((p) => p.key));
     for (const p of extra) if (!seen.has(p.key)) props.push(p);
   }
@@ -439,12 +610,20 @@ function buildLibrary(file, id, variant, rootName) {
   }
   const components = {};
   const missing = [];
+  // Components whose props ARE a named object schema (props: SeriesSchema).
+  const schemaOwners = new Map();
+  for (const rec of resolved) {
+    if (rec.missing) continue;
+    const ident = rec.propsExpr.trim();
+    if (/^[A-Za-z0-9_]+$/.test(ident) && schemas.has(ident)) schemaOwners.set(ident, rec.name);
+  }
+  const ctx = makeCtx(file, schemaOwners);
   for (const rec of resolved) {
     if (rec.missing) {
       missing.push(rec.ident);
       continue;
     }
-    const props = parsePropsFromExpr(rec.propsExpr, known);
+    const props = parsePropsFromExpr(rec.propsExpr, ctx);
     if (!props.length && rec.propsExpr) {
       missing.push(`${rec.name}:no-props:${rec.propsExpr.slice(0, 80)}`);
     }
@@ -460,7 +639,8 @@ function buildLibrary(file, id, variant, rootName) {
       if (spec.required) required.push(p.key);
       if (p.reactive) reactiveProps.push(p.key);
       if (CHILD_KEYS.has(p.key) && spec.type === "array") {
-        const kids = childNames(p.expr, known);
+        // Only names this library actually ships; `z.any()` children = any registered.
+        const kids = p.members.filter((n) => known.has(n));
         children = kids.length ? kids : ["*"];
       }
     }

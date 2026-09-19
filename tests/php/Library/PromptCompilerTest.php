@@ -92,6 +92,14 @@ final class PromptCompilerTest extends TestCase
         $this->assertSame('any[]', PromptCompiler::schemaTypeStr(['type' => 'array']));
         $this->assertSame('object', PromptCompiler::schemaTypeStr(['type' => 'object']));
         $this->assertSame('Component', PromptCompiler::schemaTypeStr(['$ref' => '#/$defs/Component']));
+        $this->assertSame(
+            'Input | Select',
+            PromptCompiler::schemaTypeStr(['anyOf' => [['$ref' => 'Input'], ['$ref' => 'Select']]])
+        );
+        $this->assertSame(
+            '(object | Series)[]',
+            PromptCompiler::schemaTypeStr(['type' => 'array', 'items' => ['anyOf' => [['type' => 'object'], ['$ref' => 'Series']]]])
+        );
         $this->assertSame('any', PromptCompiler::schemaTypeStr([]));
     }
 

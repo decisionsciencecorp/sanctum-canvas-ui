@@ -160,10 +160,131 @@
       "properties": {
         "children": {
           "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "TextContent"
+              },
+              {
+                "$ref": "MarkDownRenderer"
+              },
+              {
+                "$ref": "CardHeader"
+              },
+              {
+                "$ref": "Callout"
+              },
+              {
+                "$ref": "TextCallout"
+              },
+              {
+                "$ref": "CodeBlock"
+              },
+              {
+                "$ref": "Image"
+              },
+              {
+                "$ref": "ImageBlock"
+              },
+              {
+                "$ref": "ImageGallery"
+              },
+              {
+                "$ref": "Separator"
+              },
+              {
+                "$ref": "HorizontalBarChart"
+              },
+              {
+                "$ref": "RadarChart"
+              },
+              {
+                "$ref": "PieChart"
+              },
+              {
+                "$ref": "RadialChart"
+              },
+              {
+                "$ref": "SingleStackedBarChart"
+              },
+              {
+                "$ref": "ScatterChart"
+              },
+              {
+                "$ref": "AreaChart"
+              },
+              {
+                "$ref": "BarChart"
+              },
+              {
+                "$ref": "LineChart"
+              },
+              {
+                "$ref": "Table"
+              },
+              {
+                "$ref": "TagBlock"
+              },
+              {
+                "$ref": "Form"
+              },
+              {
+                "$ref": "Buttons"
+              },
+              {
+                "$ref": "IconButton"
+              },
+              {
+                "$ref": "Steps"
+              },
+              {
+                "$ref": "InlineHeader"
+              },
+              {
+                "$ref": "EntityList"
+              },
+              {
+                "$ref": "EditableTable"
+              },
+              {
+                "$ref": "SnippetCardBlock"
+              },
+              {
+                "$ref": "OverviewCardBlock"
+              },
+              {
+                "$ref": "ContextCardBlock"
+              },
+              {
+                "$ref": "CompositeCardBlock"
+              },
+              {
+                "$ref": "VisualCardBlock"
+              },
+              {
+                "$ref": "ListBlock"
+              },
+              {
+                "$ref": "FollowUpBlock"
+              },
+              {
+                "$ref": "SectionBlock"
+              },
+              {
+                "$ref": "Tabs"
+              },
+              {
+                "$ref": "Carousel"
+              }
+            ]
+          },
           "required": true
         },
         "sources": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         }
       },
       "required": [
@@ -171,7 +292,44 @@
       ],
       "reactiveProps": [],
       "allowedChildren": [
-        "*"
+        "TextContent",
+        "MarkDownRenderer",
+        "CardHeader",
+        "Callout",
+        "TextCallout",
+        "CodeBlock",
+        "Image",
+        "ImageBlock",
+        "ImageGallery",
+        "Separator",
+        "HorizontalBarChart",
+        "RadarChart",
+        "PieChart",
+        "RadialChart",
+        "SingleStackedBarChart",
+        "ScatterChart",
+        "AreaChart",
+        "BarChart",
+        "LineChart",
+        "Table",
+        "TagBlock",
+        "Form",
+        "Buttons",
+        "IconButton",
+        "Steps",
+        "InlineHeader",
+        "EntityList",
+        "EditableTable",
+        "SnippetCardBlock",
+        "OverviewCardBlock",
+        "ContextCardBlock",
+        "CompositeCardBlock",
+        "VisualCardBlock",
+        "ListBlock",
+        "FollowUpBlock",
+        "SectionBlock",
+        "Tabs",
+        "Carousel"
       ],
       "renderer": "layout/Card.js",
       "securityCapabilities": [
@@ -441,6 +599,9 @@
       "properties": {
         "images": {
           "type": "array",
+          "items": {
+            "type": "object"
+          },
           "required": true
         }
       },
@@ -607,10 +768,23 @@
       "properties": {
         "labels": {
           "type": "array",
+          "items": {
+            "type": "string"
+          },
           "required": true
         },
         "series": {
           "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "$ref": "Series"
+              }
+            ]
+          },
           "required": true
         },
         "variant": {
@@ -659,10 +833,23 @@
       "properties": {
         "labels": {
           "type": "array",
+          "items": {
+            "type": "string"
+          },
           "required": true
         },
         "series": {
           "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "$ref": "Series"
+              }
+            ]
+          },
           "required": true
         },
         "variant": {
@@ -712,10 +899,23 @@
       "properties": {
         "labels": {
           "type": "array",
+          "items": {
+            "type": "string"
+          },
           "required": true
         },
         "series": {
           "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "$ref": "Series"
+              }
+            ]
+          },
           "required": true
         },
         "variant": {
@@ -761,10 +961,23 @@
       "properties": {
         "labels": {
           "type": "array",
+          "items": {
+            "type": "string"
+          },
           "required": true
         },
         "series": {
           "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "$ref": "Series"
+              }
+            ]
+          },
           "required": true
         }
       },
@@ -796,10 +1009,23 @@
       "properties": {
         "labels": {
           "type": "array",
+          "items": {
+            "type": "string"
+          },
           "required": true
         },
         "series": {
           "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "$ref": "Series"
+              }
+            ]
+          },
           "required": true
         },
         "variant": {
@@ -845,6 +1071,9 @@
         },
         "values": {
           "type": "array",
+          "items": {
+            "type": "number"
+          },
           "required": true
         }
       },
@@ -875,10 +1104,16 @@
       "properties": {
         "labels": {
           "type": "array",
+          "items": {
+            "type": "string"
+          },
           "required": true
         },
         "values": {
           "type": "array",
+          "items": {
+            "type": "number"
+          },
           "required": true
         },
         "variant": {
@@ -921,10 +1156,16 @@
       "properties": {
         "labels": {
           "type": "array",
+          "items": {
+            "type": "string"
+          },
           "required": true
         },
         "values": {
           "type": "array",
+          "items": {
+            "type": "number"
+          },
           "required": true
         }
       },
@@ -953,10 +1194,16 @@
       "properties": {
         "labels": {
           "type": "array",
+          "items": {
+            "type": "string"
+          },
           "required": true
         },
         "values": {
           "type": "array",
+          "items": {
+            "type": "number"
+          },
           "required": true
         }
       },
@@ -1018,6 +1265,16 @@
       "properties": {
         "datasets": {
           "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "$ref": "ScatterSeries"
+              }
+            ]
+          },
           "required": true
         },
         "xLabel": {
@@ -1055,6 +1312,16 @@
         },
         "points": {
           "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "$ref": "Point"
+              }
+            ]
+          },
           "required": true
         }
       },
@@ -1123,7 +1390,6 @@
           "required": true
         },
         "buttons": {
-          "type": "object",
           "$ref": "Buttons",
           "required": true
         },
@@ -1166,7 +1432,35 @@
           "required": true
         },
         "input": {
-          "type": "object",
+          "anyOf": [
+            {
+              "$ref": "Input"
+            },
+            {
+              "$ref": "TextArea"
+            },
+            {
+              "$ref": "Select"
+            },
+            {
+              "$ref": "DatePicker"
+            },
+            {
+              "$ref": "Slider"
+            },
+            {
+              "$ref": "CheckBoxGroup"
+            },
+            {
+              "$ref": "RadioGroup"
+            },
+            {
+              "$ref": "Chips"
+            },
+            {
+              "$ref": "OptionCards"
+            }
+          ],
           "required": true
         },
         "hint": {
@@ -1484,7 +1778,10 @@
           "type": "number"
         },
         "defaultValue": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
         },
         "label": {
           "type": "string"
@@ -1493,7 +1790,10 @@
           "type": "object"
         },
         "value": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
         }
       },
       "required": [
@@ -1540,7 +1840,7 @@
           "type": "object"
         },
         "value": {
-          "type": "boolean"
+          "type": "object"
         }
       },
       "required": [
@@ -1723,7 +2023,7 @@
           ]
         },
         "value": {
-          "type": "boolean"
+          "type": "object"
         }
       },
       "required": [
@@ -1943,7 +2243,7 @@
           "type": "string"
         },
         "image": {
-          "type": "string"
+          "type": "object"
         },
         "actionLabel": {
           "type": "string"
@@ -2033,6 +2333,9 @@
       "properties": {
         "sections": {
           "type": "array",
+          "items": {
+            "$ref": "SectionItem"
+          },
           "required": true
         },
         "isFoldable": {
@@ -2044,7 +2347,7 @@
       ],
       "reactiveProps": [],
       "allowedChildren": [
-        "*"
+        "SectionItem"
       ],
       "renderer": "containers/SectionBlock.js",
       "securityCapabilities": [
@@ -2074,6 +2377,121 @@
         },
         "content": {
           "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "TextContent"
+              },
+              {
+                "$ref": "MarkDownRenderer"
+              },
+              {
+                "$ref": "CardHeader"
+              },
+              {
+                "$ref": "Callout"
+              },
+              {
+                "$ref": "TextCallout"
+              },
+              {
+                "$ref": "CodeBlock"
+              },
+              {
+                "$ref": "Image"
+              },
+              {
+                "$ref": "ImageBlock"
+              },
+              {
+                "$ref": "ImageGallery"
+              },
+              {
+                "$ref": "Separator"
+              },
+              {
+                "$ref": "HorizontalBarChart"
+              },
+              {
+                "$ref": "RadarChart"
+              },
+              {
+                "$ref": "PieChart"
+              },
+              {
+                "$ref": "RadialChart"
+              },
+              {
+                "$ref": "SingleStackedBarChart"
+              },
+              {
+                "$ref": "ScatterChart"
+              },
+              {
+                "$ref": "AreaChart"
+              },
+              {
+                "$ref": "BarChart"
+              },
+              {
+                "$ref": "LineChart"
+              },
+              {
+                "$ref": "Table"
+              },
+              {
+                "$ref": "TagBlock"
+              },
+              {
+                "$ref": "Form"
+              },
+              {
+                "$ref": "Buttons"
+              },
+              {
+                "$ref": "IconButton"
+              },
+              {
+                "$ref": "Steps"
+              },
+              {
+                "$ref": "InlineHeader"
+              },
+              {
+                "$ref": "EntityList"
+              },
+              {
+                "$ref": "EditableTable"
+              },
+              {
+                "$ref": "SnippetCardBlock"
+              },
+              {
+                "$ref": "OverviewCardBlock"
+              },
+              {
+                "$ref": "ContextCardBlock"
+              },
+              {
+                "$ref": "CompositeCardBlock"
+              },
+              {
+                "$ref": "VisualCardBlock"
+              },
+              {
+                "$ref": "ListBlock"
+              },
+              {
+                "$ref": "FollowUpBlock"
+              },
+              {
+                "$ref": "Tabs"
+              },
+              {
+                "$ref": "Accordion"
+              }
+            ]
+          },
           "required": true
         }
       },
@@ -2084,7 +2502,43 @@
       ],
       "reactiveProps": [],
       "allowedChildren": [
-        "*"
+        "TextContent",
+        "MarkDownRenderer",
+        "CardHeader",
+        "Callout",
+        "TextCallout",
+        "CodeBlock",
+        "Image",
+        "ImageBlock",
+        "ImageGallery",
+        "Separator",
+        "HorizontalBarChart",
+        "RadarChart",
+        "PieChart",
+        "RadialChart",
+        "SingleStackedBarChart",
+        "ScatterChart",
+        "AreaChart",
+        "BarChart",
+        "LineChart",
+        "Table",
+        "TagBlock",
+        "Form",
+        "Buttons",
+        "IconButton",
+        "Steps",
+        "InlineHeader",
+        "EntityList",
+        "EditableTable",
+        "SnippetCardBlock",
+        "OverviewCardBlock",
+        "ContextCardBlock",
+        "CompositeCardBlock",
+        "VisualCardBlock",
+        "ListBlock",
+        "FollowUpBlock",
+        "Tabs",
+        "Accordion"
       ],
       "renderer": "containers/SectionItem.js",
       "securityCapabilities": [
@@ -2104,6 +2558,9 @@
       "properties": {
         "items": {
           "type": "array",
+          "items": {
+            "$ref": "TabItem"
+          },
           "required": true
         }
       },
@@ -2112,7 +2569,7 @@
       ],
       "reactiveProps": [],
       "allowedChildren": [
-        "*"
+        "TabItem"
       ],
       "renderer": "containers/Tabs.js",
       "securityCapabilities": [
@@ -2142,6 +2599,118 @@
         },
         "content": {
           "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "TextContent"
+              },
+              {
+                "$ref": "MarkDownRenderer"
+              },
+              {
+                "$ref": "CardHeader"
+              },
+              {
+                "$ref": "Callout"
+              },
+              {
+                "$ref": "TextCallout"
+              },
+              {
+                "$ref": "CodeBlock"
+              },
+              {
+                "$ref": "Image"
+              },
+              {
+                "$ref": "ImageBlock"
+              },
+              {
+                "$ref": "ImageGallery"
+              },
+              {
+                "$ref": "Separator"
+              },
+              {
+                "$ref": "HorizontalBarChart"
+              },
+              {
+                "$ref": "RadarChart"
+              },
+              {
+                "$ref": "PieChart"
+              },
+              {
+                "$ref": "RadialChart"
+              },
+              {
+                "$ref": "SingleStackedBarChart"
+              },
+              {
+                "$ref": "ScatterChart"
+              },
+              {
+                "$ref": "AreaChart"
+              },
+              {
+                "$ref": "BarChart"
+              },
+              {
+                "$ref": "LineChart"
+              },
+              {
+                "$ref": "Table"
+              },
+              {
+                "$ref": "TagBlock"
+              },
+              {
+                "$ref": "Form"
+              },
+              {
+                "$ref": "Buttons"
+              },
+              {
+                "$ref": "IconButton"
+              },
+              {
+                "$ref": "Steps"
+              },
+              {
+                "$ref": "InlineHeader"
+              },
+              {
+                "$ref": "EntityList"
+              },
+              {
+                "$ref": "EditableTable"
+              },
+              {
+                "$ref": "SnippetCardBlock"
+              },
+              {
+                "$ref": "OverviewCardBlock"
+              },
+              {
+                "$ref": "ContextCardBlock"
+              },
+              {
+                "$ref": "CompositeCardBlock"
+              },
+              {
+                "$ref": "VisualCardBlock"
+              },
+              {
+                "$ref": "ListBlock"
+              },
+              {
+                "$ref": "FollowUpBlock"
+              },
+              {
+                "$ref": "Accordion"
+              }
+            ]
+          },
           "required": true
         }
       },
@@ -2152,7 +2721,42 @@
       ],
       "reactiveProps": [],
       "allowedChildren": [
-        "*"
+        "TextContent",
+        "MarkDownRenderer",
+        "CardHeader",
+        "Callout",
+        "TextCallout",
+        "CodeBlock",
+        "Image",
+        "ImageBlock",
+        "ImageGallery",
+        "Separator",
+        "HorizontalBarChart",
+        "RadarChart",
+        "PieChart",
+        "RadialChart",
+        "SingleStackedBarChart",
+        "ScatterChart",
+        "AreaChart",
+        "BarChart",
+        "LineChart",
+        "Table",
+        "TagBlock",
+        "Form",
+        "Buttons",
+        "IconButton",
+        "Steps",
+        "InlineHeader",
+        "EntityList",
+        "EditableTable",
+        "SnippetCardBlock",
+        "OverviewCardBlock",
+        "ContextCardBlock",
+        "CompositeCardBlock",
+        "VisualCardBlock",
+        "ListBlock",
+        "FollowUpBlock",
+        "Accordion"
       ],
       "renderer": "containers/Tabs.js",
       "securityCapabilities": [
@@ -2172,6 +2776,9 @@
       "properties": {
         "items": {
           "type": "array",
+          "items": {
+            "$ref": "AccordionItem"
+          },
           "required": true
         }
       },
@@ -2180,7 +2787,7 @@
       ],
       "reactiveProps": [],
       "allowedChildren": [
-        "*"
+        "AccordionItem"
       ],
       "renderer": "containers/Accordion.js",
       "securityCapabilities": [
@@ -2210,6 +2817,115 @@
         },
         "content": {
           "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "TextContent"
+              },
+              {
+                "$ref": "MarkDownRenderer"
+              },
+              {
+                "$ref": "CardHeader"
+              },
+              {
+                "$ref": "Callout"
+              },
+              {
+                "$ref": "TextCallout"
+              },
+              {
+                "$ref": "CodeBlock"
+              },
+              {
+                "$ref": "Image"
+              },
+              {
+                "$ref": "ImageBlock"
+              },
+              {
+                "$ref": "ImageGallery"
+              },
+              {
+                "$ref": "Separator"
+              },
+              {
+                "$ref": "HorizontalBarChart"
+              },
+              {
+                "$ref": "RadarChart"
+              },
+              {
+                "$ref": "PieChart"
+              },
+              {
+                "$ref": "RadialChart"
+              },
+              {
+                "$ref": "SingleStackedBarChart"
+              },
+              {
+                "$ref": "ScatterChart"
+              },
+              {
+                "$ref": "AreaChart"
+              },
+              {
+                "$ref": "BarChart"
+              },
+              {
+                "$ref": "LineChart"
+              },
+              {
+                "$ref": "Table"
+              },
+              {
+                "$ref": "TagBlock"
+              },
+              {
+                "$ref": "Form"
+              },
+              {
+                "$ref": "Buttons"
+              },
+              {
+                "$ref": "IconButton"
+              },
+              {
+                "$ref": "Steps"
+              },
+              {
+                "$ref": "InlineHeader"
+              },
+              {
+                "$ref": "EntityList"
+              },
+              {
+                "$ref": "EditableTable"
+              },
+              {
+                "$ref": "SnippetCardBlock"
+              },
+              {
+                "$ref": "OverviewCardBlock"
+              },
+              {
+                "$ref": "ContextCardBlock"
+              },
+              {
+                "$ref": "CompositeCardBlock"
+              },
+              {
+                "$ref": "VisualCardBlock"
+              },
+              {
+                "$ref": "ListBlock"
+              },
+              {
+                "$ref": "FollowUpBlock"
+              }
+            ]
+          },
           "required": true
         }
       },
@@ -2220,7 +2936,41 @@
       ],
       "reactiveProps": [],
       "allowedChildren": [
-        "*"
+        "TextContent",
+        "MarkDownRenderer",
+        "CardHeader",
+        "Callout",
+        "TextCallout",
+        "CodeBlock",
+        "Image",
+        "ImageBlock",
+        "ImageGallery",
+        "Separator",
+        "HorizontalBarChart",
+        "RadarChart",
+        "PieChart",
+        "RadialChart",
+        "SingleStackedBarChart",
+        "ScatterChart",
+        "AreaChart",
+        "BarChart",
+        "LineChart",
+        "Table",
+        "TagBlock",
+        "Form",
+        "Buttons",
+        "IconButton",
+        "Steps",
+        "InlineHeader",
+        "EntityList",
+        "EditableTable",
+        "SnippetCardBlock",
+        "OverviewCardBlock",
+        "ContextCardBlock",
+        "CompositeCardBlock",
+        "VisualCardBlock",
+        "ListBlock",
+        "FollowUpBlock"
       ],
       "renderer": "containers/Accordion.js",
       "securityCapabilities": [
@@ -2304,6 +3054,118 @@
       "properties": {
         "children": {
           "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "TextContent"
+                },
+                {
+                  "$ref": "MarkDownRenderer"
+                },
+                {
+                  "$ref": "CardHeader"
+                },
+                {
+                  "$ref": "Callout"
+                },
+                {
+                  "$ref": "TextCallout"
+                },
+                {
+                  "$ref": "CodeBlock"
+                },
+                {
+                  "$ref": "Image"
+                },
+                {
+                  "$ref": "ImageBlock"
+                },
+                {
+                  "$ref": "ImageGallery"
+                },
+                {
+                  "$ref": "Separator"
+                },
+                {
+                  "$ref": "HorizontalBarChart"
+                },
+                {
+                  "$ref": "RadarChart"
+                },
+                {
+                  "$ref": "PieChart"
+                },
+                {
+                  "$ref": "RadialChart"
+                },
+                {
+                  "$ref": "SingleStackedBarChart"
+                },
+                {
+                  "$ref": "ScatterChart"
+                },
+                {
+                  "$ref": "AreaChart"
+                },
+                {
+                  "$ref": "BarChart"
+                },
+                {
+                  "$ref": "LineChart"
+                },
+                {
+                  "$ref": "Table"
+                },
+                {
+                  "$ref": "TagBlock"
+                },
+                {
+                  "$ref": "Form"
+                },
+                {
+                  "$ref": "Buttons"
+                },
+                {
+                  "$ref": "IconButton"
+                },
+                {
+                  "$ref": "Steps"
+                },
+                {
+                  "$ref": "InlineHeader"
+                },
+                {
+                  "$ref": "EntityList"
+                },
+                {
+                  "$ref": "EditableTable"
+                },
+                {
+                  "$ref": "SnippetCardBlock"
+                },
+                {
+                  "$ref": "OverviewCardBlock"
+                },
+                {
+                  "$ref": "ContextCardBlock"
+                },
+                {
+                  "$ref": "CompositeCardBlock"
+                },
+                {
+                  "$ref": "VisualCardBlock"
+                },
+                {
+                  "$ref": "ListBlock"
+                },
+                {
+                  "$ref": "FollowUpBlock"
+                }
+              ]
+            }
+          },
           "required": true
         },
         "variant": {
@@ -2319,7 +3181,41 @@
       ],
       "reactiveProps": [],
       "allowedChildren": [
-        "*"
+        "TextContent",
+        "MarkDownRenderer",
+        "CardHeader",
+        "Callout",
+        "TextCallout",
+        "CodeBlock",
+        "Image",
+        "ImageBlock",
+        "ImageGallery",
+        "Separator",
+        "HorizontalBarChart",
+        "RadarChart",
+        "PieChart",
+        "RadialChart",
+        "SingleStackedBarChart",
+        "ScatterChart",
+        "AreaChart",
+        "BarChart",
+        "LineChart",
+        "Table",
+        "TagBlock",
+        "Form",
+        "Buttons",
+        "IconButton",
+        "Steps",
+        "InlineHeader",
+        "EntityList",
+        "EditableTable",
+        "SnippetCardBlock",
+        "OverviewCardBlock",
+        "ContextCardBlock",
+        "CompositeCardBlock",
+        "VisualCardBlock",
+        "ListBlock",
+        "FollowUpBlock"
       ],
       "renderer": "containers/Carousel.js",
       "securityCapabilities": [
@@ -2340,6 +3236,9 @@
       "properties": {
         "tags": {
           "type": "array",
+          "items": {
+            "type": "string"
+          },
           "required": true
         },
         "size": {
@@ -2380,9 +3279,7 @@
           "required": true
         },
         "icon": {
-          "type": "object",
-          "$ref": "Icon",
-          "required": true
+          "$ref": "Icon"
         },
         "size": {
           "type": "string",
@@ -2404,8 +3301,7 @@
         }
       },
       "required": [
-        "text",
-        "icon"
+        "text"
       ],
       "reactiveProps": [],
       "allowedChildren": null,
@@ -2430,6 +3326,9 @@
       "properties": {
         "rows": {
           "type": "array",
+          "items": {
+            "type": "object"
+          },
           "default": []
         },
         "size": {
@@ -2498,11 +3397,11 @@
       ],
       "properties": {
         "name": {
-          "type": "any",
+          "type": "string",
           "required": true
         },
         "category": {
-          "type": "any"
+          "type": "string"
         }
       },
       "required": [
@@ -2536,7 +3435,6 @@
           "required": true
         },
         "icon": {
-          "type": "object",
           "$ref": "Icon",
           "required": true
         },
@@ -2598,23 +3496,25 @@
           "default": ""
         },
         "columns": {
-          "type": "string",
-          "enum": [
-            "text",
-            "number",
-            "date-single",
-            "select",
-            "url"
-          ]
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "default": []
         },
         "data": {
           "type": "array",
+          "items": {
+            "type": "object"
+          },
           "default": []
         }
       },
       "required": [],
       "reactiveProps": [],
-      "allowedChildren": null,
+      "allowedChildren": [
+        "*"
+      ],
       "renderer": "table/EditableTable.js",
       "securityCapabilities": [
         "none"
@@ -2643,9 +3543,7 @@
           "required": true
         },
         "icon": {
-          "type": "object",
-          "$ref": "Icon",
-          "required": true
+          "$ref": "Icon"
         },
         "disabled": {
           "type": "boolean"
@@ -2653,8 +3551,7 @@
       },
       "required": [
         "value",
-        "label",
-        "icon"
+        "label"
       ],
       "reactiveProps": [],
       "allowedChildren": null,
@@ -2701,7 +3598,17 @@
           "type": "object"
         },
         "defaultValue": {
-          "type": "array"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
         }
       },
       "required": [
@@ -2743,7 +3650,14 @@
           "type": "string"
         },
         "topContent": {
-          "type": "object"
+          "anyOf": [
+            {
+              "$ref": "Icon"
+            },
+            {
+              "$ref": "Image"
+            }
+          ]
         },
         "disabled": {
           "type": "boolean"
@@ -2798,7 +3712,17 @@
           "type": "object"
         },
         "defaultValue": {
-          "type": "array"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
         }
       },
       "required": [
@@ -2951,12 +3875,21 @@
       ],
       "properties": {
         "icon": {
-          "type": "object",
           "$ref": "Icon",
           "required": true
         },
         "iconVariant": {
-          "type": "any",
+          "type": "string",
+          "enum": [
+            "neutral",
+            "info",
+            "success",
+            "warning",
+            "danger",
+            "inverted",
+            "filled",
+            "soft"
+          ],
           "default": "neutral"
         },
         "iconSize": {
@@ -3198,11 +4131,25 @@
           "type": "string"
         },
         "lhs": {
-          "type": "object",
+          "anyOf": [
+            {
+              "$ref": "IconText"
+            },
+            {
+              "$ref": "ImageText"
+            }
+          ],
           "required": true
         },
         "rhs": {
-          "type": "object"
+          "anyOf": [
+            {
+              "$ref": "Text"
+            },
+            {
+              "$ref": "BoldText"
+            }
+          ]
         }
       },
       "required": [
@@ -3252,7 +4199,14 @@
           "type": "object"
         },
         "gap": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
         }
       },
       "required": [
@@ -3284,18 +4238,25 @@
           "type": "string"
         },
         "top": {
-          "type": "object",
+          "anyOf": [
+            {
+              "$ref": "IconText"
+            },
+            {
+              "$ref": "ImageText"
+            },
+            {
+              "$ref": "Text"
+            }
+          ],
           "required": true
         },
         "bottom": {
-          "type": "object",
-          "$ref": "MetricIndicatorInline",
-          "required": true
+          "$ref": "MetricIndicatorInline"
         }
       },
       "required": [
-        "top",
-        "bottom"
+        "top"
       ],
       "reactiveProps": [],
       "allowedChildren": null,
@@ -3342,7 +4303,14 @@
           "type": "object"
         },
         "gap": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
         }
       },
       "required": [
@@ -3377,14 +4345,24 @@
           "type": "string"
         },
         "title": {
-          "type": "string",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "Tag"
+            }
+          ],
           "required": true
         },
         "body": {
           "type": "string"
         },
         "bgColor": {
-          "type": "object"
+          "type": "string",
+          "enum": [
+            "gray"
+          ]
         },
         "bgImageSrc": {
           "type": "string"
@@ -3441,7 +4419,14 @@
           "type": "object"
         },
         "gap": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
         }
       },
       "required": [
@@ -3474,10 +4459,63 @@
           "type": "string"
         },
         "header": {
-          "type": "object"
+          "anyOf": [
+            {
+              "$ref": "IconText"
+            },
+            {
+              "$ref": "ImageText"
+            },
+            {
+              "$ref": "ImageTextLarge"
+            },
+            {
+              "$ref": "Text"
+            },
+            {
+              "$ref": "Image"
+            }
+          ]
         },
         "body": {
           "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "Text"
+              },
+              {
+                "$ref": "BoldText"
+              },
+              {
+                "$ref": "MetricIndicatorInline"
+              },
+              {
+                "$ref": "IconText"
+              },
+              {
+                "$ref": "Image"
+              },
+              {
+                "$ref": "AreaChart"
+              },
+              {
+                "$ref": "BarChart"
+              },
+              {
+                "$ref": "LineChart"
+              },
+              {
+                "$ref": "ListBlock"
+              },
+              {
+                "$ref": "TagBlock"
+              },
+              {
+                "$ref": "EntityList"
+              }
+            ]
+          },
           "default": []
         },
         "footer": {
@@ -3530,7 +4568,14 @@
           "type": "object"
         },
         "gap": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
         }
       },
       "required": [
@@ -3561,7 +4606,6 @@
       ],
       "properties": {
         "body": {
-          "type": "object",
           "$ref": "BoldText",
           "required": true
         },
@@ -3572,17 +4616,14 @@
           "type": "string"
         },
         "tag": {
-          "type": "object",
-          "$ref": "Tag",
-          "required": true
+          "$ref": "Tag"
         },
         "bgImageAlt": {
           "type": "string"
         }
       },
       "required": [
-        "body",
-        "tag"
+        "body"
       ],
       "reactiveProps": [],
       "allowedChildren": null,
@@ -3629,7 +4670,14 @@
           "type": "object"
         },
         "gap": {
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
         }
       },
       "required": [
