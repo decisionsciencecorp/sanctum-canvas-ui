@@ -61,7 +61,7 @@ npm run test:browser
 
 ## Manifest consistency
 
-Slim `resources/libraries/{chat,dashboard}/library.v1.json` still expose only the bootstrap component set (6 / 5 names). Full register* surface (~94 including A5) is listed as **gaps** in `A6-manifest-audit.txt` — intentional until a dedicated library expansion; **no orphans**.
+Slim `resources/libraries/{chat,dashboard}/library.v1.json` still expose only the bootstrap component set (6 / 5 names). Full register* surface (~94 including A5) is listed as **gaps** in `A6-manifest-audit.txt` — this sentence recorded an execution deferral. **That deferral is closed.** The catalogs are now the full OpenUI libraries (dashboard 82, chat 84).
 
 ## Stop line
 

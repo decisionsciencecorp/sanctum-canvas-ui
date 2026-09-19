@@ -26,6 +26,7 @@ import { CodeBlock } from "./CodeBlock.js";
 import { Image } from "./Image.js";
 import { ImageBlock } from "./ImageBlock.js";
 import { Icon } from "./Icon.js";
+import { MarkDownRenderer } from "./MarkDownRenderer.js";
 
 /** @type {Record<string, import("../../renderer/registry.js").ComponentEntry>} */
 export const CONTENT_COMPONENTS = {
@@ -48,6 +49,7 @@ export const CONTENT_COMPONENTS = {
   CodeBlock,
   Image,
   ImageBlock,
+  MarkDownRenderer,
 };
 
 /**

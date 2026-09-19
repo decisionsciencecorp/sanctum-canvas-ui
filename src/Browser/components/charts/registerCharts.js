@@ -11,6 +11,7 @@ import { SingleStackedBarChart } from "./SingleStackedBarChart.js";
 import { RadarChart } from "./RadarChart.js";
 import { RadialChart } from "./RadialChart.js";
 import { ScatterChart } from "./ScatterChart.js";
+import { Series, Slice, ScatterSeries, Point } from "./dataLeaf.js";
 
 /** @type {Record<string, import("../../renderer/registry.js").ComponentEntry>} */
 export const CHART_COMPONENTS = {
@@ -23,6 +24,10 @@ export const CHART_COMPONENTS = {
   RadarChart,
   RadialChart,
   ScatterChart,
+  Series,
+  Slice,
+  ScatterSeries,
+  Point,
 };
 
 /**

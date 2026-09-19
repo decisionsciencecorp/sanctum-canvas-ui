@@ -1,104 +1,3696 @@
 {
   "contractFormatVersion": "1.0.0",
-  "id": "sanctum-openui-examples",
+  "id": "sanctum-openui-dashboard",
   "variant": "dashboard",
   "root": "Stack",
   "upstreamCommit": "ee54f66",
   "componentGroups": [
-    { "name": "Foundation", "components": ["TextContent"] },
-    { "name": "Layout", "components": ["Stack"] },
-    { "name": "Forms", "components": ["Input"] },
-    { "name": "Charts", "components": ["BarChart"] },
-    { "name": "Actions", "components": ["Button"] }
+    {
+      "name": "Layout",
+      "components": [
+        "Stack",
+        "Tabs",
+        "TabItem",
+        "Accordion",
+        "AccordionItem",
+        "Steps",
+        "StepsItem",
+        "Carousel",
+        "Separator",
+        "Modal"
+      ]
+    },
+    {
+      "name": "Content",
+      "components": [
+        "Card",
+        "CardHeader",
+        "TextContent",
+        "MarkDownRenderer",
+        "Callout",
+        "TextCallout",
+        "Image",
+        "ImageBlock",
+        "ImageGallery",
+        "CodeBlock",
+        "InlineHeader"
+      ]
+    },
+    {
+      "name": "Tables",
+      "components": [
+        "Table",
+        "Col",
+        "EditableTable"
+      ]
+    },
+    {
+      "name": "Charts (2D)",
+      "components": [
+        "BarChart",
+        "LineChart",
+        "AreaChart",
+        "RadarChart",
+        "HorizontalBarChart",
+        "Series"
+      ]
+    },
+    {
+      "name": "Charts (1D)",
+      "components": [
+        "PieChart",
+        "RadialChart",
+        "SingleStackedBarChart",
+        "Slice"
+      ]
+    },
+    {
+      "name": "Charts (Scatter)",
+      "components": [
+        "ScatterChart",
+        "ScatterSeries",
+        "Point"
+      ]
+    },
+    {
+      "name": "Forms",
+      "components": [
+        "Form",
+        "FormControl",
+        "Label",
+        "Input",
+        "TextArea",
+        "Select",
+        "SelectItem",
+        "DatePicker",
+        "Slider",
+        "CheckBoxGroup",
+        "CheckBoxItem",
+        "RadioGroup",
+        "RadioItem",
+        "SwitchGroup",
+        "SwitchItem",
+        "Chips",
+        "ChipItem",
+        "OptionCards",
+        "OptionCard"
+      ]
+    },
+    {
+      "name": "Buttons",
+      "components": [
+        "Button",
+        "Buttons",
+        "IconButton"
+      ]
+    },
+    {
+      "name": "Data Display",
+      "components": [
+        "TagBlock",
+        "Tag",
+        "Icon",
+        "EntityList",
+        "ListBlock",
+        "ListItem"
+      ]
+    },
+    {
+      "name": "Cards",
+      "components": [
+        "SnippetCardBlock",
+        "SnippetCardItem",
+        "OverviewCardBlock",
+        "OverviewCardItem",
+        "ContextCardBlock",
+        "ContextCardItem",
+        "CompositeCardBlock",
+        "CompositeCardItem",
+        "VisualCardBlock",
+        "VisualCardItem",
+        "Text",
+        "BoldText",
+        "IconText",
+        "ImageText",
+        "ImageTextLarge",
+        "MetricIndicatorInline",
+        "MetricIndicatorWithStrikethrough"
+      ]
+    }
   ],
   "components": {
+    "Card": {
+      "name": "Card",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "children",
+        "variant",
+        "direction",
+        "gap",
+        "align",
+        "justify",
+        "wrap"
+      ],
+      "properties": {
+        "children": {
+          "type": "array",
+          "required": true
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "card",
+            "sunk",
+            "clear"
+          ]
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "row",
+            "column"
+          ]
+        },
+        "gap": {
+          "type": "string",
+          "enum": [
+            "none",
+            "xs",
+            "s",
+            "m",
+            "l",
+            "xl",
+            "2xl"
+          ]
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end",
+            "stretch",
+            "baseline"
+          ]
+        },
+        "justify": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end",
+            "between",
+            "around",
+            "evenly"
+          ]
+        },
+        "wrap": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "children"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "*"
+      ],
+      "renderer": "layout/Card.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Styled container. variant: \"card\" (default, elevated) | \"sunk\" (recessed) | \"clear\" (transparent). Always full width. Accepts all Stack flex params (default: direction \"column\"). Cards flex to share space in row/wrap layouts.",
+        "group": "Content"
+      }
+    },
+    "CardHeader": {
+      "name": "CardHeader",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "title",
+        "subtitle"
+      ],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "subtitle": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "content/CardHeader.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Header with optional title and subtitle",
+        "group": "Content"
+      }
+    },
     "TextContent": {
       "name": "TextContent",
       "version": "0.5.0",
-      "propertyOrder": ["text", "size", "weight"],
+      "propertyOrder": [
+        "text",
+        "size"
+      ],
       "properties": {
-        "text": { "type": "string", "required": true },
-        "size": { "type": "string", "enum": ["sm", "md", "lg"], "default": "md" },
-        "weight": { "type": "string", "enum": ["normal", "medium", "bold"], "default": "normal" }
+        "text": {
+          "type": "string",
+          "required": true
+        },
+        "size": {
+          "type": "string",
+          "enum": [
+            "small",
+            "default",
+            "large",
+            "small-heavy",
+            "large-heavy"
+          ]
+        }
       },
-      "required": ["text"],
+      "required": [
+        "text"
+      ],
       "reactiveProps": [],
       "allowedChildren": null,
-      "renderer": "components/TextContent.js",
-      "securityCapabilities": ["none"],
-      "prompt": { "description": "Plain text content block.", "group": "Foundation" }
+      "renderer": "content/TextContent.js",
+      "securityCapabilities": [
+        "markdown"
+      ],
+      "prompt": {
+        "description": "Text block. Supports markdown. Optional size: \"small\" | \"default\" | \"large\" | \"small-heavy\" | \"large-heavy\".",
+        "group": "Content"
+      }
     },
-    "Stack": {
-      "name": "Stack",
+    "MarkDownRenderer": {
+      "name": "MarkDownRenderer",
       "version": "0.5.0",
-      "propertyOrder": ["children", "direction", "gap", "align", "justify", "wrap"],
+      "propertyOrder": [
+        "textMarkdown",
+        "variant"
+      ],
       "properties": {
-        "children": { "type": "array", "required": true },
-        "direction": { "type": "string", "enum": ["row", "column"], "default": "column" },
-        "gap": { "type": "string", "default": "md" },
-        "align": { "type": "string", "default": "stretch" },
-        "justify": { "type": "string", "default": "start" },
-        "wrap": { "type": "boolean", "default": false }
+        "textMarkdown": {
+          "type": "string",
+          "required": true
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "clear",
+            "card",
+            "sunk"
+          ]
+        }
       },
-      "required": ["children"],
+      "required": [
+        "textMarkdown"
+      ],
       "reactiveProps": [],
-      "allowedChildren": ["*registered*"],
-      "renderer": "components/Stack.js",
-      "securityCapabilities": ["none"],
-      "prompt": { "description": "Dashboard root layout stack.", "group": "Layout" }
-    },
-    "Input": {
-      "name": "Input",
-      "version": "0.5.0",
-      "propertyOrder": ["name", "placeholder", "type", "rules", "value"],
-      "properties": {
-        "name": { "type": "string", "required": true },
-        "placeholder": { "type": "string" },
-        "type": { "type": "string", "enum": ["text", "email", "password", "number", "url"] },
-        "rules": { "type": "object" },
-        "value": { "type": "string" }
-      },
-      "required": ["name"],
-      "reactiveProps": ["value"],
       "allowedChildren": null,
-      "renderer": "components/Input.js",
-      "securityCapabilities": ["none"],
-      "prompt": { "description": "Single-line input; value is reactive.", "group": "Forms" }
+      "renderer": "content/MarkDownRenderer.js",
+      "securityCapabilities": [
+        "markdown"
+      ],
+      "prompt": {
+        "description": "Renders markdown text with optional container variant",
+        "group": "Content"
+      }
+    },
+    "Callout": {
+      "name": "Callout",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "variant",
+        "title",
+        "description",
+        "visible"
+      ],
+      "properties": {
+        "variant": {
+          "type": "string",
+          "enum": [
+            "info",
+            "warning",
+            "error",
+            "success",
+            "neutral"
+          ],
+          "required": true
+        },
+        "title": {
+          "type": "string",
+          "required": true
+        },
+        "description": {
+          "type": "string",
+          "required": true
+        },
+        "visible": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "variant",
+        "title",
+        "description"
+      ],
+      "reactiveProps": [
+        "visible"
+      ],
+      "allowedChildren": null,
+      "renderer": "content/Callout.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Callout banner. Optional visible is a reactive $boolean — auto-dismisses after 3s by setting $visible to false.",
+        "group": "Content"
+      }
+    },
+    "TextCallout": {
+      "name": "TextCallout",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "variant",
+        "title",
+        "description"
+      ],
+      "properties": {
+        "variant": {
+          "type": "string",
+          "enum": [
+            "neutral",
+            "info",
+            "warning",
+            "success",
+            "danger"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "content/TextCallout.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Text callout with variant, title, and description",
+        "group": "Content"
+      }
+    },
+    "Image": {
+      "name": "Image",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "alt",
+        "src"
+      ],
+      "properties": {
+        "alt": {
+          "type": "string",
+          "required": true
+        },
+        "src": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "alt"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "content/Image.js",
+      "securityCapabilities": [
+        "images",
+        "links"
+      ],
+      "prompt": {
+        "description": "Image with alt text and optional URL",
+        "group": "Content"
+      }
+    },
+    "ImageBlock": {
+      "name": "ImageBlock",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "src",
+        "alt"
+      ],
+      "properties": {
+        "src": {
+          "type": "string",
+          "required": true
+        },
+        "alt": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "src"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "content/ImageBlock.js",
+      "securityCapabilities": [
+        "images",
+        "links"
+      ],
+      "prompt": {
+        "description": "Image block with loading state",
+        "group": "Content"
+      }
+    },
+    "ImageGallery": {
+      "name": "ImageGallery",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "images"
+      ],
+      "properties": {
+        "images": {
+          "type": "array",
+          "required": true
+        }
+      },
+      "required": [
+        "images"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "cards/ImageGallery.js",
+      "securityCapabilities": [
+        "images"
+      ],
+      "prompt": {
+        "description": "Gallery grid of images with modal preview",
+        "group": "Content"
+      }
+    },
+    "CodeBlock": {
+      "name": "CodeBlock",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "language",
+        "codeString"
+      ],
+      "properties": {
+        "language": {
+          "type": "string",
+          "required": true
+        },
+        "codeString": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "required": [
+        "language",
+        "codeString"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "content/CodeBlock.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Syntax-highlighted code block",
+        "group": "Content"
+      }
+    },
+    "InlineHeader": {
+      "name": "InlineHeader",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "heading",
+        "description"
+      ],
+      "properties": {
+        "heading": {
+          "type": "string",
+          "required": true
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "heading"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "content/InlineHeader.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Compact section heading with an optional one-line description, for use inside cards.",
+        "group": "Content"
+      }
+    },
+    "Table": {
+      "name": "Table",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "columns"
+      ],
+      "properties": {
+        "columns": {
+          "type": "array",
+          "items": {
+            "$ref": "Col"
+          },
+          "required": true
+        }
+      },
+      "required": [
+        "columns"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "Col"
+      ],
+      "renderer": "table/Table.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Data table — column-oriented. Each Col holds its own data array.",
+        "group": "Tables"
+      }
+    },
+    "Col": {
+      "name": "Col",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "label",
+        "data",
+        "type"
+      ],
+      "properties": {
+        "label": {
+          "type": "string",
+          "required": true
+        },
+        "data": {
+          "type": "any",
+          "required": true
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "string",
+            "number",
+            "action"
+          ]
+        }
+      },
+      "required": [
+        "label",
+        "data"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "table/Col.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Column definition — holds label + data array",
+        "group": "Tables"
+      }
+    },
+    "EditableTable": {
+      "name": "EditableTable",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "name",
+        "columns",
+        "data"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "default": ""
+        },
+        "columns": {
+          "type": "string",
+          "enum": [
+            "text",
+            "number",
+            "date-single",
+            "select",
+            "url"
+          ]
+        },
+        "data": {
+          "type": "array",
+          "default": []
+        }
+      },
+      "required": [],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "table/EditableTable.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Spreadsheet-like table whose cells the user can edit inline (text, number, url, date, select columns); edits are saved back as a form field",
+        "group": "Tables"
+      }
     },
     "BarChart": {
       "name": "BarChart",
       "version": "0.5.0",
-      "propertyOrder": ["labels", "series", "variant", "xLabel", "yLabel", "height"],
+      "propertyOrder": [
+        "labels",
+        "series",
+        "variant",
+        "xLabel",
+        "yLabel",
+        "height"
+      ],
       "properties": {
-        "labels": { "type": "array", "required": true },
-        "series": { "type": "array", "required": true },
-        "variant": { "type": "string" },
-        "xLabel": { "type": "string" },
-        "yLabel": { "type": "string" },
-        "height": { "type": "number" }
+        "labels": {
+          "type": "array",
+          "required": true
+        },
+        "series": {
+          "type": "array",
+          "required": true
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "grouped",
+            "stacked"
+          ]
+        },
+        "xLabel": {
+          "type": "string"
+        },
+        "yLabel": {
+          "type": "string"
+        },
+        "height": {
+          "type": "number"
+        }
       },
-      "required": ["labels", "series"],
+      "required": [
+        "labels",
+        "series"
+      ],
       "reactiveProps": [],
       "allowedChildren": null,
-      "renderer": "components/BarChart.js",
-      "securityCapabilities": ["none"],
-      "prompt": { "description": "Vertical bar chart.", "group": "Charts" }
+      "renderer": "charts/BarChart.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Vertical bars; use for comparing values across categories with one or more series",
+        "group": "Charts (2D)"
+      }
+    },
+    "LineChart": {
+      "name": "LineChart",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "labels",
+        "series",
+        "variant",
+        "xLabel",
+        "yLabel",
+        "height"
+      ],
+      "properties": {
+        "labels": {
+          "type": "array",
+          "required": true
+        },
+        "series": {
+          "type": "array",
+          "required": true
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "linear",
+            "natural",
+            "step"
+          ]
+        },
+        "xLabel": {
+          "type": "string"
+        },
+        "yLabel": {
+          "type": "string"
+        },
+        "height": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "labels",
+        "series"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "charts/LineChart.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Lines over categories; use for trends and continuous data over time",
+        "group": "Charts (2D)"
+      }
+    },
+    "AreaChart": {
+      "name": "AreaChart",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "labels",
+        "series",
+        "variant",
+        "xLabel",
+        "yLabel",
+        "height"
+      ],
+      "properties": {
+        "labels": {
+          "type": "array",
+          "required": true
+        },
+        "series": {
+          "type": "array",
+          "required": true
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "linear",
+            "natural",
+            "step"
+          ]
+        },
+        "xLabel": {
+          "type": "string"
+        },
+        "yLabel": {
+          "type": "string"
+        },
+        "height": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "labels",
+        "series"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "charts/AreaChart.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Filled area under lines; use for cumulative totals or volume trends over time",
+        "group": "Charts (2D)"
+      }
+    },
+    "RadarChart": {
+      "name": "RadarChart",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "labels",
+        "series"
+      ],
+      "properties": {
+        "labels": {
+          "type": "array",
+          "required": true
+        },
+        "series": {
+          "type": "array",
+          "required": true
+        }
+      },
+      "required": [
+        "labels",
+        "series"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "charts/RadarChart.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Spider/web chart; use for comparing multiple variables across one or more entities",
+        "group": "Charts (2D)"
+      }
+    },
+    "HorizontalBarChart": {
+      "name": "HorizontalBarChart",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "labels",
+        "series",
+        "variant",
+        "xLabel",
+        "yLabel"
+      ],
+      "properties": {
+        "labels": {
+          "type": "array",
+          "required": true
+        },
+        "series": {
+          "type": "array",
+          "required": true
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "grouped",
+            "stacked"
+          ]
+        },
+        "xLabel": {
+          "type": "string"
+        },
+        "yLabel": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "labels",
+        "series"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "charts/HorizontalBarChart.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Horizontal bars; prefer when category labels are long or for ranked lists",
+        "group": "Charts (2D)"
+      }
+    },
+    "Series": {
+      "name": "Series",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "category",
+        "values"
+      ],
+      "properties": {
+        "category": {
+          "type": "string",
+          "required": true
+        },
+        "values": {
+          "type": "array",
+          "required": true
+        }
+      },
+      "required": [
+        "category",
+        "values"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "charts/dataLeaf.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "One data series",
+        "group": "Charts (2D)"
+      }
+    },
+    "PieChart": {
+      "name": "PieChart",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "labels",
+        "values",
+        "variant",
+        "appearance"
+      ],
+      "properties": {
+        "labels": {
+          "type": "array",
+          "required": true
+        },
+        "values": {
+          "type": "array",
+          "required": true
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "pie",
+            "donut"
+          ]
+        },
+        "appearance": {
+          "type": "string",
+          "enum": [
+            "circular",
+            "semiCircular"
+          ]
+        }
+      },
+      "required": [
+        "labels",
+        "values"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "charts/PieChart.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Circular slices; use plucked arrays: PieChart(data.categories, data.values)",
+        "group": "Charts (1D)"
+      }
+    },
+    "RadialChart": {
+      "name": "RadialChart",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "labels",
+        "values"
+      ],
+      "properties": {
+        "labels": {
+          "type": "array",
+          "required": true
+        },
+        "values": {
+          "type": "array",
+          "required": true
+        }
+      },
+      "required": [
+        "labels",
+        "values"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "charts/RadialChart.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Radial bars; use plucked arrays: RadialChart(data.categories, data.values)",
+        "group": "Charts (1D)"
+      }
+    },
+    "SingleStackedBarChart": {
+      "name": "SingleStackedBarChart",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "labels",
+        "values"
+      ],
+      "properties": {
+        "labels": {
+          "type": "array",
+          "required": true
+        },
+        "values": {
+          "type": "array",
+          "required": true
+        }
+      },
+      "required": [
+        "labels",
+        "values"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "charts/SingleStackedBarChart.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Single horizontal stacked bar; use plucked arrays: SingleStackedBarChart(data.categories, data.values)",
+        "group": "Charts (1D)"
+      }
+    },
+    "Slice": {
+      "name": "Slice",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "category",
+        "value"
+      ],
+      "properties": {
+        "category": {
+          "type": "string",
+          "required": true
+        },
+        "value": {
+          "type": "number",
+          "required": true
+        }
+      },
+      "required": [
+        "category",
+        "value"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "charts/dataLeaf.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "One slice with label and numeric value",
+        "group": "Charts (1D)"
+      }
+    },
+    "ScatterChart": {
+      "name": "ScatterChart",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "datasets",
+        "xLabel",
+        "yLabel"
+      ],
+      "properties": {
+        "datasets": {
+          "type": "array",
+          "required": true
+        },
+        "xLabel": {
+          "type": "string"
+        },
+        "yLabel": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "datasets"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "charts/ScatterChart.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "X/Y scatter plot; use for correlations, distributions, and clustering",
+        "group": "Charts (Scatter)"
+      }
+    },
+    "ScatterSeries": {
+      "name": "ScatterSeries",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "name",
+        "points"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "points": {
+          "type": "array",
+          "required": true
+        }
+      },
+      "required": [
+        "name",
+        "points"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "charts/dataLeaf.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Named dataset",
+        "group": "Charts (Scatter)"
+      }
+    },
+    "Point": {
+      "name": "Point",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "required": true
+        },
+        "y": {
+          "type": "number",
+          "required": true
+        },
+        "z": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "charts/dataLeaf.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Data point with numeric coordinates",
+        "group": "Charts (Scatter)"
+      }
+    },
+    "Form": {
+      "name": "Form",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "name",
+        "buttons",
+        "fields"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "buttons": {
+          "type": "object",
+          "$ref": "Buttons",
+          "required": true
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "FormControl"
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "name",
+        "buttons"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "FormControl"
+      ],
+      "renderer": "forms/Form.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Form container with fields and explicit action buttons",
+        "group": "Forms"
+      }
+    },
+    "FormControl": {
+      "name": "FormControl",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "label",
+        "input",
+        "hint"
+      ],
+      "properties": {
+        "label": {
+          "type": "string",
+          "required": true
+        },
+        "input": {
+          "type": "object",
+          "required": true
+        },
+        "hint": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "input"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "forms/FormControl.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Field with label, input component, and optional hint text",
+        "group": "Forms"
+      }
+    },
+    "Label": {
+      "name": "Label",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "forms/Label.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Text label",
+        "group": "Forms"
+      }
+    },
+    "Input": {
+      "name": "Input",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "name",
+        "placeholder",
+        "type",
+        "rules",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "text",
+            "email",
+            "password",
+            "number",
+            "url"
+          ]
+        },
+        "rules": {
+          "type": "object"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "allowedChildren": null,
+      "renderer": "forms/Input.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Input",
+        "group": "Forms"
+      }
+    },
+    "TextArea": {
+      "name": "TextArea",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "name",
+        "placeholder",
+        "rows",
+        "rules",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "rows": {
+          "type": "number"
+        },
+        "rules": {
+          "type": "object"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "allowedChildren": null,
+      "renderer": "forms/TextArea.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "TextArea",
+        "group": "Forms"
+      }
+    },
+    "Select": {
+      "name": "Select",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "name",
+        "items",
+        "placeholder",
+        "rules",
+        "value",
+        "size"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "SelectItem"
+          },
+          "required": true
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "rules": {
+          "type": "object"
+        },
+        "value": {
+          "type": "string"
+        },
+        "size": {
+          "type": "string",
+          "enum": [
+            "small",
+            "medium",
+            "large"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "items"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "allowedChildren": [
+        "SelectItem"
+      ],
+      "renderer": "forms/Select.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Select",
+        "group": "Forms"
+      }
+    },
+    "SelectItem": {
+      "name": "SelectItem",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "value",
+        "label"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "required": true
+        },
+        "label": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "required": [
+        "value",
+        "label"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "forms/Select.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Option for Select",
+        "group": "Forms"
+      }
+    },
+    "DatePicker": {
+      "name": "DatePicker",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "name",
+        "mode",
+        "rules",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "single",
+            "range"
+          ]
+        },
+        "rules": {
+          "type": "object"
+        },
+        "value": {
+          "type": "any"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "allowedChildren": null,
+      "renderer": "forms/DatePicker.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "DatePicker",
+        "group": "Forms"
+      }
+    },
+    "Slider": {
+      "name": "Slider",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "name",
+        "variant",
+        "min",
+        "max",
+        "step",
+        "defaultValue",
+        "label",
+        "rules",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "continuous",
+            "discrete"
+          ],
+          "required": true
+        },
+        "min": {
+          "type": "number",
+          "required": true
+        },
+        "max": {
+          "type": "number",
+          "required": true
+        },
+        "step": {
+          "type": "number"
+        },
+        "defaultValue": {
+          "type": "array"
+        },
+        "label": {
+          "type": "string"
+        },
+        "rules": {
+          "type": "object"
+        },
+        "value": {
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "variant",
+        "min",
+        "max"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "allowedChildren": null,
+      "renderer": "forms/Slider.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Numeric slider input; supports continuous and discrete (stepped) variants",
+        "group": "Forms"
+      }
+    },
+    "CheckBoxGroup": {
+      "name": "CheckBoxGroup",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "name",
+        "items",
+        "rules",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "CheckBoxItem"
+          },
+          "required": true
+        },
+        "rules": {
+          "type": "object"
+        },
+        "value": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "items"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "allowedChildren": [
+        "CheckBoxItem"
+      ],
+      "renderer": "forms/CheckBoxGroup.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "CheckBoxGroup",
+        "group": "Forms"
+      }
+    },
+    "CheckBoxItem": {
+      "name": "CheckBoxItem",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "label",
+        "description",
+        "name",
+        "defaultChecked"
+      ],
+      "properties": {
+        "label": {
+          "type": "string",
+          "required": true
+        },
+        "description": {
+          "type": "string",
+          "required": true
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "defaultChecked": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "label",
+        "description",
+        "name"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "forms/CheckBoxGroup.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "CheckBoxItem",
+        "group": "Forms"
+      }
+    },
+    "RadioGroup": {
+      "name": "RadioGroup",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "name",
+        "items",
+        "defaultValue",
+        "rules",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "RadioItem"
+          },
+          "required": true
+        },
+        "defaultValue": {
+          "type": "string"
+        },
+        "rules": {
+          "type": "object"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "items"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "allowedChildren": [
+        "RadioItem"
+      ],
+      "renderer": "forms/RadioGroup.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "RadioGroup",
+        "group": "Forms"
+      }
+    },
+    "RadioItem": {
+      "name": "RadioItem",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "label",
+        "description",
+        "value"
+      ],
+      "properties": {
+        "label": {
+          "type": "string",
+          "required": true
+        },
+        "description": {
+          "type": "string",
+          "required": true
+        },
+        "value": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "required": [
+        "label",
+        "description",
+        "value"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "forms/RadioGroup.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "RadioItem",
+        "group": "Forms"
+      }
+    },
+    "SwitchGroup": {
+      "name": "SwitchGroup",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "name",
+        "items",
+        "variant",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "SwitchItem"
+          },
+          "required": true
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "clear",
+            "card",
+            "sunk"
+          ]
+        },
+        "value": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "items"
+      ],
+      "reactiveProps": [
+        "value"
+      ],
+      "allowedChildren": [
+        "SwitchItem"
+      ],
+      "renderer": "forms/SwitchGroup.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Group of switch toggles",
+        "group": "Forms"
+      }
+    },
+    "SwitchItem": {
+      "name": "SwitchItem",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "label",
+        "description",
+        "name",
+        "defaultChecked"
+      ],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "defaultChecked": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "forms/SwitchGroup.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Individual switch toggle",
+        "group": "Forms"
+      }
+    },
+    "ChipItem": {
+      "name": "ChipItem",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "value",
+        "label",
+        "icon",
+        "disabled"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "required": true
+        },
+        "label": {
+          "type": "string",
+          "required": true
+        },
+        "icon": {
+          "type": "object",
+          "$ref": "Icon",
+          "required": true
+        },
+        "disabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "value",
+        "label",
+        "icon"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "forms/Chips.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "A single selectable chip inside a Chips group, with a value, label and optional icon.",
+        "group": "Forms"
+      }
+    },
+    "Chips": {
+      "name": "Chips",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "name",
+        "type",
+        "items",
+        "rules",
+        "defaultValue"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "single",
+            "multiple"
+          ],
+          "default": "multiple"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "ChipItem"
+          },
+          "default": []
+        },
+        "rules": {
+          "type": "object"
+        },
+        "defaultValue": {
+          "type": "array"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "ChipItem"
+      ],
+      "renderer": "forms/Chips.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "A form field of compact selectable chips for choosing one or many short options; the selection is stored under `name`.",
+        "group": "Forms"
+      }
+    },
+    "OptionCard": {
+      "name": "OptionCard",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "value",
+        "title",
+        "subtitle",
+        "topContent",
+        "disabled"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "required": true
+        },
+        "title": {
+          "type": "string",
+          "required": true
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "topContent": {
+          "type": "object"
+        },
+        "disabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "value",
+        "title"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "forms/OptionCards.js",
+      "securityCapabilities": [
+        "actions"
+      ],
+      "prompt": {
+        "description": "A single selectable card inside an OptionCards group, with a value, title, optional subtitle and an optional Icon or Image on top.",
+        "group": "Forms"
+      }
+    },
+    "OptionCards": {
+      "name": "OptionCards",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "name",
+        "type",
+        "items",
+        "rules",
+        "defaultValue"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "single",
+            "multiple"
+          ],
+          "default": "single"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "OptionCard"
+          },
+          "default": []
+        },
+        "rules": {
+          "type": "object"
+        },
+        "defaultValue": {
+          "type": "array"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "OptionCard"
+      ],
+      "renderer": "forms/OptionCards.js",
+      "securityCapabilities": [
+        "actions"
+      ],
+      "prompt": {
+        "description": "A form field of selectable cards (title, optional subtitle, optional icon or image) laid out in a responsive grid for choosing one or many options; the selection is stored under `name`.",
+        "group": "Forms"
+      }
     },
     "Button": {
       "name": "Button",
       "version": "0.5.0",
-      "propertyOrder": ["label", "variant", "action"],
+      "propertyOrder": [
+        "label",
+        "action",
+        "variant",
+        "type",
+        "size"
+      ],
       "properties": {
-        "label": { "type": "string", "required": true },
-        "variant": { "type": "string", "enum": ["primary", "secondary", "danger"], "default": "primary" },
-        "action": { "type": "object" }
+        "label": {
+          "type": "string",
+          "required": true
+        },
+        "action": {
+          "type": "object"
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "primary",
+            "secondary",
+            "tertiary"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "destructive"
+          ]
+        },
+        "size": {
+          "type": "string",
+          "enum": [
+            "extra-small",
+            "small",
+            "medium",
+            "large"
+          ]
+        }
       },
-      "required": ["label"],
+      "required": [
+        "label"
+      ],
       "reactiveProps": [],
       "allowedChildren": null,
-      "renderer": "components/Button.js",
-      "securityCapabilities": ["actions", "links"],
-      "prompt": { "description": "Action-bearing button.", "group": "Actions" }
+      "renderer": "actions/Button.js",
+      "securityCapabilities": [
+        "actions"
+      ],
+      "prompt": {
+        "description": "Clickable button",
+        "group": "Buttons"
+      }
+    },
+    "Buttons": {
+      "name": "Buttons",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "buttons",
+        "direction"
+      ],
+      "properties": {
+        "buttons": {
+          "type": "array",
+          "items": {
+            "$ref": "Button"
+          },
+          "required": true
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "row",
+            "column"
+          ]
+        }
+      },
+      "required": [
+        "buttons"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "actions/Buttons.js",
+      "securityCapabilities": [
+        "actions"
+      ],
+      "prompt": {
+        "description": "Group of Button components. direction: \"row\" (default) | \"column\".",
+        "group": "Buttons"
+      }
+    },
+    "IconButton": {
+      "name": "IconButton",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "name",
+        "icon",
+        "action",
+        "variant",
+        "size",
+        "shape"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "required": true
+        },
+        "icon": {
+          "type": "object",
+          "$ref": "Icon",
+          "required": true
+        },
+        "action": {
+          "type": "object"
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "primary",
+            "secondary",
+            "tertiary"
+          ]
+        },
+        "size": {
+          "type": "string",
+          "enum": [
+            "extra-small",
+            "small",
+            "medium",
+            "large"
+          ]
+        },
+        "shape": {
+          "type": "string",
+          "enum": [
+            "square",
+            "circle"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "icon"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "actions/IconButton.js",
+      "securityCapabilities": [
+        "images",
+        "actions"
+      ],
+      "prompt": {
+        "description": "Icon-only button. name is the accessible label and the action label; icon is an Icon; action fires on click.",
+        "group": "Buttons"
+      }
+    },
+    "Stack": {
+      "name": "Stack",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "children",
+        "direction",
+        "gap",
+        "align",
+        "justify",
+        "wrap"
+      ],
+      "properties": {
+        "children": {
+          "type": "array",
+          "required": true
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "row",
+            "column"
+          ]
+        },
+        "gap": {
+          "type": "string",
+          "enum": [
+            "none",
+            "xs",
+            "s",
+            "m",
+            "l",
+            "xl",
+            "2xl"
+          ]
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end",
+            "stretch",
+            "baseline"
+          ]
+        },
+        "justify": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end",
+            "between",
+            "around",
+            "evenly"
+          ]
+        },
+        "wrap": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "children"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "*"
+      ],
+      "renderer": "layout/Stack.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Flex container. direction: \"row\"|\"column\" (default \"column\"). gap: \"none\"|\"xs\"|\"s\"|\"m\"|\"l\"|\"xl\"|\"2xl\" (default \"m\"). align: \"start\"|\"center\"|\"end\"|\"stretch\"|\"baseline\". justify: \"start\"|\"center\"|\"end\"|\"between\"|\"around\"|\"evenly\".",
+        "group": "Layout"
+      }
+    },
+    "Tabs": {
+      "name": "Tabs",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "items"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "TabItem"
+          },
+          "required": true
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "TabItem"
+      ],
+      "renderer": "containers/Tabs.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Tabbed container",
+        "group": "Layout"
+      }
+    },
+    "TabItem": {
+      "name": "TabItem",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "value",
+        "trigger",
+        "content"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "required": true
+        },
+        "trigger": {
+          "type": "string",
+          "required": true
+        },
+        "content": {
+          "type": "array",
+          "required": true
+        }
+      },
+      "required": [
+        "value",
+        "trigger",
+        "content"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "*"
+      ],
+      "renderer": "containers/Tabs.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "value is unique id, trigger is tab label, content is array of components",
+        "group": "Layout"
+      }
+    },
+    "Accordion": {
+      "name": "Accordion",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "items"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "AccordionItem"
+          },
+          "required": true
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "AccordionItem"
+      ],
+      "renderer": "containers/Accordion.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Collapsible sections",
+        "group": "Layout"
+      }
+    },
+    "AccordionItem": {
+      "name": "AccordionItem",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "value",
+        "trigger",
+        "content"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "required": true
+        },
+        "trigger": {
+          "type": "string",
+          "required": true
+        },
+        "content": {
+          "type": "array",
+          "required": true
+        }
+      },
+      "required": [
+        "value",
+        "trigger",
+        "content"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "*"
+      ],
+      "renderer": "containers/Accordion.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "value is unique id, trigger is section title",
+        "group": "Layout"
+      }
+    },
+    "Steps": {
+      "name": "Steps",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "items"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "StepsItem"
+          },
+          "required": true
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "StepsItem"
+      ],
+      "renderer": "containers/Steps.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Step-by-step guide",
+        "group": "Layout"
+      }
+    },
+    "StepsItem": {
+      "name": "StepsItem",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "title",
+        "details"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "required": true
+        },
+        "details": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "required": [
+        "title",
+        "details"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "containers/StepsItem.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "title and details text for one step",
+        "group": "Layout"
+      }
+    },
+    "Carousel": {
+      "name": "Carousel",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "children",
+        "variant"
+      ],
+      "properties": {
+        "children": {
+          "type": "array",
+          "required": true
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "card",
+            "sunk"
+          ]
+        }
+      },
+      "required": [
+        "children"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "*"
+      ],
+      "renderer": "containers/Carousel.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Horizontal scrollable carousel",
+        "group": "Layout"
+      }
+    },
+    "Separator": {
+      "name": "Separator",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "orientation",
+        "decorative"
+      ],
+      "properties": {
+        "orientation": {
+          "type": "string",
+          "enum": [
+            "horizontal",
+            "vertical"
+          ]
+        },
+        "decorative": {
+          "type": "boolean"
+        }
+      },
+      "required": [],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "content/Separator.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Visual divider between content sections",
+        "group": "Layout"
+      }
+    },
+    "TagBlock": {
+      "name": "TagBlock",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "tags",
+        "size"
+      ],
+      "properties": {
+        "tags": {
+          "type": "array",
+          "required": true
+        },
+        "size": {
+          "type": "string",
+          "enum": [
+            "sm",
+            "md",
+            "lg"
+          ]
+        }
+      },
+      "required": [
+        "tags"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "content/TagBlock.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "tags is an array of strings; optional size sm | md | lg",
+        "group": "Data Display"
+      }
+    },
+    "Tag": {
+      "name": "Tag",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "text",
+        "icon",
+        "size",
+        "variant"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "required": true
+        },
+        "icon": {
+          "type": "object",
+          "$ref": "Icon",
+          "required": true
+        },
+        "size": {
+          "type": "string",
+          "enum": [
+            "sm",
+            "md",
+            "lg"
+          ]
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "neutral",
+            "info",
+            "success",
+            "warning",
+            "danger"
+          ]
+        }
+      },
+      "required": [
+        "text",
+        "icon"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "content/Tag.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Styled tag/badge with optional Icon and variant",
+        "group": "Data Display"
+      }
+    },
+    "Icon": {
+      "name": "Icon",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "name",
+        "category"
+      ],
+      "properties": {
+        "name": {
+          "type": "any",
+          "required": true
+        },
+        "category": {
+          "type": "any"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "content/Icon.js",
+      "securityCapabilities": [
+        "images"
+      ],
+      "prompt": {
+        "description": "A lucide icon by kebab-case name (e.g. 'circle-check'). Optional category picks a topical fallback when the name doesn't resolve.",
+        "group": "Data Display"
+      }
+    },
+    "EntityList": {
+      "name": "EntityList",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "rows",
+        "size",
+        "header",
+        "footer"
+      ],
+      "properties": {
+        "rows": {
+          "type": "array",
+          "default": []
+        },
+        "size": {
+          "type": "string",
+          "enum": [
+            "small",
+            "default"
+          ],
+          "default": "default"
+        },
+        "header": {
+          "type": "object"
+        },
+        "footer": {
+          "type": "object"
+        }
+      },
+      "required": [],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "content/EntityList.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Two-column key/value rows (left label, right value). size 'default' supports optional header and footer rows; rightVariant 'number' uses tabular numbers.",
+        "group": "Data Display"
+      }
+    },
+    "ListBlock": {
+      "name": "ListBlock",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "items",
+        "variant",
+        "size"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "ListItem"
+          },
+          "required": true
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "number",
+            "image"
+          ]
+        },
+        "size": {
+          "type": "string",
+          "enum": [
+            "default",
+            "small"
+          ]
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "ListItem"
+      ],
+      "renderer": "content/ListBlock.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "A list of items with number or image indicators. Each item can optionally have an action. size small renders a compact list.",
+        "group": "Data Display"
+      }
+    },
+    "ListItem": {
+      "name": "ListItem",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "title",
+        "subtitle",
+        "image",
+        "actionLabel",
+        "action"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "required": true
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "image": {
+          "type": "string"
+        },
+        "actionLabel": {
+          "type": "string"
+        },
+        "action": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "content/ListItem.js",
+      "securityCapabilities": [
+        "actions"
+      ],
+      "prompt": {
+        "description": "Item in a ListBlock — displays a title with an optional subtitle and image. When action is provided, the item becomes clickable.",
+        "group": "Data Display"
+      }
+    },
+    "Text": {
+      "name": "Text",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "variant",
+        "value",
+        "subtext",
+        "subtextVariant",
+        "size"
+      ],
+      "properties": {
+        "variant": {
+          "type": "string",
+          "enum": [
+            "text",
+            "number"
+          ],
+          "default": "text"
+        },
+        "value": {
+          "type": "string",
+          "required": true
+        },
+        "subtext": {
+          "type": "string"
+        },
+        "subtextVariant": {
+          "type": "string",
+          "enum": [
+            "text",
+            "number",
+            "metric"
+          ],
+          "default": "text"
+        },
+        "size": {
+          "type": "string",
+          "enum": [
+            "xs",
+            "sm",
+            "md",
+            "lg"
+          ],
+          "default": "sm"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "cards/Text.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Plain text line with optional subtext. variant 'number' uses tabular number styling; subtextVariant 'metric' colors a leading +/- subtext green/red.",
+        "group": "Cards"
+      }
+    },
+    "BoldText": {
+      "name": "BoldText",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "variant",
+        "value",
+        "subtext",
+        "subtextVariant",
+        "size"
+      ],
+      "properties": {
+        "variant": {
+          "type": "string",
+          "enum": [
+            "text",
+            "number"
+          ],
+          "default": "text"
+        },
+        "value": {
+          "type": "string",
+          "required": true
+        },
+        "subtext": {
+          "type": "string"
+        },
+        "subtextVariant": {
+          "type": "string",
+          "enum": [
+            "text",
+            "number",
+            "metric"
+          ],
+          "default": "text"
+        },
+        "size": {
+          "type": "string",
+          "enum": [
+            "xs",
+            "sm",
+            "md",
+            "lg"
+          ],
+          "default": "sm"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "cards/Text.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Emphasized (bold) text line with optional subtext. variant 'number' uses tabular number styling; subtextVariant 'metric' colors a leading +/- subtext green/red.",
+        "group": "Cards"
+      }
+    },
+    "IconText": {
+      "name": "IconText",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "icon",
+        "iconVariant",
+        "iconSize",
+        "title",
+        "subtitle",
+        "bold",
+        "layout"
+      ],
+      "properties": {
+        "icon": {
+          "type": "object",
+          "$ref": "Icon",
+          "required": true
+        },
+        "iconVariant": {
+          "type": "any",
+          "default": "neutral"
+        },
+        "iconSize": {
+          "type": "string",
+          "enum": [
+            "xs",
+            "s",
+            "m",
+            "l",
+            "xl",
+            "sm",
+            "md",
+            "lg"
+          ],
+          "default": "m"
+        },
+        "title": {
+          "type": "string",
+          "required": true
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "bold": {
+          "type": "boolean",
+          "default": false
+        },
+        "layout": {
+          "type": "string",
+          "enum": [
+            "horizontal",
+            "vertical"
+          ],
+          "default": "horizontal"
+        }
+      },
+      "required": [
+        "icon",
+        "title"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "cards/IconText.js",
+      "securityCapabilities": [
+        "images"
+      ],
+      "prompt": {
+        "description": "An icon badge with a title and optional subtitle, laid out horizontally or vertically. iconVariant sets the badge color.",
+        "group": "Cards"
+      }
+    },
+    "ImageText": {
+      "name": "ImageText",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "src",
+        "alt",
+        "title",
+        "subtitle",
+        "bold",
+        "layout",
+        "imageSize"
+      ],
+      "properties": {
+        "src": {
+          "type": "string",
+          "required": true
+        },
+        "alt": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "required": true
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "bold": {
+          "type": "boolean",
+          "default": false
+        },
+        "layout": {
+          "type": "string",
+          "enum": [
+            "horizontal",
+            "vertical"
+          ],
+          "default": "horizontal"
+        },
+        "imageSize": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "src",
+        "title"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "cards/ImageText.js",
+      "securityCapabilities": [
+        "images",
+        "links"
+      ],
+      "prompt": {
+        "description": "A small square image (thumbnail/avatar) with a title and optional subtitle. src must be a real image URL.",
+        "group": "Cards"
+      }
+    },
+    "ImageTextLarge": {
+      "name": "ImageTextLarge",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "src",
+        "alt",
+        "title",
+        "subtitle",
+        "bold"
+      ],
+      "properties": {
+        "src": {
+          "type": "string",
+          "required": true
+        },
+        "alt": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "required": true
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "bold": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "src",
+        "title"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "cards/ImageText.js",
+      "securityCapabilities": [
+        "images",
+        "links"
+      ],
+      "prompt": {
+        "description": "A full-width banner image above a bold title and optional subtitle. src must be a real image URL.",
+        "group": "Cards"
+      }
+    },
+    "MetricIndicatorInline": {
+      "name": "MetricIndicatorInline",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "value",
+        "subtext",
+        "trend"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "required": true
+        },
+        "subtext": {
+          "type": "string"
+        },
+        "trend": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "content/MetricIndicator.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Headline metric value with an optional +/- percentage trend and subtext, all on one line.",
+        "group": "Cards"
+      }
+    },
+    "MetricIndicatorWithStrikethrough": {
+      "name": "MetricIndicatorWithStrikethrough",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "value",
+        "subtext",
+        "previousValue",
+        "trend"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "required": true
+        },
+        "subtext": {
+          "type": "string"
+        },
+        "previousValue": {
+          "type": "string"
+        },
+        "trend": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "content/MetricIndicator.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Headline metric value with an optional struck-through previousValue, a +/- percentage trend, and subtext below.",
+        "group": "Cards"
+      }
+    },
+    "SnippetCardItem": {
+      "name": "SnippetCardItem",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "id",
+        "lhs",
+        "rhs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "lhs": {
+          "type": "object",
+          "required": true
+        },
+        "rhs": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "lhs"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "cards/SnippetCardBlock.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "One row-style snippet card: a label on the left (IconText or ImageText) and an optional value on the right (Text or BoldText).",
+        "group": "Cards"
+      }
+    },
+    "SnippetCardBlock": {
+      "name": "SnippetCardBlock",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "items",
+        "layout",
+        "responsive",
+        "action",
+        "gap"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "SnippetCardItem"
+          },
+          "required": true
+        },
+        "layout": {
+          "type": "string",
+          "enum": [
+            "grid"
+          ],
+          "default": "grid"
+        },
+        "responsive": {
+          "type": "boolean",
+          "default": true
+        },
+        "action": {
+          "type": "object"
+        },
+        "gap": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "SnippetCardItem"
+      ],
+      "renderer": "cards/SnippetCardBlock.js",
+      "securityCapabilities": [
+        "actions"
+      ],
+      "prompt": {
+        "description": "A responsive grid of compact label/value cards (2 per row) for showing several short facts side by side; optionally clickable with a shared action.",
+        "group": "Cards"
+      }
+    },
+    "OverviewCardItem": {
+      "name": "OverviewCardItem",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "id",
+        "top",
+        "bottom"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "top": {
+          "type": "object",
+          "required": true
+        },
+        "bottom": {
+          "type": "object",
+          "$ref": "MetricIndicatorInline",
+          "required": true
+        }
+      },
+      "required": [
+        "top",
+        "bottom"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "cards/OverviewCardBlock.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "One overview card: a heading slot at the top (IconText, ImageText or Text) and an optional MetricIndicatorInline at the bottom.",
+        "group": "Cards"
+      }
+    },
+    "OverviewCardBlock": {
+      "name": "OverviewCardBlock",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "items",
+        "layout",
+        "responsive",
+        "action",
+        "gap"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "OverviewCardItem"
+          },
+          "required": true
+        },
+        "layout": {
+          "type": "string",
+          "enum": [
+            "grid",
+            "carousel"
+          ],
+          "default": "grid"
+        },
+        "responsive": {
+          "type": "boolean",
+          "default": true
+        },
+        "action": {
+          "type": "object"
+        },
+        "gap": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "OverviewCardItem"
+      ],
+      "renderer": "cards/OverviewCardBlock.js",
+      "securityCapabilities": [
+        "actions"
+      ],
+      "prompt": {
+        "description": "A grid or horizontal carousel of compact overview cards, each with a heading (icon/image/text) on top and an inline metric below; optionally clickable with a shared action.",
+        "group": "Cards"
+      }
+    },
+    "ContextCardItem": {
+      "name": "ContextCardItem",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "id",
+        "title",
+        "body",
+        "bgColor",
+        "bgImageSrc",
+        "bgImageAlt"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "required": true
+        },
+        "body": {
+          "type": "string"
+        },
+        "bgColor": {
+          "type": "object"
+        },
+        "bgImageSrc": {
+          "type": "string"
+        },
+        "bgImageAlt": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "cards/ContextCardBlock.js",
+      "securityCapabilities": [
+        "links"
+      ],
+      "prompt": {
+        "description": "A single card inside a ContextCardBlock: a title (plain string or Tag), an optional markdown body, and an optional gray tint or background image.",
+        "group": "Cards"
+      }
+    },
+    "ContextCardBlock": {
+      "name": "ContextCardBlock",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "items",
+        "layout",
+        "responsive",
+        "action",
+        "gap"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "ContextCardItem"
+          },
+          "required": true
+        },
+        "layout": {
+          "type": "string",
+          "enum": [
+            "grid",
+            "carousel"
+          ],
+          "default": "grid"
+        },
+        "responsive": {
+          "type": "boolean",
+          "default": true
+        },
+        "action": {
+          "type": "object"
+        },
+        "gap": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "ContextCardItem"
+      ],
+      "renderer": "cards/ContextCardBlock.js",
+      "securityCapabilities": [
+        "actions"
+      ],
+      "prompt": {
+        "description": "A grid or carousel of compact tinted context cards (title or tag plus a short bold body); an optional action makes every card clickable.",
+        "group": "Cards"
+      }
+    },
+    "CompositeCardItem": {
+      "name": "CompositeCardItem",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "id",
+        "header",
+        "body",
+        "footer"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "header": {
+          "type": "object"
+        },
+        "body": {
+          "type": "array",
+          "default": []
+        },
+        "footer": {
+          "type": "object"
+        }
+      },
+      "required": [],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "cards/CompositeCardBlock.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "A single card inside a CompositeCardBlock: an optional header (icon/image/text), a stack of body elements (text, metrics, charts, lists, tags), and an optional price/button footer.",
+        "group": "Cards"
+      }
+    },
+    "CompositeCardBlock": {
+      "name": "CompositeCardBlock",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "items",
+        "layout",
+        "responsive",
+        "action",
+        "gap"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "CompositeCardItem"
+          },
+          "required": true
+        },
+        "layout": {
+          "type": "string",
+          "enum": [
+            "grid",
+            "carousel"
+          ],
+          "default": "grid"
+        },
+        "responsive": {
+          "type": "boolean",
+          "default": true
+        },
+        "action": {
+          "type": "object"
+        },
+        "gap": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "CompositeCardItem"
+      ],
+      "renderer": "cards/CompositeCardBlock.js",
+      "securityCapabilities": [
+        "actions"
+      ],
+      "prompt": {
+        "description": "A two-per-row grid or carousel of rich cards, each with an optional header, stacked body content (text, metrics, charts, lists, tags) and a price/button footer; an optional action makes every card clickable.",
+        "group": "Cards"
+      }
+    },
+    "VisualCardItem": {
+      "name": "VisualCardItem",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "body",
+        "id",
+        "bgImageSrc",
+        "tag",
+        "bgImageAlt"
+      ],
+      "properties": {
+        "body": {
+          "type": "object",
+          "$ref": "BoldText",
+          "required": true
+        },
+        "id": {
+          "type": "string"
+        },
+        "bgImageSrc": {
+          "type": "string"
+        },
+        "tag": {
+          "type": "object",
+          "$ref": "Tag",
+          "required": true
+        },
+        "bgImageAlt": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "body",
+        "tag"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": null,
+      "renderer": "cards/VisualCardBlock.js",
+      "securityCapabilities": [
+        "links"
+      ],
+      "prompt": {
+        "description": "A single photo-first card inside a VisualCardBlock: a BoldText body panel, an optional Tag, and a background image (bgImageSrc must be a real URL; bgImageAlt is its alt text).",
+        "group": "Cards"
+      }
+    },
+    "VisualCardBlock": {
+      "name": "VisualCardBlock",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "items",
+        "layout",
+        "responsive",
+        "action",
+        "gap"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "VisualCardItem"
+          },
+          "required": true
+        },
+        "layout": {
+          "type": "string",
+          "enum": [
+            "grid",
+            "carousel"
+          ],
+          "default": "grid"
+        },
+        "responsive": {
+          "type": "boolean",
+          "default": true
+        },
+        "action": {
+          "type": "object"
+        },
+        "gap": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "reactiveProps": [],
+      "allowedChildren": [
+        "VisualCardItem"
+      ],
+      "renderer": "cards/VisualCardBlock.js",
+      "securityCapabilities": [
+        "actions"
+      ],
+      "prompt": {
+        "description": "A grid or carousel of photo-first cards: a full-bleed background image with a tag on top and a bold text panel at the bottom; an optional action makes every card clickable.",
+        "group": "Cards"
+      }
+    },
+    "Modal": {
+      "name": "Modal",
+      "version": "0.5.0",
+      "propertyOrder": [
+        "title",
+        "open",
+        "children",
+        "size"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "required": true
+        },
+        "open": {
+          "type": "boolean"
+        },
+        "children": {
+          "type": "array",
+          "required": true
+        },
+        "size": {
+          "type": "string",
+          "enum": [
+            "sm",
+            "md",
+            "lg"
+          ]
+        }
+      },
+      "required": [
+        "title",
+        "children"
+      ],
+      "reactiveProps": [
+        "open"
+      ],
+      "allowedChildren": [
+        "*"
+      ],
+      "renderer": "containers/Modal.js",
+      "securityCapabilities": [
+        "none"
+      ],
+      "prompt": {
+        "description": "Modal dialog. open is a reactive $boolean binding — set to true to open, X/Escape/backdrop auto-closes. Put Form with buttons inside children.",
+        "group": "Layout"
+      }
     }
   }
 }

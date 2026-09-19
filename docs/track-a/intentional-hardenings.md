@@ -55,7 +55,7 @@ This list is the **complete A2–A7 intentional hardening inventory** for the A8
 | H18 | Native controls where upstream is custom | Radix / custom triggers | Native `<select>`, `<input type=date>`, `<dialog>` where a11y/simpler — **documented visual intentional** | A5.7/A6 |
 | H19 | Card / metric presentation | Combined label strings / baseline metric chrome | Port label/metric text choices recorded in visual parity (not defects) | A5/A6 |
 | H20 | Tool-activity copy | Upstream “streaming” wording | Sanctum presentation labels (“Calling…”) — intentional | A6 |
-| H21 | Slim library manifests | Full Zod surface | Chat/dashboard `library.v1.json` intentionally slim; full register surface listed as gaps until expansion | A6 |
+| H21 | Library manifests | Full Zod surface was deferred during A6 close as a six-name bootstrap | **Reopened and finished.** Chat and dashboard `library.v1.json` are generated from OpenUI `genui-lib` (`tools/build-library-manifests.mjs`). Dashboard 82 names, chat 84. A renderer without a contract is a gap. | A6 deferral closed |
 
 ---
 

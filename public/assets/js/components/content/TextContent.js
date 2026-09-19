@@ -2,6 +2,7 @@
  * TextContent — plain text block (library: text/size/weight; React: clear|card|sunk).
  */
 
+import { markdownToSafeDom } from "../../security/markdown.js";
 import {
   applySurfaceStatus,
   asText,
@@ -11,7 +12,6 @@ import {
 } from "./shared.js";
 
 const VARIANTS = new Set(["clear", "card", "sunk"]);
-const SIZES = new Set(["sm", "md", "lg"]);
 const WEIGHTS = new Set(["normal", "medium", "bold"]);
 
 function resolveVariant(props) {
@@ -19,14 +19,28 @@ function resolveVariant(props) {
   return VARIANTS.has(v) ? v : "sunk";
 }
 
+const SIZE_ALIAS = {
+  sm: "sm",
+  md: "md",
+  lg: "lg",
+  small: "sm",
+  default: "md",
+  large: "lg",
+  "small-heavy": "sm",
+  "large-heavy": "lg",
+};
+
 function resolveSize(props) {
-  const s = asText(props.size) || "md";
-  return SIZES.has(s) ? s : "md";
+  const s = asText(props.size) || "default";
+  return SIZE_ALIAS[s] || "md";
 }
 
 function resolveWeight(props) {
-  const w = asText(props.weight) || "normal";
-  return WEIGHTS.has(w) ? w : "normal";
+  const explicit = asText(props.weight);
+  if (explicit && WEIGHTS.has(explicit)) return explicit;
+  const size = asText(props.size) || "";
+  if (size.endsWith("-heavy") || size === "heavy") return "bold";
+  return "normal";
 }
 
 function bodyText(props) {
@@ -65,10 +79,9 @@ export const TextContent = lifecycle({
     });
     if (status !== "ready") return;
 
-    const body = doc.createElement("div");
+    const body = markdownToSafeDom(text, doc);
     body.setAttribute("class", "canvas-text-content__body");
     body.setAttribute("data-canvas-body", "");
-    body.textContent = text;
     el.insertBefore(body, el.firstChild);
   },
 });
