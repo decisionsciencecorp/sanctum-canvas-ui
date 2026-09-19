@@ -150,6 +150,13 @@ def run(base: str, tag: str) -> list[str]:
         assert page.locator("#comp-Stack .cat-comp__badge--root").count() == 1, "Stack not marked root"
         assert page.locator("#comp-FormControl .cat-comp__sig").text_content().find("Input | TextArea") >= 0
         # Live draws — not just JSON contracts
+        assert page.locator('#comp-Stack .cat-comp__mount [data-canvas-component="Callout"]').count() >= 3
+        assert page.locator('#comp-Stack .cat-comp__mount [data-canvas-component="Stack"][data-direction="row"]').count() >= 1
+        assert page.locator('#comp-Stack .cat-comp__mount [data-canvas-component="Stack"][data-direction="column"]').count() >= 1
+        page.locator("#comp-Stack").scroll_into_view_if_needed()
+        shot = OUT / f"a9-catalog-stack-desktop-{tag}.png"
+        page.locator("#comp-Stack").screenshot(path=str(shot))
+        written.append(str(shot))
         for name in ("Stack", "BarChart", "Form", "Tag", "SnippetCardBlock", "Modal"):
             mount = page.locator(f'#comp-{name} .cat-comp__mount')
             assert mount.count() == 1, f"missing live mount for {name}"

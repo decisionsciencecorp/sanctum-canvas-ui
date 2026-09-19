@@ -1,25 +1,17 @@
 /**
  * A5.1 lab — mount Stack + Card fixtures (Playwright target for A5.8).
+ * Stack is layout-only; children are Callouts so row/gap/wrap are visible.
  */
 import { createComponentRegistry } from "../assets/js/renderer/registry.js";
 import { createRenderContext } from "../assets/js/renderer/context.js";
 import { render } from "../assets/js/renderer/reconciler.js";
 import { registerFoundation } from "../assets/js/components/registerFoundation.js";
+import { registerContent } from "../assets/js/components/content/registerContent.js";
 import * as urlPolicy from "../assets/js/security/urlPolicy.js";
-
-const Text = {
-  create(_props, ctx) {
-    const el = ctx.document.createElement("span");
-    el.setAttribute("data-canvas-component", "Text");
-    return el;
-  },
-  update() {},
-  destroy() {},
-};
 
 const registry = createComponentRegistry();
 registerFoundation(registry);
-registry.register("Text", Text);
+registerContent(registry);
 
 const ctx = createRenderContext({
   document,
@@ -35,12 +27,71 @@ render(
   stackMount,
   {
     type: "Stack",
-    id: "lab-stack",
-    props: { direction: "row", gap: "l", align: "center", wrap: true },
+    id: "lab-stack-root",
+    props: { direction: "column", gap: "l" },
     children: [
-      { type: "Text", id: "a", children: ["Monday"] },
-      { type: "Text", id: "b", children: ["Tuesday"] },
-      { type: "Text", id: "c", children: ["Wednesday"] },
+      {
+        type: "TextContent",
+        id: "lab-stack-row-label",
+        props: {
+          text: "Row — three panels side by side (narrow the window and they wrap):",
+          variant: "clear",
+          size: "sm",
+        },
+      },
+      {
+        type: "Stack",
+        id: "lab-stack-row",
+        props: { direction: "row", gap: "l", align: "stretch", wrap: true },
+        children: [
+          {
+            type: "Callout",
+            id: "lab-stack-a",
+            props: { title: "Monday", description: "First child in the row", variant: "info" },
+          },
+          {
+            type: "Callout",
+            id: "lab-stack-b",
+            props: { title: "Tuesday", description: "Second child — notice the gap", variant: "success" },
+          },
+          {
+            type: "Callout",
+            id: "lab-stack-c",
+            props: { title: "Wednesday", description: "Third child", variant: "warning" },
+          },
+        ],
+      },
+      {
+        type: "TextContent",
+        id: "lab-stack-col-label",
+        props: {
+          text: "Column — same three panels, top to bottom (Stack’s default):",
+          variant: "clear",
+          size: "sm",
+        },
+      },
+      {
+        type: "Stack",
+        id: "lab-stack-col",
+        props: { direction: "column", gap: "s" },
+        children: [
+          {
+            type: "Callout",
+            id: "lab-stack-d",
+            props: { title: "Top", description: "First in the column", variant: "info" },
+          },
+          {
+            type: "Callout",
+            id: "lab-stack-e",
+            props: { title: "Middle", description: "Second in the column", variant: "success" },
+          },
+          {
+            type: "Callout",
+            id: "lab-stack-f",
+            props: { title: "Bottom", description: "Third in the column", variant: "warning" },
+          },
+        ],
+      },
     ],
   },
   ctx,
@@ -54,10 +105,22 @@ render(
     props: { variant: "card" },
     children: [
       {
+        type: "CardHeader",
+        id: "card-h",
+        props: { title: "Sales this week", subtitle: "With the system they came from" },
+      },
+      {
         type: "CardContent",
         id: "body",
         children: [
-          { type: "Text", id: "line", children: ["Sales this week, with the system they came from."] },
+          {
+            type: "TextContent",
+            id: "line",
+            props: {
+              text: "A Card is a titled box. The source under it is a link — that is the only control on this page.",
+              variant: "clear",
+            },
+          },
         ],
       },
       {
@@ -92,4 +155,8 @@ render(
   ctx,
 );
 
-if (status) status.textContent = "Ready. The source under the card is a link.";
+if (status) {
+  status.textContent =
+    "Ready. Stack only arranges children (row vs column, gap, wrap). The source under the card is a link.";
+  status.setAttribute("data-lab-ready", "1");
+}

@@ -58,12 +58,71 @@ function mount(id, vnode) {
 
 mount("mount-stack", {
   type: "Stack",
-  id: "lab-stack",
-  props: { direction: "row", gap: "l", align: "center", wrap: true },
+  id: "lab-stack-root",
+  props: { direction: "column", gap: "l" },
   children: [
-    { type: "Text", id: "sa", children: ["Stack A"] },
-    { type: "Text", id: "sb", children: ["Stack B"] },
-    { type: "Text", id: "sc", children: ["Stack C"] },
+    {
+      type: "TextContent",
+      id: "sa-label",
+      props: {
+        text: "Row — children sit side by side with a gap:",
+        variant: "clear",
+        size: "sm",
+      },
+    },
+    {
+      type: "Stack",
+      id: "lab-stack-row",
+      props: { direction: "row", gap: "l", align: "stretch", wrap: true },
+      children: [
+        {
+          type: "Callout",
+          id: "sa",
+          props: { title: "A", description: "First child", variant: "info" },
+        },
+        {
+          type: "Callout",
+          id: "sb",
+          props: { title: "B", description: "Second child", variant: "success" },
+        },
+        {
+          type: "Callout",
+          id: "sc",
+          props: { title: "C", description: "Third child", variant: "warning" },
+        },
+      ],
+    },
+    {
+      type: "TextContent",
+      id: "sc-label",
+      props: {
+        text: "Column — same children, top to bottom:",
+        variant: "clear",
+        size: "sm",
+      },
+    },
+    {
+      type: "Stack",
+      id: "lab-stack-col",
+      props: { direction: "column", gap: "s" },
+      children: [
+        {
+          type: "Callout",
+          id: "sd",
+          props: { title: "Top", description: "First in column", variant: "info" },
+        },
+        {
+          type: "Callout",
+          id: "se",
+          props: { title: "Middle", description: "Second in column", variant: "success" },
+        },
+        {
+          type: "Callout",
+          id: "sf",
+          props: { title: "Bottom", description: "Third in column", variant: "warning" },
+        },
+      ],
+    },
   ],
 });
 

@@ -30,14 +30,62 @@ const DEMOS = {
   Stack: () => ({
     vnode: {
       type: "Stack",
-      id: "d-stack",
-      props: { direction: "row", gap: "m", wrap: true },
+      id: "d-stack-root",
+      props: { direction: "column", gap: "l" },
       children: [
-        { type: "Text", id: "d-sa", props: { text: "Stack A" } },
-        { type: "Text", id: "d-sb", props: { text: "Stack B" } },
-        { type: "Text", id: "d-sc", props: { text: "Stack C" } },
+        {
+          type: "TextContent",
+          id: "d-stack-row-label",
+          props: {
+            text: "Row — children sit side by side with a gap (wrap if the row is narrow):",
+            variant: "clear",
+            size: "sm",
+          },
+        },
+        {
+          type: "Stack",
+          id: "d-stack-row",
+          props: { direction: "row", gap: "m", wrap: true, align: "stretch" },
+          children: [
+            {
+              type: "Callout",
+              id: "d-stack-a",
+              props: { title: "A", description: "First child", variant: "info" },
+            },
+            {
+              type: "Callout",
+              id: "d-stack-b",
+              props: { title: "B", description: "Second child", variant: "success" },
+            },
+            {
+              type: "Callout",
+              id: "d-stack-c",
+              props: { title: "C", description: "Third child", variant: "warning" },
+            },
+          ],
+        },
+        {
+          type: "TextContent",
+          id: "d-stack-col-label",
+          props: {
+            text: "Column — children stack top to bottom (the default):",
+            variant: "clear",
+            size: "sm",
+          },
+        },
+        {
+          type: "Stack",
+          id: "d-stack-col",
+          props: { direction: "column", gap: "s" },
+          children: [
+            { type: "Tag", id: "d-stack-t1", props: { text: "Top", variant: "info" } },
+            { type: "Tag", id: "d-stack-t2", props: { text: "Middle", variant: "success" } },
+            { type: "Tag", id: "d-stack-t3", props: { text: "Bottom", variant: "warning" } },
+          ],
+        },
       ],
     },
+    note: "Stack has no look of its own — it only arranges children (row/column, gap, wrap, align). Plain text children make that hard to see; the samples below use Callouts and Tags so the layout is obvious.",
   }),
 
   Card: () => ({
