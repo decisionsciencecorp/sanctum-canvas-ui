@@ -3,7 +3,7 @@
 A9.6 — Python Playwright smoke for the lab home dashboard and the guided walkthrough.
 
 Local mode (default): starts `php -S` as a child on an ephemeral port (killed in finally).
-Remote mode: CANVAS_LAB_URL=https://canvas-lab.decisionsciencecorp.com  (no PHP child).
+Remote mode: CANVAS_LAB_URL=https://canvas-lab.sanctumos.org  (no PHP child).
 
 Walks every walkthrough step with Next, asserts the components each step promises
 are on the canvas, exercises the interactive steps (Place reorder, follow-up chip,

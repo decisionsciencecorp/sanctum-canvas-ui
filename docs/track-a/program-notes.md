@@ -1,11 +1,13 @@
 # Track A program notes (A8.8)
 
-**Updated:** 2026-09-18  
+**Updated:** 2026-10-28  
 **Status:** **GREEN — Track A complete** (see [`A8-evidence.md`](./A8-evidence.md))
 
 ## Named review URL
 
-**https://canvas-lab.decisionsciencecorp.com/stream.php**
+**https://canvas-lab.sanctumos.org/stream.php**
+
+Moved 2026-10-28 from `canvas-lab.decisionsciencecorp.com` (Ada depro/repro onto sanctumos.org). The DSC hostname is gone on purpose.
 
 Human-visible lab: fixture replay, streaming chat, tools, debug panes beside (not inside) `#sanctum-canvas-root`.
 

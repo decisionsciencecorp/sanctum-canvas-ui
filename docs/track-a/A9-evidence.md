@@ -45,7 +45,7 @@ CodeBlock, ListBlock.
 
 ```
 python3 tools/design-smoke/verify_a9_home_walkthrough.py            # local php -S child
-CANVAS_LAB_URL=https://canvas-lab.decisionsciencecorp.com python3 tools/design-smoke/verify_a9_home_walkthrough.py
+CANVAS_LAB_URL=https://canvas-lab.sanctumos.org python3 tools/design-smoke/verify_a9_home_walkthrough.py
 ```
 
 Local run: `A9 smoke OK (local) — steps: 18/18`; screenshots under `docs/track-a/screenshots/a9/`.

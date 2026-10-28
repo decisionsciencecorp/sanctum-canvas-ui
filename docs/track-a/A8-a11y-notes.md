@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-18  
 **Task:** [#4172](https://tasks.decisionsciencecorp.com/admin/view.php?id=4172)  
-**Review URL:** **https://canvas-lab.decisionsciencecorp.com/stream.php**  
+**Review URL:** **https://canvas-lab.sanctumos.org/stream.php**  
 **Tool:** `tools/design-smoke/verify_a8_a11y.py` (Python Playwright)  
 **Depends:** A7.8 named lab, A8.2 registry parity checklist
 

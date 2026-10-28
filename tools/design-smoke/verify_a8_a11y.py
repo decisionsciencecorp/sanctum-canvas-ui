@@ -2,7 +2,7 @@
 """
 A8.4 — Python Playwright accessibility + responsive smoke on the named lab URL.
 
-Targets https://canvas-lab.decisionsciencecorp.com/ (not localhost / not php -S).
+Targets https://canvas-lab.sanctumos.org/ (not localhost / not php -S).
 Keyboard Tab order, focus-visible, landmarks/labels, mobile + desktop screenshots.
 Also opens deployed A5/A6 lab pages under /lab/ when HTTP 200.
 
@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "docs" / "track-a" / "screenshots" / "a8-a11y"
 OUT.mkdir(parents=True, exist_ok=True)
 
-DEFAULT_BASE = "https://canvas-lab.decisionsciencecorp.com"
+DEFAULT_BASE = "https://canvas-lab.sanctumos.org"
 _COMPANION_VENV = Path(
     "/root/projects/sanctum-companion-shell/tools/design-smoke/.venv/bin/python"
 )

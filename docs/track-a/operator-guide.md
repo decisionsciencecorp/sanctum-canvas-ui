@@ -6,9 +6,9 @@ Short runbook for humans and Track B / Merge. Detail lives in phase evidence and
 
 | Page | URL | What it is |
 |------|-----|-----------|
-| **Home** | **https://canvas-lab.decisionsciencecorp.com/** | Tile dashboard — pick what to look at (A9.2) |
-| **Guided walkthrough** | **https://canvas-lab.decisionsciencecorp.com/walkthrough.php** | 18-step scripted story; every component family used in context; Next / Back / Auto-play; `?step=<id>` deep links (A9.3–A9.5) |
-| Stream lab | **https://canvas-lab.decisionsciencecorp.com/stream.php** | Fixture replay, canned live prompt, fake tools, debug panes (A7.7) |
+| **Home** | **https://canvas-lab.sanctumos.org/** | Tile dashboard — pick what to look at (A9.2) |
+| **Guided walkthrough** | **https://canvas-lab.sanctumos.org/walkthrough.php** | 18-step scripted story; every component family used in context; Next / Back / Auto-play; `?step=<id>` deep links (A9.3–A9.5) |
+| Stream lab | **https://canvas-lab.sanctumos.org/stream.php** | Fixture replay, canned live prompt, fake tools, debug panes (A7.7) |
 | Galleries | `/lab/a5-foundation.html`, `/lab/a6-library.html`, … | One static sample per component |
 
 Lab chrome on every page is **outside** `#sanctum-canvas-root` so Track B never imports it.
