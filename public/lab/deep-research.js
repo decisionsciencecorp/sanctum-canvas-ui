@@ -266,7 +266,11 @@ async function postSubmit(submit) {
 async function boot() {
   setStatus("Loading library…");
   try {
-    library = await loadLibraryJson(LIBRARY_URL);
+    const libRes = await fetch(LIBRARY_URL, { headers: { Accept: "application/json" } });
+    if (!libRes.ok) {
+      throw new Error(`library HTTP ${libRes.status}`);
+    }
+    library = loadLibraryJson(await libRes.text());
     schema = libraryToJsonSchema(library);
     streamingParser = createStreamingParser(schema, library.root || "Stack");
     setStatus("Listening for SMCP paint…", { ready: true });
