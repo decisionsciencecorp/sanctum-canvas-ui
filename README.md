@@ -46,3 +46,7 @@ node --test tests/browser/*.test.js tests/browser/*.golden.test.js
 ```
 
 Phases A0–A6 complete for the browser/library surface. A7.4–A7.6 PHP APIs live under `public/api/`. **Lab pages:** `public/index.php` home dashboard, `public/walkthrough.php` guided walkthrough (A9, `docs/track-a/A9-evidence.md`), `public/stream.php` stream lab (A7.7, `docs/track-a/A7.7-evidence.md`). Named review URL: https://canvas-lab.sanctumos.org/
+
+### Deep Research SMCP twin (until product v1)
+
+Active SMCP-only canvas for Deep Research UI triage: https://canvas-lab.sanctumos.org/lab/deep-research.php — plugin `smcp_plugin/sanctum_canvas_lab/`, doc `docs/deep-research-smcp-twin.md`. Keep in sync with `decisionsciencecorp/deep-research` until Mark says v1 shipped.

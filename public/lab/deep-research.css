@@ -1,0 +1,42 @@
+/* Deep Research SMCP twin — lab chrome only (outside #sanctum-canvas-root). */
+
+.dr-lab-body .dr-lab-chrome {
+  max-width: 28rem;
+}
+
+.dr-meta {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+
+.dr-meta > div {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 0.35rem;
+  align-items: baseline;
+}
+
+.dr-meta dt {
+  margin: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+
+.dr-meta dd {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  word-break: break-word;
+}
+
+.dr-subhead {
+  margin: 1rem 0 0.35rem;
+  font-size: 0.9rem;
+}
+
+#sanctum-canvas-root.canvas-root {
+  min-height: 60vh;
+}

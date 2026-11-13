@@ -43,6 +43,15 @@ $tiles = [
         'tag' => 'Catalog',
     ],
     [
+        'href' => '/lab/deep-research.php',
+        'kicker' => 'Product twin',
+        'title' => 'Deep Research — SMCP canvas',
+        'what' => 'Live Sanctum Canvas surface painted only through SMCP (sanctum_canvas_lab). Same runtime Deep Research hosts on the right pane — no Broca, board, or chat shell. Use it to triage rendering bugs while the full app is still tangled.',
+        'expect' => 'Otto paints from Cursor; the page polls and redraws within a second. Keep programs in sync with Deep Research until v1 ships.',
+        'featured' => true,
+        'tag' => 'SMCP',
+    ],
+    [
         'href' => '/stream.php',
         'kicker' => 'Plumbing',
         'title' => 'Stream lab',

@@ -1,0 +1,16 @@
+header = CardHeader("Deep Research scope", "SMCP twin — same canvas runtime the product hosts")
+lede = TextContent("Pick depth and sources. Submit stays on this lab page so Otto can inspect rendering without Broca.")
+scope = Form("deep-research-scope-v1", Buttons([Button("Lock scope", Action([@Run("echo_message", { message: "scope locked" })]))]), [
+  FormControl("Topic", Input("topic", "What should we research?")),
+  FormControl("Depth", RadioGroup("depth", [
+    RadioItem("Brief", "1–2 pages", "brief"),
+    RadioItem("Standard", "Full report", "standard"),
+    RadioItem("Deep", "Deep dive", "deep")
+  ], "standard")),
+  FormControl("Sources", CheckBoxGroup("sources", [
+    CheckBoxItem("Web docs", "Official docs and pages", "web"),
+    CheckBoxItem("YouTube", "Video corpus", "youtube"),
+    CheckBoxItem("Primary filings", "Primary source documents", "primary")
+  ]))
+])
+root = Stack([header, lede, scope])
