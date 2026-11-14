@@ -4604,6 +4604,12 @@ function unwrap(node) {
       o.props
     );
   }
+  if (typeof o.type === "string" && o.type !== "element" && o.props && typeof o.props === "object") {
+    return (
+      /** @type {Record<string, unknown>} */
+      o.props
+    );
+  }
   return o;
 }
 function asArray2(v) {
@@ -16825,21 +16831,22 @@ async function ensureLazyPacks(registry, types, opts = {}) {
     const pack = TYPE_TO_PACK[t];
     if (pack) needed.add(pack);
   }
-  const jobs = [];
   for (const packId of needed) {
     if (!loaded.has(packId)) {
       loaded.set(
         packId,
         (async () => {
-          const register = await importPackRegistrar(packId);
-          register(registry);
+          const register2 = await importPackRegistrar(packId);
           injectPackCss(packId, importMetaUrl);
+          return register2;
         })()
       );
     }
-    jobs.push(loaded.get(packId));
+    const register = await loaded.get(packId);
+    if (typeof register === "function") {
+      register(registry);
+    }
   }
-  await Promise.all(jobs);
 }
 
 // src/Browser/host/mountCore.js

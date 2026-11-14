@@ -10,7 +10,19 @@ export function unwrap(node) {
   if (node == null) return null;
   if (typeof node !== "object") return null;
   const o = /** @type {Record<string, unknown>} */ (node);
+  // AST element from the OpenUI parser
   if (o.type === "element" && o.props && typeof o.props === "object") {
+    return /** @type {Record<string, unknown>} */ (o.props);
+  }
+  // VNode from elementToVnode — Series/Slice/etc. land in chart props as
+  // { type: "Series", props: { category, values } }. Without this, BarChart
+  // sees empty series and paints "No chart data".
+  if (
+    typeof o.type === "string" &&
+    o.type !== "element" &&
+    o.props &&
+    typeof o.props === "object"
+  ) {
     return /** @type {Record<string, unknown>} */ (o.props);
   }
   return o;

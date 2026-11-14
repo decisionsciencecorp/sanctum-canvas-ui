@@ -540,6 +540,12 @@ function unwrap(node) {
       o.props
     );
   }
+  if (typeof o.type === "string" && o.type !== "element" && o.props && typeof o.props === "object") {
+    return (
+      /** @type {Record<string, unknown>} */
+      o.props
+    );
+  }
   return o;
 }
 function asArray(v) {

@@ -165,19 +165,23 @@ export async function ensureLazyPacks(registry, types, opts = {}) {
     const pack = TYPE_TO_PACK[t];
     if (pack) needed.add(pack);
   }
-  const jobs = [];
+  // Cache the pack *module* (register fn), not a one-shot registration on the
+  // first mount's registry. Each mount() creates a fresh registry; remounts
+  // must call register(registry) again or BarChart stays data-openui-unknown.
   for (const packId of needed) {
     if (!loaded.has(packId)) {
       loaded.set(
         packId,
         (async () => {
           const register = await importPackRegistrar(packId);
-          register(registry);
           injectPackCss(packId, importMetaUrl);
+          return register;
         })(),
       );
     }
-    jobs.push(loaded.get(packId));
+    const register = await loaded.get(packId);
+    if (typeof register === "function") {
+      register(registry);
+    }
   }
-  await Promise.all(jobs);
 }

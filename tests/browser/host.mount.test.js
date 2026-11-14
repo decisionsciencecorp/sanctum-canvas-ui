@@ -118,7 +118,7 @@ describe("A8.6 host mount — canvas-host-v1", () => {
       },
     });
 
-    lease.handle.setProgram('root = TextContent("adapter ok")\n');
+    await lease.handle.setProgram('root = TextContent("adapter ok")\n');
     assert.match(findText(canvas), /adapter ok/);
     await lease.unmount("close");
     assert.equal(canvas.childNodes.length, 0);

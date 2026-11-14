@@ -221,6 +221,15 @@ describe("normalize + palette + table", () => {
     assert.equal(a.series.length, 2);
     assert.equal(a.empty, false);
 
+    // elementToVnode shape — Series inside BarChart props
+    const vnode = normalizeCartesian({
+      labels: ["todo", "done"],
+      series: [{ type: "Series", props: { category: "cards", values: [2, 1] } }],
+    });
+    assert.equal(vnode.empty, false);
+    assert.equal(vnode.series[0].name, "cards");
+    assert.deepEqual(vnode.series[0].values, [2, 1]);
+
     const tab = normalizeCartesian({
       labels: ["day", "views", "users"],
       series: [
