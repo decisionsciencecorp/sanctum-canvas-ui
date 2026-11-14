@@ -1,8 +1,53 @@
-var __defProp = Object.defineProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
+import {
+  validateField
+} from "./chunk-VRTNI4I3.js";
+import {
+  ACTION_STEPS,
+  CodeBlock,
+  Image,
+  ImageBlock,
+  LAZY_BUILTINS,
+  ListBlock,
+  ListItem,
+  RESERVED_CALLS,
+  isBuiltin,
+  isReservedCall
+} from "./chunk-CLKPEL75.js";
+import {
+  applySurfaceStatus,
+  applyVariantCue,
+  asText,
+  clearChildren,
+  clearInlineStyle,
+  lifecycle,
+  resolveStatus,
+  setClass,
+  setInlineStyle,
+  setOrRemoveAttr
+} from "./chunk-SL6LI3PJ.js";
+import {
+  safeOpenUrl,
+  safeUrl,
+  sanitizeUrl,
+  toCssUrl,
+  urlPolicy_exports
+} from "./chunk-LQVUHYG2.js";
+import {
+  asText as asText2,
+  contentSize,
+  findDirectByAttr,
+  itemKey,
+  lifecycle as lifecycle2,
+  nextUid,
+  normalizeItems,
+  renderItemContent,
+  requireDocument,
+  setClass as setClass2,
+  setOrRemoveAttr as setOrRemoveAttr2
+} from "./chunk-23WAPPGV.js";
+import {
+  __export
+} from "./chunk-MLKGABMK.js";
 
 // src/Browser/renderer/partialGate.js
 var PARTIAL_ATTR = "data-openui-partial";
@@ -536,119 +581,6 @@ function registerFoundation(registry) {
   return registry;
 }
 
-// src/Browser/security/urlPolicy.js
-var urlPolicy_exports = {};
-__export(urlPolicy_exports, {
-  isHostAllowed: () => isHostAllowed,
-  mergeNoopenerFeatures: () => mergeNoopenerFeatures,
-  relForTarget: () => relForTarget,
-  safeOpenUrl: () => safeOpenUrl,
-  safeUrl: () => safeUrl,
-  sanitizeUrl: () => sanitizeUrl,
-  toCssUrl: () => toCssUrl
-});
-var DANGEROUS_URI_RE = /^\s*(?:javascript|data|vbscript|file)\s*:/i;
-var SCHEME_OBFUSCATION_RE = /[\u0000-\u001F\u007F]/g;
-var ABSOLUTE_SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i;
-var ALLOWED_ABSOLUTE_SCHEME_RE = /^(?:https?|mailto):/i;
-function stripControlCharsForSchemeCheck(url) {
-  return url.replace(SCHEME_OBFUSCATION_RE, "");
-}
-function hasAbsoluteScheme(normalized) {
-  return ABSOLUTE_SCHEME_RE.test(normalized);
-}
-function isAllowedRelative(trimmed) {
-  if (trimmed.startsWith("//")) return false;
-  if (trimmed.startsWith("/")) return true;
-  if (trimmed.startsWith("./") || trimmed.startsWith("../")) return true;
-  if (trimmed.startsWith("#")) return true;
-  const normalized = stripControlCharsForSchemeCheck(trimmed);
-  return !hasAbsoluteScheme(normalized);
-}
-function isHostAllowed(hostname, allowedHosts) {
-  if (!Array.isArray(allowedHosts) || allowedHosts.length === 0) return true;
-  const host = String(hostname || "").toLowerCase();
-  if (!host) return false;
-  for (const entry of allowedHosts) {
-    if (typeof entry !== "string" || !entry) continue;
-    let pattern = entry.toLowerCase().trim();
-    if (pattern.startsWith("*.")) pattern = pattern.slice(1);
-    if (pattern.startsWith(".")) {
-      const apex = pattern.slice(1);
-      if (host === apex || host.endsWith(pattern)) return true;
-    } else if (host === pattern) {
-      return true;
-    }
-  }
-  return false;
-}
-function passesHostAllowlist(trimmed, opts = {}) {
-  const allowedHosts = opts.allowedHosts;
-  if (!Array.isArray(allowedHosts) || allowedHosts.length === 0) return true;
-  const normalized = stripControlCharsForSchemeCheck(trimmed);
-  if (!hasAbsoluteScheme(normalized)) {
-    return isAllowedRelative(trimmed);
-  }
-  if (/^mailto:/i.test(normalized)) return true;
-  try {
-    const parsed = new URL(normalized);
-    return isHostAllowed(parsed.hostname, allowedHosts);
-  } catch {
-    return false;
-  }
-}
-function safeUrl(url, opts = {}) {
-  if (typeof url !== "string") return void 0;
-  const trimmed = url.trim();
-  if (!trimmed) return void 0;
-  const normalized = stripControlCharsForSchemeCheck(trimmed);
-  if (DANGEROUS_URI_RE.test(normalized)) return void 0;
-  if (hasAbsoluteScheme(normalized)) {
-    if (!ALLOWED_ABSOLUTE_SCHEME_RE.test(normalized)) return void 0;
-  } else if (!isAllowedRelative(trimmed)) {
-    return void 0;
-  }
-  if (!passesHostAllowlist(trimmed, opts)) return void 0;
-  return trimmed;
-}
-var sanitizeUrl = safeUrl;
-function mergeNoopenerFeatures(features = "") {
-  const parts = new Set(
-    String(features).split(/[,;\s]+/).map((s) => s.trim().toLowerCase()).filter(Boolean)
-  );
-  parts.add("noopener");
-  parts.add("noreferrer");
-  return [...parts].join(",");
-}
-function relForTarget(target = "_self") {
-  if (target === "_blank") return "noopener noreferrer";
-  return "";
-}
-function safeOpenUrl(url, target = "_blank", features = "noopener,noreferrer", opts = {}) {
-  if (typeof globalThis.window === "undefined") return null;
-  const safe = safeUrl(url, opts);
-  if (!safe) return null;
-  const merged = mergeNoopenerFeatures(features);
-  return globalThis.window.open(safe, target, merged);
-}
-function toCssUrl(url, opts = {}) {
-  const safe = safeUrl(url, opts);
-  if (!safe) return void 0;
-  const resolved = resolveAgainstDocument(safe, opts);
-  const escaped = resolved.replace(/[\\"\n\r]/g, (c) => `\\${c.charCodeAt(0).toString(16)} `);
-  return `url("${escaped}")`;
-}
-function resolveAgainstDocument(url, opts = {}) {
-  if (hasAbsoluteScheme(url)) return url;
-  const base = typeof opts.baseUrl === "string" && opts.baseUrl ? opts.baseUrl : globalThis.document?.baseURI ?? globalThis.location?.href;
-  if (!base) return url;
-  try {
-    return new URL(url, base).href;
-  } catch {
-    return url;
-  }
-}
-
 // src/Browser/security/markdown.js
 var CITE_ATTR = "data-citation";
 function createFallbackDocument() {
@@ -933,123 +865,6 @@ function markdownToSafeDom(markdown, document2) {
   return root;
 }
 
-// src/Browser/components/content/shared.js
-var SURFACE_STATUS = Object.freeze({
-  READY: "ready",
-  LOADING: "loading",
-  EMPTY: "empty",
-  ERROR: "error"
-});
-var STATUS_LABELS = Object.freeze({
-  ready: "",
-  loading: "Loading",
-  empty: "No content",
-  error: "Error"
-});
-function requireDocument(ctx = {}) {
-  const doc = ctx.document ?? globalThis.document;
-  if (!doc?.createElement) {
-    throw new Error("content component: ctx.document required");
-  }
-  return doc;
-}
-function setClass(el2, className) {
-  el2.setAttribute("class", String(className).trim());
-}
-function setOrRemoveAttr(el2, name, value) {
-  if (value == null || value === false || value === "") {
-    el2.removeAttribute(name);
-  } else {
-    el2.setAttribute(name, value === true ? "true" : String(value));
-  }
-}
-function clearChildren(el2) {
-  while (el2.firstChild) {
-    el2.removeChild(el2.firstChild);
-  }
-}
-function asText(value) {
-  if (value == null) return "";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  return "";
-}
-function resolveStatus(props = {}) {
-  const raw = props.status ?? props.state;
-  if (raw === "loading" || raw === "empty" || raw === "error" || raw === "ready") {
-    return raw;
-  }
-  if (props.loading === true) return "loading";
-  if (props.error != null && props.error !== false) return "error";
-  if (props.empty === true) return "empty";
-  return "ready";
-}
-var statusTextByHost = /* @__PURE__ */ new WeakMap();
-function findStatusTextChild(el2) {
-  const cached = statusTextByHost.get(el2);
-  if (cached && cached.parentNode === el2) return cached;
-  for (const child of el2.childNodes ?? []) {
-    if (child.nodeType === 1 && child.getAttribute?.("data-canvas-status-text") != null) {
-      statusTextByHost.set(el2, child);
-      return child;
-    }
-  }
-  return null;
-}
-function applySurfaceStatus(el2, doc, props = {}, opts = {}) {
-  const status = resolveStatus(props);
-  el2.setAttribute("data-status", status);
-  setOrRemoveAttr(el2, "aria-busy", status === "loading" ? "true" : null);
-  let statusEl = findStatusTextChild(el2);
-  const show = opts.showStatusText !== false && (status === "loading" || status === "empty" || status === "error");
-  if (show) {
-    if (!statusEl) {
-      statusEl = doc.createElement("span");
-      statusEl.setAttribute("data-canvas-status-text", "");
-      statusEl.setAttribute("class", "canvas-status-text");
-      el2.appendChild(statusEl);
-      statusTextByHost.set(el2, statusEl);
-    }
-    const msg = status === "loading" ? asText(props.loadingMessage) || opts.loadingMessage || STATUS_LABELS.loading : status === "empty" ? asText(props.emptyMessage) || opts.emptyMessage || STATUS_LABELS.empty : asText(props.errorMessage ?? props.error) || opts.errorMessage || STATUS_LABELS.error;
-    statusEl.textContent = msg;
-    statusEl.setAttribute("role", "status");
-    setOrRemoveAttr(statusEl, "aria-live", status === "error" ? "assertive" : "polite");
-  } else if (statusEl && statusEl.parentNode) {
-    statusEl.parentNode.removeChild(statusEl);
-    statusTextByHost.delete(el2);
-    statusEl = null;
-  }
-  return { status, statusEl };
-}
-function applyVariantCue(el2, variant, labelMap = {}) {
-  const v = String(variant || "neutral");
-  el2.setAttribute("data-variant", v);
-  const label = labelMap[v] || v;
-  const existing = el2.getAttribute("aria-label");
-  if (!existing) {
-    el2.setAttribute("aria-label", label);
-  }
-  return v;
-}
-function lifecycle(impl) {
-  return {
-    create(props = {}, ctx = {}) {
-      const doc = requireDocument(ctx);
-      const el2 = impl.mount(doc, props, ctx);
-      impl.patch(el2, props, ctx);
-      return el2;
-    },
-    update(el2, props = {}, ctx = {}) {
-      impl.patch(el2, props, ctx);
-    },
-    destroy(el2, ctx = {}) {
-      impl.unmount?.(el2, ctx);
-    },
-    // Content primitives render from props; keyed reconciler must not wipe chrome.
-    ownsChildren: impl.ownsChildren !== false
-  };
-}
-
 // src/Browser/components/content/TextContent.js
 var VARIANTS2 = /* @__PURE__ */ new Set(["clear", "card", "sunk"]);
 var WEIGHTS = /* @__PURE__ */ new Set(["normal", "medium", "bold"]);
@@ -1176,52 +991,6 @@ var TextCallout = lifecycle({
     el2.insertBefore(content, el2.firstChild);
   }
 });
-
-// src/Browser/renderer/inlineStyle.js
-function setInlineStyle(el2, declarations) {
-  if (!el2 || !declarations) return;
-  const style = (
-    /** @type {any} */
-    el2.style
-  );
-  if (style && typeof style.setProperty === "function") {
-    for (const [prop, value] of Object.entries(declarations)) {
-      if (value == null || value === "") style.removeProperty(prop);
-      else style.setProperty(prop, String(value));
-    }
-    return;
-  }
-  const existing = parseStyleAttr(el2.getAttribute?.("style") || "");
-  for (const [prop, value] of Object.entries(declarations)) {
-    if (value == null || value === "") delete existing[prop];
-    else existing[prop] = String(value);
-  }
-  const text2 = Object.entries(existing).map(([k, v]) => `${k}: ${v}`).join("; ");
-  if (text2) el2.setAttribute("style", text2);
-  else el2.removeAttribute("style");
-}
-function clearInlineStyle(el2) {
-  if (!el2) return;
-  const style = (
-    /** @type {any} */
-    el2.style
-  );
-  if (style && typeof style.setProperty === "function" && typeof style.cssText === "string") {
-    style.cssText = "";
-  }
-  if (typeof el2.removeAttribute === "function") el2.removeAttribute("style");
-}
-function parseStyleAttr(text2) {
-  const out = {};
-  for (const part of text2.split(";")) {
-    const i = part.indexOf(":");
-    if (i <= 0) continue;
-    const k = part.slice(0, i).trim();
-    const v = part.slice(i + 1).trim();
-    if (k) out[k] = v;
-  }
-  return out;
-}
 
 // src/Browser/components/content/Callout.js
 var VARIANTS4 = /* @__PURE__ */ new Set(["neutral", "info", "warning", "success", "danger"]);
@@ -1719,781 +1488,6 @@ var MetricIndicatorInline = {
   }
 };
 
-// src/Browser/lang/builtins.js
-function resolveField(obj, path) {
-  if (!path || obj == null) return void 0;
-  if (!path.includes(".")) return obj[path];
-  let cur = obj;
-  for (const p of path.split(".")) {
-    if (cur == null) return void 0;
-    cur = cur[p];
-  }
-  return cur;
-}
-function toNumber(val) {
-  if (typeof val === "number") return val;
-  if (typeof val === "string") {
-    const n = Number(val);
-    return isNaN(n) ? 0 : n;
-  }
-  if (typeof val === "boolean") return val ? 1 : 0;
-  return 0;
-}
-var BUILTINS = {
-  Count: {
-    name: "Count",
-    signature: "Count(array) \u2192 number",
-    description: "Returns array length",
-    fn: (arr) => Array.isArray(arr) ? arr.length : 0
-  },
-  First: {
-    name: "First",
-    signature: "First(array) \u2192 element",
-    description: "Returns first element of array",
-    fn: (arr) => Array.isArray(arr) ? arr[0] ?? null : null
-  },
-  Last: {
-    name: "Last",
-    signature: "Last(array) \u2192 element",
-    description: "Returns last element of array",
-    fn: (arr) => Array.isArray(arr) ? arr[arr.length - 1] ?? null : null
-  },
-  Sum: {
-    name: "Sum",
-    signature: "Sum(numbers[]) \u2192 number",
-    description: "Sum of numeric array",
-    fn: (arr) => Array.isArray(arr) ? arr.reduce((a, b) => a + toNumber(b), 0) : 0
-  },
-  Avg: {
-    name: "Avg",
-    signature: "Avg(numbers[]) \u2192 number",
-    description: "Average of numeric array",
-    fn: (arr) => Array.isArray(arr) && arr.length ? arr.reduce((a, b) => a + toNumber(b), 0) / arr.length : 0
-  },
-  Min: {
-    name: "Min",
-    signature: "Min(numbers[]) \u2192 number",
-    description: "Minimum value in array",
-    fn: (arr) => Array.isArray(arr) && arr.length ? arr.reduce((acc, b) => Math.min(acc, toNumber(b)), toNumber(arr[0])) : 0
-  },
-  Max: {
-    name: "Max",
-    signature: "Max(numbers[]) \u2192 number",
-    description: "Maximum value in array",
-    fn: (arr) => Array.isArray(arr) && arr.length ? arr.reduce((acc, b) => Math.max(acc, toNumber(b)), toNumber(arr[0])) : 0
-  },
-  Sort: {
-    name: "Sort",
-    signature: "Sort(array, field, direction?) \u2192 sorted array",
-    description: 'Sort array by field. Direction: "asc" (default) or "desc"',
-    fn: (arr, field, dir) => {
-      if (!Array.isArray(arr)) return arr;
-      const f = String(field ?? "");
-      const desc = String(dir ?? "asc") === "desc";
-      return [...arr].sort((a, b) => {
-        const av = f ? resolveField(a, f) : a;
-        const bv = f ? resolveField(b, f) : b;
-        const aIsNumeric = typeof av === "number" || typeof av === "string" && !isNaN(Number(av)) && av !== "";
-        const bIsNumeric = typeof bv === "number" || typeof bv === "string" && !isNaN(Number(bv)) && bv !== "";
-        if (aIsNumeric && bIsNumeric) {
-          const diff = toNumber(av) - toNumber(bv);
-          return desc ? -diff : diff;
-        }
-        const cmp = String(av ?? "").localeCompare(String(bv ?? ""));
-        return desc ? -cmp : cmp;
-      });
-    }
-  },
-  Filter: {
-    name: "Filter",
-    signature: 'Filter(array, field, operator: "==" | "!=" | ">" | "<" | ">=" | "<=" | "contains", value) \u2192 filtered array',
-    description: "Filter array by field value",
-    fn: (arr, field, op, value) => {
-      if (!Array.isArray(arr)) return [];
-      const f = String(field ?? "");
-      const o = String(op ?? "==");
-      return arr.filter((item) => {
-        const v = f ? resolveField(item, f) : item;
-        switch (o) {
-          case "==":
-            return v == value;
-          case "!=":
-            return v != value;
-          case ">":
-            return toNumber(v) > toNumber(value);
-          case "<":
-            return toNumber(v) < toNumber(value);
-          case ">=":
-            return toNumber(v) >= toNumber(value);
-          case "<=":
-            return toNumber(v) <= toNumber(value);
-          case "contains":
-            return String(v ?? "").includes(String(value ?? ""));
-          default:
-            return false;
-        }
-      });
-    }
-  },
-  Round: {
-    name: "Round",
-    signature: "Round(number, decimals?) \u2192 number",
-    description: "Round to N decimal places (default 0)",
-    fn: (n, decimals) => {
-      const num2 = toNumber(n);
-      const d = decimals != null ? toNumber(decimals) : 0;
-      const factor = Math.pow(10, d);
-      return Math.round(num2 * factor) / factor;
-    }
-  },
-  Abs: {
-    name: "Abs",
-    signature: "Abs(number) \u2192 number",
-    description: "Absolute value",
-    fn: (n) => Math.abs(toNumber(n))
-  },
-  Floor: {
-    name: "Floor",
-    signature: "Floor(number) \u2192 number",
-    description: "Round down to nearest integer",
-    fn: (n) => Math.floor(toNumber(n))
-  },
-  Ceil: {
-    name: "Ceil",
-    signature: "Ceil(number) \u2192 number",
-    description: "Round up to nearest integer",
-    fn: (n) => Math.ceil(toNumber(n))
-  }
-};
-var LAZY_BUILTINS = /* @__PURE__ */ new Set(["Each"]);
-var ACTION_STEPS = {
-  Run: "run",
-  ToAssistant: "continue_conversation",
-  OpenUrl: "open_url",
-  Set: "set",
-  Reset: "reset"
-};
-var ACTION_NAMES = /* @__PURE__ */ new Set(["Action", ...Object.keys(ACTION_STEPS)]);
-var BUILTIN_NAMES = /* @__PURE__ */ new Set([
-  ...Object.keys(BUILTINS),
-  ...LAZY_BUILTINS,
-  ...ACTION_NAMES
-]);
-function isBuiltin(name) {
-  return BUILTIN_NAMES.has(name);
-}
-var RESERVED_CALLS = { Query: "Query", Mutation: "Mutation" };
-function isReservedCall(name) {
-  return name in RESERVED_CALLS;
-}
-
-// src/Browser/components/chat/continueConversation.js
-var MAX_CONTINUE_CHARS = 4e3;
-function boundContinueText(value, max = MAX_CONTINUE_CHARS) {
-  const s = value == null ? "" : String(value);
-  if (s.length <= max) return s;
-  return s.slice(0, max);
-}
-function isStreaming(ctx = {}) {
-  return ctx.stream?.isStreaming === true;
-}
-function resolveContinuePayload(props = {}, opts = {}) {
-  const action = props.action;
-  let message = "";
-  let context;
-  if (action && typeof action === "object") {
-    const type = String(action.type || "").toLowerCase();
-    if (type && type !== "continue_conversation" && type !== ACTION_STEPS.ToAssistant && type !== "toassistant") {
-      return null;
-    }
-    if (typeof action.message === "string") message = action.message;
-    else if (typeof action.context === "string" && !action.message) {
-      message = action.context;
-    }
-    if (typeof action.context === "string") context = action.context;
-    if (action.params && typeof action.params === "object") {
-      const p = (
-        /** @type {Record<string, unknown>} */
-        action.params
-      );
-      if (!message && typeof p.context === "string") message = p.context;
-      if (!context && typeof p.context === "string") context = p.context;
-      if (typeof p.message === "string") message = p.message;
-    }
-    if (Array.isArray(action.steps)) {
-      const step = action.steps.find(
-        (s) => s && typeof s === "object" && (s.type === ACTION_STEPS.ToAssistant || s.type === "continue_conversation")
-      );
-      if (step) {
-        if (typeof step.message === "string") message = step.message;
-        if (typeof step.context === "string") context = step.context;
-      }
-    }
-  }
-  if (!message) {
-    message = opts.fallbackMessage || (typeof props.text === "string" ? props.text : "") || (typeof props.title === "string" ? props.title : "") || "";
-  }
-  message = boundContinueText(message);
-  if (context != null) context = boundContinueText(context, MAX_CONTINUE_CHARS);
-  if (!message && !context) return null;
-  if (!message && context) message = context;
-  return { message, context };
-}
-function dispatchContinueConversation(ctx = {}, props = {}, opts = {}) {
-  if (opts.userGesture === false) {
-    return { ok: false, reason: "gesture-required" };
-  }
-  if (isStreaming(ctx)) {
-    return { ok: false, reason: "streaming" };
-  }
-  const payload = resolveContinuePayload(props, opts);
-  if (!payload || !payload.message) {
-    return { ok: false, reason: "empty" };
-  }
-  const actions = ctx.actions;
-  if (actions && typeof actions.run === "function") {
-    const plan = {
-      steps: [
-        {
-          type: ACTION_STEPS.ToAssistant,
-          message: payload.message,
-          context: payload.context
-        }
-      ]
-    };
-    void actions.run(plan, { userGesture: true });
-    return { ok: true };
-  }
-  if (actions && typeof actions.continueConversation === "function") {
-    actions.continueConversation(payload.message, payload.context);
-    return { ok: true };
-  }
-  if (typeof ctx.continueConversation === "function") {
-    ctx.continueConversation(payload.message, payload.context);
-    return { ok: true };
-  }
-  if (ctx.host && typeof ctx.host.continueConversation === "function") {
-    ctx.host.continueConversation(payload.message, payload.context);
-    return { ok: true };
-  }
-  return { ok: false, reason: "no-handler" };
-}
-
-// src/Browser/components/content/ListItem.js
-var VARIANTS7 = /* @__PURE__ */ new Set(["number", "image", "icon"]);
-var SIZES3 = /* @__PURE__ */ new Set(["default", "small"]);
-function hasAction(props) {
-  return props.action != null && props.action !== false;
-}
-function renderIndicator(el2, doc, props, ctx) {
-  const variant = VARIANTS7.has(asText(props.variant)) ? asText(props.variant) : "number";
-  const listHasSubtitle = props.listHasSubtitle === true || !!asText(props.subtitle);
-  const index = typeof props.index === "number" ? props.index : 0;
-  const indicator = doc.createElement("div");
-  let indCls = "canvas-list-item__indicator";
-  if (!listHasSubtitle) indCls += " canvas-list-item__indicator--no-subtitle";
-  if (hasAction(props)) indCls += " canvas-list-item__indicator--clickable";
-  indicator.setAttribute("class", indCls);
-  indicator.setAttribute("data-variant", variant);
-  if (variant === "number") {
-    const num2 = doc.createElement("div");
-    num2.setAttribute("class", "canvas-list-item__indicator-number");
-    num2.textContent = String(index + 1);
-    indicator.appendChild(num2);
-  } else if (variant === "image") {
-    const image = props.image && typeof props.image === "object" ? props.image : null;
-    const srcRaw = image && typeof image.src === "string" ? image.src : "";
-    const alt = image && typeof image.alt === "string" ? image.alt : "";
-    const safe = srcRaw && (ctx.urlPolicy?.safeUrl ? ctx.urlPolicy.safeUrl(srcRaw) : safeUrl(srcRaw));
-    if (safe || alt) {
-      const wrap = doc.createElement("div");
-      wrap.setAttribute("class", "canvas-list-item__indicator-image");
-      if (safe) {
-        const img = doc.createElement("img");
-        img.setAttribute("src", safe);
-        img.setAttribute("alt", alt);
-        img.setAttribute("width", "40");
-        img.setAttribute("height", "40");
-        wrap.appendChild(img);
-      } else {
-        wrap.textContent = alt;
-      }
-      indicator.appendChild(wrap);
-    }
-  } else if (variant === "icon" && asText(props.icon)) {
-    const icon = doc.createElement("span");
-    icon.setAttribute("class", "canvas-list-item__indicator-icon");
-    icon.setAttribute("aria-hidden", "true");
-    icon.textContent = asText(props.icon);
-    indicator.appendChild(icon);
-  }
-  el2.appendChild(indicator);
-}
-var ListItem = lifecycle({
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "ListItem");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const size = SIZES3.has(asText(props.size)) ? asText(props.size) : "default";
-    const actionable = hasAction(props);
-    const streaming = ctx.stream?.isStreaming === true;
-    let wrapCls = "canvas-list-item-wrapper";
-    if (size === "small") wrapCls += " canvas-list-item-wrapper--small";
-    if (actionable) wrapCls += " canvas-list-item-wrapper--with-action";
-    setClass(el2, wrapCls);
-    el2.setAttribute("data-size", size);
-    el2.setAttribute("data-actionable", actionable ? "true" : "false");
-    setOrRemoveAttr(el2, "data-streaming-blocked", streaming && actionable ? "true" : null);
-    clearChildren(el2);
-    const row = doc.createElement("div");
-    let rowCls = "canvas-list-item";
-    if (actionable) rowCls += " canvas-list-item--clickable";
-    if (streaming && actionable) rowCls += " canvas-list-item--disabled";
-    row.setAttribute("class", rowCls);
-    if (actionable) {
-      row.setAttribute("role", "button");
-      row.setAttribute("tabindex", streaming ? "-1" : "0");
-      setOrRemoveAttr(row, "aria-disabled", streaming ? "true" : null);
-      const activate = () => {
-        dispatchContinueConversation(ctx, props, {
-          fallbackMessage: asText(props.title),
-          userGesture: true
-        });
-      };
-      row.onclick = () => activate();
-      row.onkeydown = (ev) => {
-        const key = ev?.key;
-        if (key === "Enter" || key === " ") {
-          ev?.preventDefault?.();
-          activate();
-        }
-      };
-    } else {
-      row.removeAttribute("role");
-      row.removeAttribute("tabindex");
-      row.onclick = null;
-      row.onkeydown = null;
-    }
-    renderIndicator(row, doc, props, ctx);
-    const contentWrap = doc.createElement("div");
-    contentWrap.setAttribute("class", "canvas-list-item__content-wrapper");
-    const content = doc.createElement("div");
-    content.setAttribute("class", "canvas-list-item__content");
-    const title = asText(props.title);
-    if (title) {
-      const t = doc.createElement("div");
-      t.setAttribute("class", "canvas-list-item__title");
-      t.textContent = title;
-      content.appendChild(t);
-    }
-    const subtitle = asText(props.subtitle);
-    if (subtitle) {
-      const s = doc.createElement("div");
-      s.setAttribute("class", "canvas-list-item__subtitle");
-      s.textContent = subtitle;
-      content.appendChild(s);
-    }
-    contentWrap.appendChild(content);
-    if (actionable) {
-      const actionLabel = asText(props.actionLabel);
-      if (actionLabel) {
-        const act = doc.createElement("div");
-        act.setAttribute("class", "canvas-list-item__action");
-        const lab = doc.createElement("div");
-        lab.setAttribute("class", "canvas-list-item__action-label");
-        lab.textContent = actionLabel;
-        act.appendChild(lab);
-        const chevron = doc.createElement("span");
-        chevron.setAttribute("class", "canvas-list-item__action-icon");
-        chevron.setAttribute("aria-hidden", "true");
-        chevron.textContent = "\u203A";
-        act.appendChild(chevron);
-        contentWrap.appendChild(act);
-      }
-    }
-    row.appendChild(contentWrap);
-    el2.appendChild(row);
-  }
-});
-
-// src/Browser/components/content/ListBlock.js
-var VARIANTS8 = /* @__PURE__ */ new Set(["number", "image", "icon"]);
-var SIZES4 = /* @__PURE__ */ new Set(["default", "small"]);
-function normalizeListItems(props = {}) {
-  if (Array.isArray(props.items)) {
-    return props.items.map((item) => {
-      if (!item || typeof item !== "object") return null;
-      if (item.props && typeof item.props === "object") {
-        return (
-          /** @type {Record<string, unknown>} */
-          item.props
-        );
-      }
-      return (
-        /** @type {Record<string, unknown>} */
-        item
-      );
-    }).filter(Boolean);
-  }
-  return [];
-}
-var ListBlock = lifecycle({
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "ListBlock");
-    el2.setAttribute("role", "list");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const variant = VARIANTS8.has(asText(props.variant)) ? asText(props.variant) : "number";
-    const size = SIZES4.has(asText(props.size)) ? asText(props.size) : "default";
-    const items = normalizeListItems(props);
-    const listHasSubtitle = items.some((it) => !!asText(it.subtitle));
-    let cls = "canvas-list-block";
-    if (size === "small") cls += " canvas-list-block--small";
-    setClass(el2, cls);
-    el2.setAttribute("data-variant", variant);
-    el2.setAttribute("data-size", size);
-    el2.setAttribute("data-item-count", String(items.length));
-    clearChildren(el2);
-    if (typeof ctx.renderChildren === "function" && Array.isArray(props.children) && props.children.length) {
-      const enhanced = props.children.map((child, index) => {
-        if (!child || typeof child !== "object") return child;
-        const c = (
-          /** @type {Record<string, unknown>} */
-          child
-        );
-        const childProps = c.props && typeof c.props === "object" ? (
-          /** @type {Record<string, unknown>} */
-          c.props
-        ) : {};
-        return {
-          ...c,
-          props: {
-            ...childProps,
-            variant,
-            size,
-            listHasSubtitle,
-            index: typeof childProps.index === "number" ? childProps.index : index
-          }
-        };
-      });
-      ctx.renderChildren(el2, enhanced);
-      return;
-    }
-    for (let i = 0; i < items.length; i++) {
-      const itemProps = {
-        ...items[i],
-        variant,
-        size,
-        listHasSubtitle,
-        index: i
-      };
-      const child = ListItem.create(itemProps, ctx);
-      child.setAttribute("role", "listitem");
-      el2.appendChild(child);
-    }
-  }
-});
-
-// src/Browser/components/content/CodeBlock.js
-var copiedTimers = /* @__PURE__ */ new WeakMap();
-async function copyTextNoFocusSteal(text2) {
-  const value = String(text2 ?? "");
-  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-    try {
-      await navigator.clipboard.writeText(value);
-      return true;
-    } catch {
-    }
-  }
-  if (typeof document === "undefined") return false;
-  const prev = document.activeElement;
-  const ta = document.createElement("textarea");
-  ta.value = value;
-  ta.setAttribute("readonly", "true");
-  ta.style.position = "fixed";
-  ta.style.left = "-9999px";
-  document.body?.appendChild(ta);
-  if (typeof ta.select === "function") {
-    ta.select();
-  } else if (typeof ta.setSelectionRange === "function") {
-    ta.setSelectionRange(0, value.length);
-  }
-  let ok = false;
-  try {
-    ok = typeof document.execCommand === "function" && document.execCommand("copy") === true;
-  } catch {
-    ok = false;
-  }
-  if (typeof ta.remove === "function") {
-    ta.remove();
-  } else if (ta.parentNode) {
-    ta.parentNode.removeChild(ta);
-  }
-  if (prev && typeof prev.focus === "function") {
-    try {
-      prev.focus();
-    } catch {
-    }
-  }
-  return ok;
-}
-function clearCopiedTimer(el2) {
-  const t = copiedTimers.get(el2);
-  if (t != null) {
-    clearTimeout(t);
-    copiedTimers.delete(el2);
-  }
-}
-var CodeBlock = lifecycle({
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "CodeBlock");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const language = asText(props.language) || "text";
-    const codeString = asText(props.codeString ?? props.code ?? props.children);
-    setClass(el2, "canvas-code-block");
-    el2.setAttribute("data-language", language);
-    clearChildren(el2);
-    clearCopiedTimer(el2);
-    const live = doc.createElement("span");
-    live.setAttribute("class", "canvas-code-block__live");
-    live.setAttribute("aria-live", "polite");
-    live.setAttribute("aria-atomic", "true");
-    live.setAttribute("data-canvas-copy-live", "");
-    setInlineStyle(live, { position: "absolute", width: "1px", height: "1px", overflow: "hidden", clip: "rect(0,0,0,0)" });
-    const btn = doc.createElement("button");
-    btn.setAttribute("type", "button");
-    btn.setAttribute("class", "canvas-code-block__copy");
-    btn.setAttribute("aria-label", "Copy code");
-    btn.setAttribute("data-copied", "false");
-    btn.textContent = "Copy";
-    const setCopied = (copied) => {
-      btn.setAttribute("data-copied", copied ? "true" : "false");
-      btn.setAttribute("aria-label", copied ? "Copied to clipboard" : "Copy code");
-      btn.textContent = copied ? "Copied" : "Copy";
-      setOrRemoveAttr(btn, "class", null);
-      btn.setAttribute(
-        "class",
-        copied ? "canvas-code-block__copy canvas-code-block__copy--copied" : "canvas-code-block__copy"
-      );
-      live.textContent = copied ? "Copied to clipboard" : "";
-    };
-    btn.onclick = async (ev) => {
-      ev?.preventDefault?.();
-      const ok = await copyTextNoFocusSteal(codeString);
-      if (!ok) {
-        live.textContent = "Copy failed";
-        return;
-      }
-      setCopied(true);
-      clearCopiedTimer(el2);
-      const timer = setTimeout(() => {
-        setCopied(false);
-        copiedTimers.delete(el2);
-      }, 1e3);
-      copiedTimers.set(el2, timer);
-    };
-    const pre = doc.createElement("pre");
-    pre.setAttribute("class", "canvas-code-block__pre");
-    const code = doc.createElement("code");
-    code.setAttribute("class", `canvas-code-block__code language-${language}`);
-    code.textContent = codeString;
-    pre.appendChild(code);
-    el2.appendChild(btn);
-    el2.appendChild(pre);
-    el2.appendChild(live);
-  },
-  unmount(el2) {
-    clearCopiedTimer(el2);
-  }
-});
-
-// src/Browser/components/content/Image.js
-var ASPECT = /* @__PURE__ */ new Set(["1:1", "3:2", "3:4", "4:3", "16:9"]);
-var SCALE = /* @__PURE__ */ new Set(["fit", "fill"]);
-var ASPECT_RATIO = {
-  "1:1": "1 / 1",
-  "3:2": "3 / 2",
-  "3:4": "3 / 4",
-  "4:3": "4 / 3",
-  "16:9": "16 / 9"
-};
-function resolveImageAccessibility(props = {}) {
-  const decorative = props.decorative === true || props.decorative === "true" || props.role === "presentation" || props.role === "none";
-  const alt = asText(props.alt);
-  if (decorative) {
-    return { ok: true, alt: "", decorative: true };
-  }
-  if (alt) {
-    return { ok: true, alt, decorative: false };
-  }
-  return { ok: false, reason: "alt-or-decorative-required" };
-}
-function resolveSafeSrc(props, ctx) {
-  const raw = asText(props.src);
-  if (!raw) return void 0;
-  const policy = ctx.urlPolicy && typeof ctx.urlPolicy.safeUrl === "function" ? ctx.urlPolicy.safeUrl : safeUrl;
-  return policy(raw);
-}
-function showFallback(el2, doc, message) {
-  el2.setAttribute("data-status", "error");
-  el2.setAttribute("data-broken", "true");
-  const fb = doc.createElement("div");
-  fb.setAttribute("class", "canvas-image__fallback");
-  fb.setAttribute("role", "img");
-  fb.setAttribute("aria-label", message);
-  fb.textContent = message;
-  el2.appendChild(fb);
-}
-var Image = lifecycle({
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "Image");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const aspect = ASPECT.has(asText(props.aspectRatio)) ? asText(props.aspectRatio) : "3:2";
-    const scale = SCALE.has(asText(props.scale)) ? asText(props.scale) : "fill";
-    setClass(el2, `canvas-image canvas-image--scale-${scale}`);
-    el2.setAttribute("data-aspect", aspect);
-    setInlineStyle(el2, { "aspect-ratio": ASPECT_RATIO[aspect] });
-    clearChildren(el2);
-    const a11y = resolveImageAccessibility(props);
-    if (!a11y.ok) {
-      showFallback(el2, doc, "Image missing alt text");
-      el2.setAttribute("data-a11y", "missing-alt");
-      return;
-    }
-    const safe = resolveSafeSrc(props, ctx);
-    if (!safe) {
-      showFallback(el2, doc, props.src ? "Unsafe image URL blocked" : "Image unavailable");
-      el2.setAttribute("data-a11y", a11y.decorative ? "decorative" : "labelled");
-      return;
-    }
-    el2.setAttribute("data-status", "ready");
-    el2.setAttribute("data-a11y", a11y.decorative ? "decorative" : "labelled");
-    el2.removeAttribute("data-broken");
-    const img = doc.createElement("img");
-    img.setAttribute("class", `canvas-image__img canvas-image__img--${scale}`);
-    img.setAttribute("src", safe);
-    if (a11y.decorative) {
-      img.setAttribute("alt", "");
-      img.setAttribute("role", "presentation");
-    } else {
-      img.setAttribute("alt", a11y.alt);
-    }
-    img.onload = () => {
-      el2.setAttribute("data-status", "ready");
-      el2.removeAttribute("data-broken");
-      setOrRemoveAttr(img, "data-broken", null);
-    };
-    img.onerror = () => {
-      el2.setAttribute("data-broken", "true");
-      el2.setAttribute("data-status", "error");
-      img.setAttribute("data-broken", "true");
-      clearChildren(el2);
-      showFallback(el2, doc, "Image failed to load");
-    };
-    el2.appendChild(img);
-  }
-});
-
-// src/Browser/components/content/ImageBlock.js
-var ImageBlock = lifecycle({
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "ImageBlock");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    setClass(el2, "canvas-image-block");
-    clearChildren(el2);
-    const a11y = resolveImageAccessibility(props);
-    if (!a11y.ok) {
-      el2.setAttribute("data-status", "error");
-      el2.setAttribute("data-a11y", "missing-alt");
-      const fb = doc.createElement("div");
-      fb.setAttribute("class", "canvas-image-block__fallback");
-      fb.setAttribute("role", "img");
-      fb.setAttribute("aria-label", "Image missing alt text");
-      fb.textContent = "Image missing alt text";
-      el2.appendChild(fb);
-      return;
-    }
-    const safe = resolveSafeSrc(props, ctx);
-    if (!safe) {
-      el2.setAttribute("data-status", "error");
-      el2.setAttribute("data-a11y", a11y.decorative ? "decorative" : "labelled");
-      const fb = doc.createElement("div");
-      fb.setAttribute("class", "canvas-image-block__fallback");
-      fb.setAttribute("role", "img");
-      fb.setAttribute(
-        "aria-label",
-        props.src ? "Unsafe image URL blocked" : "Image unavailable"
-      );
-      fb.textContent = props.src ? "Unsafe image URL blocked" : "Image unavailable";
-      el2.appendChild(fb);
-      return;
-    }
-    el2.setAttribute("data-status", "loading");
-    el2.setAttribute("data-a11y", a11y.decorative ? "decorative" : "labelled");
-    el2.removeAttribute("data-broken");
-    const cssUrl = ctx.urlPolicy && typeof ctx.urlPolicy.toCssUrl === "function" ? ctx.urlPolicy.toCssUrl(safe) : toCssUrl(safe);
-    if (cssUrl) {
-      setInlineStyle(el2, { "--canvas-image-block-bg": cssUrl });
-      el2.setAttribute("class", "canvas-image-block canvas-image-block--has-bg");
-    }
-    const img = doc.createElement("img");
-    img.setAttribute("class", "canvas-image-block__image");
-    img.setAttribute("src", safe);
-    if (a11y.decorative) {
-      img.setAttribute("alt", "");
-      img.setAttribute("role", "presentation");
-    } else {
-      img.setAttribute("alt", a11y.alt);
-    }
-    const loader = doc.createElement("div");
-    loader.setAttribute("class", "canvas-image-block__loader");
-    loader.setAttribute("aria-hidden", "true");
-    if (props.imageLoading === false) {
-      loader.setAttribute("hidden", "true");
-      el2.setAttribute("data-status", "ready");
-    }
-    img.onload = () => {
-      el2.setAttribute("data-status", "ready");
-      el2.removeAttribute("data-broken");
-      loader.setAttribute("hidden", "true");
-      img.removeAttribute("data-broken");
-    };
-    img.onerror = () => {
-      el2.setAttribute("data-broken", "true");
-      el2.setAttribute("data-status", "error");
-      el2.removeAttribute("style");
-      setClass(el2, "canvas-image-block canvas-image-block--error");
-      clearChildren(el2);
-      const fb = doc.createElement("div");
-      fb.setAttribute("class", "canvas-image-block__fallback");
-      fb.setAttribute("role", "img");
-      fb.setAttribute("aria-label", "Image failed to load");
-      fb.textContent = "Image failed to load";
-      el2.appendChild(fb);
-    };
-    el2.appendChild(img);
-    el2.appendChild(loader);
-  }
-});
-
 // src/Browser/components/content/iconAllowlist.js
 var ICON_GLYPHS = {
   accessibility: [
@@ -2941,7 +1935,7 @@ var Icon = lifecycle({
 });
 
 // src/Browser/components/content/MarkDownRenderer.js
-var VARIANTS9 = /* @__PURE__ */ new Set(["clear", "card", "sunk"]);
+var VARIANTS7 = /* @__PURE__ */ new Set(["clear", "card", "sunk"]);
 var MarkDownRenderer = lifecycle({
   mount(doc) {
     const el2 = doc.createElement("div");
@@ -2950,7 +1944,7 @@ var MarkDownRenderer = lifecycle({
   },
   patch(el2, props = {}, ctx = {}) {
     const doc = ctx.document ?? el2.ownerDocument;
-    const variant = VARIANTS9.has(asText(props.variant)) ? asText(props.variant) : "clear";
+    const variant = VARIANTS7.has(asText(props.variant)) ? asText(props.variant) : "clear";
     setClass(el2, `canvas-markdown canvas-markdown--${variant}`);
     el2.setAttribute("data-variant", variant);
     clearChildren(el2);
@@ -2991,171 +1985,6 @@ function registerContent(registry) {
     registry.register(type, entry);
   }
   return registry;
-}
-
-// src/Browser/components/containers/shared.js
-function requireDocument2(ctx = {}) {
-  const doc = ctx.document ?? globalThis.document;
-  if (!doc?.createElement) {
-    throw new Error("container component: ctx.document required");
-  }
-  return doc;
-}
-function setClass2(el2, className) {
-  el2.setAttribute("class", String(className).trim());
-}
-function setOrRemoveAttr2(el2, name, value) {
-  if (value == null || value === false || value === "") {
-    el2.removeAttribute(name);
-  } else {
-    el2.setAttribute(name, value === true ? "true" : String(value));
-  }
-}
-function asText2(value) {
-  if (value == null) return "";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  return "";
-}
-function normalizeItem(raw) {
-  if (raw == null) return null;
-  if (typeof raw !== "object") return null;
-  const obj = (
-    /** @type {Record<string, unknown>} */
-    raw
-  );
-  const props = obj.props && typeof obj.props === "object" ? (
-    /** @type {Record<string, unknown>} */
-    obj.props
-  ) : obj;
-  const value = asText2(props.value);
-  if (!value) return null;
-  const trigger = asText2(props.trigger ?? props.label ?? props.title);
-  let content = props.content;
-  if (content == null && Array.isArray(obj.children)) {
-    content = obj.children;
-  }
-  if (content == null && Array.isArray(props.children)) {
-    content = props.children;
-  }
-  if (!Array.isArray(content)) {
-    content = content == null ? [] : [content];
-  }
-  const out = { value, trigger, content };
-  if (obj.id != null) out.id = /** @type {string|number} */
-  obj.id;
-  else if (props.id != null) out.id = /** @type {string|number} */
-  props.id;
-  if (obj.key != null) out.key = /** @type {string|number} */
-  obj.key;
-  else if (props.key != null) out.key = /** @type {string|number} */
-  props.key;
-  return out;
-}
-function normalizeItems(props = {}, itemType) {
-  const rawList = Array.isArray(props.items) ? props.items : Array.isArray(props.children) ? props.children : [];
-  const out = [];
-  for (const raw of rawList) {
-    if (itemType && raw && typeof raw === "object" && /** @type {Record<string, unknown>} */
-    raw.type != null && /** @type {Record<string, unknown>} */
-    raw.type !== itemType) {
-      continue;
-    }
-    const item = normalizeItem(raw);
-    if (item) out.push(item);
-  }
-  return out;
-}
-function itemKey(item, index) {
-  if (item.key != null) return String(item.key);
-  if (item.id != null) return String(item.id);
-  return item.value || String(index);
-}
-function contentSize(content) {
-  try {
-    return JSON.stringify(content ?? null).length;
-  } catch {
-    return Array.isArray(content) ? content.length : content == null ? 0 : 1;
-  }
-}
-function findDirectByAttr(parent, attr, value) {
-  const out = [];
-  for (const child of parent.childNodes ?? []) {
-    if (child.nodeType !== 1) continue;
-    const el2 = (
-      /** @type {Element} */
-      child
-    );
-    if (value == null) {
-      if (el2.getAttribute?.(attr) != null) out.push(el2);
-    } else if (el2.getAttribute?.(attr) === value) {
-      out.push(el2);
-    }
-  }
-  return out;
-}
-function renderItemContent(host, content, ctx) {
-  if (typeof ctx.renderChildren === "function") {
-    ctx.renderChildren(host, content ?? []);
-    return;
-  }
-  while (host.firstChild) host.removeChild(host.firstChild);
-  const doc = ctx.document ?? host.ownerDocument ?? globalThis.document;
-  for (const child of content ?? []) {
-    if (child == null) continue;
-    if (typeof child === "string" || typeof child === "number") {
-      host.appendChild(doc.createTextNode(String(child)));
-    } else if (typeof child === "object" && /** @type {Record<string, unknown>} */
-    child.nodeType === 1) {
-      host.appendChild(
-        /** @type {Node} */
-        child
-      );
-    } else if (typeof child === "object" && typeof /** @type {Record<string, unknown>} */
-    child.type === "string") {
-      const span = doc.createElement("span");
-      span.setAttribute("data-canvas-stub", String(
-        /** @type {Record<string, unknown>} */
-        child.type
-      ));
-      const text2 = (
-        /** @type {Record<string, unknown>} */
-        child.props && typeof /** @type {Record<string, unknown>} */
-        child.props === "object" ? asText2(
-          /** @type {Record<string, unknown>} */
-          /** @type {Record<string, unknown>} */
-          child.props.text ?? /** @type {Record<string, unknown>} */
-          /** @type {Record<string, unknown>} */
-          child.props.content
-        ) : ""
-      );
-      if (text2) span.textContent = text2;
-      host.appendChild(span);
-    }
-  }
-}
-var _uid = 0;
-function nextUid() {
-  _uid += 1;
-  return `c${_uid}`;
-}
-function lifecycle2(impl) {
-  return {
-    create(props = {}, ctx = {}) {
-      const doc = requireDocument2(ctx);
-      const el2 = impl.mount(doc, props, ctx);
-      impl.patch(el2, props, ctx);
-      return el2;
-    },
-    update(el2, props = {}, ctx = {}) {
-      impl.patch(el2, props, ctx);
-    },
-    destroy(el2, ctx = {}) {
-      impl.unmount?.(el2, ctx);
-    },
-    // When true, keyed reconciler will not wipe this element's children.
-    ownsChildren: impl.ownsChildren === true
-  };
 }
 
 // src/Browser/components/containers/Tabs.js
@@ -3280,7 +2109,7 @@ function ensureShell(doc, root) {
   return { list, panels };
 }
 function syncItems(root, items, ctx) {
-  const doc = requireDocument2(ctx);
+  const doc = requireDocument(ctx);
   const state = getState(root);
   const { list, panels } = ensureShell(doc, root);
   const existingTabs = /* @__PURE__ */ new Map();
@@ -3523,7 +2352,7 @@ function autoOpenSelection(state, items) {
   return state.open;
 }
 function syncItems2(root, items, ctx) {
-  const doc = requireDocument2(ctx);
+  const doc = requireDocument(ctx);
   const state = getState2(root);
   const existing = /* @__PURE__ */ new Map();
   for (const item of getItems(root)) {
@@ -3755,67 +2584,6 @@ function registerContainers(registry) {
   return registry;
 }
 
-// src/Browser/runtime/formValidation.js
-var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-var URL_RE = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
-var SAFE_PATTERN_RE = /^[\^]?[\[\]a-zA-Z0-9\s\\\.\+\*\?\-\|_(){,}]+[$]?$/;
-function compileSafePattern(pattern) {
-  if (typeof pattern !== "string" || pattern.length === 0 || pattern.length > 200) {
-    return null;
-  }
-  if (!SAFE_PATTERN_RE.test(pattern)) return null;
-  if (/\(\?/.test(pattern) || /\*\*/.test(pattern)) return null;
-  if (/\([^)]*[+*][^)]*\)[+*]/.test(pattern)) return null;
-  try {
-    return new RegExp(`^(?:${pattern})$`);
-  } catch {
-    return null;
-  }
-}
-function validateField(value, rules = {}) {
-  const str = value == null ? "" : String(value);
-  if (rules.required && (value == null || str.trim() === "")) {
-    return { ok: false, code: "required", message: "required" };
-  }
-  if (!rules.required && (value == null || str === "")) {
-    return { ok: true };
-  }
-  if (rules.email && !EMAIL_RE.test(str)) {
-    return { ok: false, code: "email", message: "invalid email" };
-  }
-  if (rules.url && !URL_RE.test(str)) {
-    return { ok: false, code: "url", message: "invalid url" };
-  }
-  if (rules.number || rules.numeric) {
-    if (Number.isNaN(Number(str)) || str.trim() === "") {
-      return { ok: false, code: "number", message: "not a number" };
-    }
-  }
-  const num2 = Number(str);
-  if (rules.min != null && num2 < rules.min) {
-    return { ok: false, code: "min", message: `min ${rules.min}` };
-  }
-  if (rules.max != null && num2 > rules.max) {
-    return { ok: false, code: "max", message: `max ${rules.max}` };
-  }
-  if (rules.minLength != null && str.length < rules.minLength) {
-    return { ok: false, code: "minLength", message: `minLength ${rules.minLength}` };
-  }
-  if (rules.maxLength != null && str.length > rules.maxLength) {
-    return { ok: false, code: "maxLength", message: `maxLength ${rules.maxLength}` };
-  }
-  if (rules.pattern) {
-    const re = compileSafePattern(rules.pattern);
-    if (!re) {
-      return { ok: false, code: "unsafe-pattern", message: "pattern rejected" };
-    }
-    if (!re.test(str)) {
-      return { ok: false, code: "pattern", message: "pattern mismatch" };
-    }
-  }
-  return { ok: true };
-}
-
 // src/Browser/components/forms/formValidationController.js
 function createFormValidationController() {
   const errors = /* @__PURE__ */ Object.create(null);
@@ -3871,7 +2639,7 @@ function createFormValidationController() {
 }
 
 // src/Browser/components/forms/shared.js
-function requireDocument3(ctx = {}) {
+function requireDocument2(ctx = {}) {
   const doc = ctx.document ?? globalThis.document;
   if (!doc?.createElement) {
     throw new Error("form component: ctx.document required");
@@ -3984,15 +2752,15 @@ function controlId(name, suffix = "") {
   const base = name ? `canvas-field-${name}` : `canvas-field-${nextUid2()}`;
   return suffix ? `${base}-${suffix}` : base;
 }
-var _uid2 = 0;
+var _uid = 0;
 function nextUid2() {
-  _uid2 += 1;
-  return `f${_uid2}`;
+  _uid += 1;
+  return `f${_uid}`;
 }
 function lifecycle3(impl) {
   return {
     create(props = {}, ctx = {}) {
-      const doc = requireDocument3(ctx);
+      const doc = requireDocument2(ctx);
       const el2 = impl.mount(doc, props, ctx);
       impl.patch(el2, props, ctx);
       return el2;
@@ -4008,7 +2776,7 @@ function lifecycle3(impl) {
 }
 function renderContent(host, content, ctx) {
   clearChildren2(host);
-  const doc = requireDocument3(ctx);
+  const doc = requireDocument2(ctx);
   if (content == null) return;
   if (typeof content === "string" || typeof content === "number") {
     host.appendChild(doc.createTextNode(String(content)));
@@ -4236,7 +3004,7 @@ var Form = lifecycle3({
   },
   patch(el2, props = {}, ctx = {}) {
     rejectNested(props, ctx);
-    const doc = requireDocument3(ctx);
+    const doc = requireDocument2(ctx);
     const formName = asText3(props.name) || "form";
     let state = getState3(el2);
     if (!state || state.formName !== formName) {
@@ -5863,13 +4631,13 @@ async function dispatchButtonAction(el2, props, ctx, meta = {}) {
 }
 
 // src/Browser/components/actions/Button.js
-var VARIANTS10 = /* @__PURE__ */ new Set(["primary", "secondary", "tertiary", "ghost"]);
-var SIZES5 = /* @__PURE__ */ new Set(["extra-small", "small", "medium", "large", "sm", "md", "lg", "xs"]);
+var VARIANTS8 = /* @__PURE__ */ new Set(["primary", "secondary", "tertiary", "ghost"]);
+var SIZES3 = /* @__PURE__ */ new Set(["extra-small", "small", "medium", "large", "sm", "md", "lg", "xs"]);
 var STATE15 = /* @__PURE__ */ new WeakMap();
 function resolveVariant6(props) {
   const v = asText3(props.variant) || "primary";
   if (v === "ghost") return "tertiary";
-  return VARIANTS10.has(v) ? v : "primary";
+  return VARIANTS8.has(v) ? v : "primary";
 }
 function resolveSize3(props) {
   const s = asText3(props.size) || "medium";
@@ -5877,7 +4645,7 @@ function resolveSize3(props) {
   if (s === "sm") return "small";
   if (s === "md") return "medium";
   if (s === "lg") return "large";
-  return SIZES5.has(s) ? s : "medium";
+  return SIZES3.has(s) ? s : "medium";
 }
 var Button = lifecycle3({
   // Label is textContent — reconciler must not wipe the text node.
@@ -6063,7 +4831,7 @@ function registerActions(registry) {
 }
 
 // src/Browser/components/cards/shared.js
-function requireDocument4(ctx = {}) {
+function requireDocument3(ctx = {}) {
   const doc = ctx.document ?? globalThis.document;
   if (!doc?.createElement) {
     throw new Error("cards component: ctx.document required");
@@ -6277,7 +5045,7 @@ function resolveSafeUrl(url, ctx = {}) {
 function lifecycle4(impl) {
   return {
     create(props = {}, ctx = {}) {
-      const doc = requireDocument4(ctx);
+      const doc = requireDocument3(ctx);
       const el2 = impl.mount(doc, props, ctx);
       impl.patch(el2, props, ctx);
       return el2;
@@ -6366,7 +5134,7 @@ function docCreateBody(el2, props, bold) {
 
 // src/Browser/components/cards/IconText.js
 var LAYOUTS = /* @__PURE__ */ new Set(["horizontal", "vertical"]);
-var VARIANTS11 = /* @__PURE__ */ new Set([
+var VARIANTS9 = /* @__PURE__ */ new Set([
   "neutral",
   "info",
   "success",
@@ -6403,7 +5171,7 @@ var IconText = lifecycle4({
     const layout = LAYOUTS.has(asText4(props.layout)) ? asText4(props.layout) : "horizontal";
     let variant = asText4(props.iconVariant) || "neutral";
     if (variant === "filled" || variant === "soft") variant = "neutral";
-    if (!VARIANTS11.has(variant)) variant = "neutral";
+    if (!VARIANTS9.has(variant)) variant = "neutral";
     const bold = props.bold === true;
     const title = asText4(props.title);
     const subtitle = asText4(props.subtitle);
@@ -11054,6 +9822,151 @@ var TRANSPORT_MODULES = Object.freeze({
   ndjsonAdapter: ndjsonAdapter_exports
 });
 
+// src/Browser/host/lazyPacks.js
+var TYPE_TO_PACK = Object.freeze({
+  // charts
+  BarChart: "charts",
+  LineChart: "charts",
+  AreaChart: "charts",
+  HorizontalBarChart: "charts",
+  PieChart: "charts",
+  SingleStackedBarChart: "charts",
+  RadarChart: "charts",
+  RadialChart: "charts",
+  ScatterChart: "charts",
+  Series: "charts",
+  Slice: "charts",
+  ScatterSeries: "charts",
+  Point: "charts",
+  // table
+  Table: "table",
+  EditableTable: "table",
+  Col: "table",
+  // tools
+  ToolActivity: "tools",
+  RunStatus: "tools",
+  ToolCall: "tools",
+  ToolResult: "tools",
+  // chat-only (FollowUp / Citation — List/Code/Image already on shell via content)
+  FollowUpBlock: "chat",
+  FollowUpItem: "chat",
+  CitationRef: "chat",
+  Citation: "chat",
+  // section / steps
+  SectionBlock: "sectionSteps",
+  SectionItem: "sectionSteps",
+  Steps: "sectionSteps",
+  StepsItem: "sectionSteps",
+  // carousel / modal
+  Carousel: "carouselModal",
+  Modal: "carouselModal"
+});
+var PACK_CSS = Object.freeze({
+  charts: ["../../css/components/charts.css"],
+  table: ["../../css/components/table.css"],
+  tools: ["../../css/components/tool-activity.css"],
+  sectionSteps: [
+    "../../css/components/section-block.css",
+    "../../css/components/steps.css"
+  ],
+  carouselModal: [
+    "../../css/components/carousel.css",
+    "../../css/components/modal.css"
+  ]
+});
+var loaded = /* @__PURE__ */ new Map();
+function collectTypeNames(node, out = /* @__PURE__ */ new Set()) {
+  if (node == null || node === false) return out;
+  if (Array.isArray(node)) {
+    for (const c of node) collectTypeNames(c, out);
+    return out;
+  }
+  if (typeof node !== "object") return out;
+  const obj = (
+    /** @type {Record<string, unknown>} */
+    node
+  );
+  if (typeof obj.typeName === "string") out.add(obj.typeName);
+  if (typeof obj.type === "string" && obj.type !== "element") out.add(obj.type);
+  if (obj.props && typeof obj.props === "object") {
+    const props = (
+      /** @type {Record<string, unknown>} */
+      obj.props
+    );
+    for (const v of Object.values(props)) collectTypeNames(v, out);
+  }
+  if (Array.isArray(obj.children)) collectTypeNames(obj.children, out);
+  return out;
+}
+function injectPackCss(packId, importMetaUrl) {
+  const hrefs = PACK_CSS[packId];
+  if (!hrefs || typeof document === "undefined") return;
+  for (const rel of hrefs) {
+    const href = new URL(rel, importMetaUrl).href;
+    const candidates = [href];
+    try {
+      const u = new URL(importMetaUrl);
+      if (u.pathname.includes("/js/")) {
+        const cssRoot = u.pathname.replace(/\/js\/.*$/, "/css/");
+        const name = rel.split("/").pop();
+        candidates.push(`${u.origin}${cssRoot}components/${name}`);
+      }
+    } catch {
+    }
+    for (const h of candidates) {
+      if (document.querySelector(`link[data-canvas-pack-css="${h}"]`)) continue;
+      if (document.querySelector(`link[href="${h}"]`)) continue;
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = h;
+      link.dataset.canvasPackCss = h;
+      document.head.appendChild(link);
+      break;
+    }
+  }
+}
+async function importPackRegistrar(packId) {
+  switch (packId) {
+    case "charts":
+      return (await import("./chunk-R4IM2ORB.js")).registerCharts;
+    case "table":
+      return (await import("./chunk-ZC777YKU.js")).registerTable;
+    case "tools":
+      return (await import("./chunk-CPMOMJH5.js")).registerTools;
+    case "chat":
+      return (await import("./chunk-546LMVGD.js")).registerChatContent;
+    case "sectionSteps":
+      return (await import("./chunk-WYVMGEI2.js")).registerSectionSteps;
+    case "carouselModal":
+      return (await import("./chunk-EVPGTOFE.js")).registerCarouselModal;
+    default:
+      throw new Error(`unknown canvas pack: ${packId}`);
+  }
+}
+async function ensureLazyPacks(registry, types, opts = {}) {
+  const importMetaUrl = opts.importMetaUrl || import.meta.url;
+  const needed = /* @__PURE__ */ new Set();
+  for (const t of types) {
+    const pack = TYPE_TO_PACK[t];
+    if (pack) needed.add(pack);
+  }
+  const jobs = [];
+  for (const packId of needed) {
+    if (!loaded.has(packId)) {
+      loaded.set(
+        packId,
+        (async () => {
+          const register = await importPackRegistrar(packId);
+          register(registry);
+          injectPackCss(packId, importMetaUrl);
+        })()
+      );
+    }
+    jobs.push(loaded.get(packId));
+  }
+  await Promise.all(jobs);
+}
+
 // src/Browser/host/mountCore.js
 var CONTRACT = "canvas-host-v1";
 var RUNTIME_ID = "sanctum-canvas";
@@ -11168,19 +10081,7 @@ async function mountWithRegistry(canvasElement, options, registerComponents) {
   mounting.add(canvasElement);
   let abortUnsub = null;
   try {
-    let renderFromSource = function(source, { streaming = false } = {}) {
-      programSource = source || "";
-      ctx.stream = { isStreaming: streaming };
-      streamingParser = createStreamingParser2(schema, rootName);
-      const result = streamingParser.push(programSource);
-      if (result.root) {
-        const vnode = elementToVnode(result.root);
-        if (vnode) safeRender(canvasElement, vnode, ctx);
-      } else if (!streaming && !programSource.trim()) {
-        clearRoot(canvasElement);
-      }
-      return result;
-    }, eventNeedsLangSync = function(event) {
+    let eventNeedsLangSync = function(event) {
       if (!event || typeof event !== "object") return false;
       const t = event.type;
       return t === EventType.TEXT_MESSAGE_CONTENT || t === EventType.TEXT_MESSAGE_CHUNK || t === EventType.TEXT_MESSAGE_END || t === EventType.TEXT_MESSAGE_START || t === EventType.RUN_FINISHED || t === EventType.RUN_ERROR || t === EventType.RUN_CANCELLED;
@@ -11188,7 +10089,7 @@ async function mountWithRegistry(canvasElement, options, registerComponents) {
       const state = reducer.getState();
       const assistant = state.messages.filter((m) => m.role === "assistant" || !m.role).map((m) => m.content || "").join("");
       const streaming = state.isStreaming === true && state.runStatus === "running";
-      renderFromSource(assistant, { streaming });
+      void renderFromSource(assistant, { streaming });
     }, dispatchEvent = function(event) {
       if (disposed) return reducer.getState();
       const next = reducer.dispatch(event);
@@ -11268,8 +10169,34 @@ async function mountWithRegistry(canvasElement, options, registerComponents) {
     ctx.continueConversation = continueConversation;
     ctx.openUrl = openUrl;
     ctx.dispatchAction = dispatchAction;
+    let renderGen = 0;
+    async function renderFromSource(source, { streaming = false } = {}) {
+      const gen = ++renderGen;
+      programSource = source || "";
+      ctx.stream = { isStreaming: streaming };
+      streamingParser = createStreamingParser2(schema, rootName);
+      const result = streamingParser.push(programSource);
+      if (result.root) {
+        const types = collectTypeNames(result.root);
+        if (options.lazyPacks !== false) {
+          try {
+            await ensureLazyPacks(registry, types, {
+              importMetaUrl: import.meta.url
+            });
+          } catch (err) {
+            reportError(err);
+          }
+        }
+        if (gen !== renderGen || disposed) return result;
+        const vnode = elementToVnode(result.root);
+        if (vnode) safeRender(canvasElement, vnode, ctx);
+      } else if (!streaming && !programSource.trim()) {
+        clearRoot(canvasElement);
+      }
+      return result;
+    }
     if (typeof seed.programSource === "string" && seed.programSource) {
-      renderFromSource(seed.programSource, { streaming: false });
+      await renderFromSource(seed.programSource, { streaming: false });
     }
     async function dispose(reason = "dispose") {
       if (disposed) return;
@@ -11307,7 +10234,7 @@ async function mountWithRegistry(canvasElement, options, registerComponents) {
       root: canvasElement,
       dispatchEvent,
       setProgram(source, opts) {
-        renderFromSource(source, opts);
+        return renderFromSource(source, opts);
       },
       getState() {
         return reducer.getState();

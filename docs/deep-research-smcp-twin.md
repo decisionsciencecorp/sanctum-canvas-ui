@@ -44,24 +44,22 @@ Local fixtures take priority until you hit Clear.
 | Surface | `deep-research` |
 | Plugin | `smcp_plugin/sanctum_canvas_lab/` |
 
-## Selective load + backflow
+## Selective load + lazy packs + backflow
 
-1. **Load only what you need** — `registerShellComponents` / `mount.shell.js`.
-2. **Fix rendering / efficiency in this repo** — `src/Browser/…`, then
-   `node tools/bundle-host-mount.mjs`.
-3. **Re-vendor into Deep Research** — copy `public/assets/js/host/mount.shell.*`
-   (and related shell deps) into `deep-research/public/vendor/sanctum-canvas/`,
-   or rebuild the product’s shell bundle from this tree.
-
-This is not a “keep two apps in sync” chore script. The lab page is the
-isolation surface; the shell mount is the shared runtime slice products should
-consume.
+1. **Shell first** — `registerShellComponents` / `mount.shell.js` (forms / content / layout).
+2. **Lazy packs** — if the OpenUI program names `BarChart`, `Table`, `ToolActivity`,
+   etc., `ensureLazyPacks` dynamic-imports that pack chunk and registers it before paint.
+3. **Fix rendering / efficiency here** — `src/Browser/…`, then `npm run bundle:host`.
+4. **Re-vendor** — copy `mount.shell.js` / `mount.shell.bundle.js` **and** `chunk-*.js`
+   into `deep-research/public/vendor/sanctum-canvas/js/host/` (or run
+   `deep-research/tools/bundle-sanctum-canvas-mount.sh`).
 
 ## Bundle
 
 ```bash
 cd sanctum-canvas-ui
-node tools/bundle-host-mount.mjs
-# → public/assets/js/host/mount.bundle.js        (full)
-# → public/assets/js/host/mount.shell.bundle.js  (shell)
+npm run bundle:host
+# → mount.bundle.js              (full kitchen sink)
+# → mount.shell.js + chunk-*.js  (shell + on-demand packs)
+# → mount.shell.bundle.js        (alias of the shell entry)
 ```

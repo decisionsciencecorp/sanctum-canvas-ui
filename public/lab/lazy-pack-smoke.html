@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Lazy pack smoke</title>
+    <link rel="stylesheet" href="/assets/css/tokens.css" />
+    <link rel="stylesheet" href="/assets/css/components/forms.css" />
+    <link rel="stylesheet" href="/assets/css/components/content.css" />
+    <link rel="stylesheet" href="/assets/css/components/stack.css" />
+  </head>
+  <body>
+    <main id="sanctum-canvas-root" class="canvas-root"></main>
+    <pre id="status">boot</pre>
+    <script type="module">
+      import { mount } from "/assets/js/host/mount.shell.bundle.js";
+      const root = document.getElementById("sanctum-canvas-root");
+      const status = document.getElementById("status");
+      const program =
+        'hdr = InlineHeader("Lazy chart")\n' +
+        'chart = BarChart("sales", [\n' +
+        '  Series("A", [1, 2, 3]),\n' +
+        '  Series("B", [2, 1, 4])\n' +
+        "])\n" +
+        "root = Stack([hdr, chart])\n";
+      try {
+        const handle = await mount(root, {
+          libraryUrl: "/assets/libraries/dashboard/library.v1.json",
+          initiation: { seed: { programSource: program } },
+        });
+        const unknown = root.querySelector("[data-openui-unknown]");
+        status.textContent = unknown
+          ? "FAIL unknown:" + unknown.getAttribute("data-openui-unknown")
+          : "OK packs=" + (root.querySelector("[data-openui-type], svg, canvas, .chart, [class*='chart']") ? "chartish" : "painted");
+        status.dataset.ready = "1";
+        window.__lazySmoke = { handle, ok: !unknown };
+      } catch (err) {
+        status.textContent = "FAIL " + (err && err.message ? err.message : String(err));
+        status.dataset.error = "1";
+      }
+    </script>
+  </body>
+</html>

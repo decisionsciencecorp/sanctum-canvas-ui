@@ -1,8 +1,6861 @@
 var __defProp = Object.defineProperty;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __esm = (fn, res, err) => function __init() {
+  if (err) throw err[0];
+  try {
+    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+  } catch (e) {
+    throw err = [e], e;
+  }
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
 };
+
+// src/Browser/security/urlPolicy.js
+var urlPolicy_exports = {};
+__export(urlPolicy_exports, {
+  isHostAllowed: () => isHostAllowed,
+  mergeNoopenerFeatures: () => mergeNoopenerFeatures,
+  relForTarget: () => relForTarget,
+  safeOpenUrl: () => safeOpenUrl,
+  safeUrl: () => safeUrl,
+  sanitizeUrl: () => sanitizeUrl,
+  toCssUrl: () => toCssUrl
+});
+function stripControlCharsForSchemeCheck(url) {
+  return url.replace(SCHEME_OBFUSCATION_RE, "");
+}
+function hasAbsoluteScheme(normalized) {
+  return ABSOLUTE_SCHEME_RE.test(normalized);
+}
+function isAllowedRelative(trimmed) {
+  if (trimmed.startsWith("//")) return false;
+  if (trimmed.startsWith("/")) return true;
+  if (trimmed.startsWith("./") || trimmed.startsWith("../")) return true;
+  if (trimmed.startsWith("#")) return true;
+  const normalized = stripControlCharsForSchemeCheck(trimmed);
+  return !hasAbsoluteScheme(normalized);
+}
+function isHostAllowed(hostname, allowedHosts) {
+  if (!Array.isArray(allowedHosts) || allowedHosts.length === 0) return true;
+  const host = String(hostname || "").toLowerCase();
+  if (!host) return false;
+  for (const entry of allowedHosts) {
+    if (typeof entry !== "string" || !entry) continue;
+    let pattern = entry.toLowerCase().trim();
+    if (pattern.startsWith("*.")) pattern = pattern.slice(1);
+    if (pattern.startsWith(".")) {
+      const apex = pattern.slice(1);
+      if (host === apex || host.endsWith(pattern)) return true;
+    } else if (host === pattern) {
+      return true;
+    }
+  }
+  return false;
+}
+function passesHostAllowlist(trimmed, opts = {}) {
+  const allowedHosts = opts.allowedHosts;
+  if (!Array.isArray(allowedHosts) || allowedHosts.length === 0) return true;
+  const normalized = stripControlCharsForSchemeCheck(trimmed);
+  if (!hasAbsoluteScheme(normalized)) {
+    return isAllowedRelative(trimmed);
+  }
+  if (/^mailto:/i.test(normalized)) return true;
+  try {
+    const parsed = new URL(normalized);
+    return isHostAllowed(parsed.hostname, allowedHosts);
+  } catch {
+    return false;
+  }
+}
+function safeUrl(url, opts = {}) {
+  if (typeof url !== "string") return void 0;
+  const trimmed = url.trim();
+  if (!trimmed) return void 0;
+  const normalized = stripControlCharsForSchemeCheck(trimmed);
+  if (DANGEROUS_URI_RE.test(normalized)) return void 0;
+  if (hasAbsoluteScheme(normalized)) {
+    if (!ALLOWED_ABSOLUTE_SCHEME_RE.test(normalized)) return void 0;
+  } else if (!isAllowedRelative(trimmed)) {
+    return void 0;
+  }
+  if (!passesHostAllowlist(trimmed, opts)) return void 0;
+  return trimmed;
+}
+function mergeNoopenerFeatures(features = "") {
+  const parts = new Set(
+    String(features).split(/[,;\s]+/).map((s) => s.trim().toLowerCase()).filter(Boolean)
+  );
+  parts.add("noopener");
+  parts.add("noreferrer");
+  return [...parts].join(",");
+}
+function relForTarget(target = "_self") {
+  if (target === "_blank") return "noopener noreferrer";
+  return "";
+}
+function safeOpenUrl(url, target = "_blank", features = "noopener,noreferrer", opts = {}) {
+  if (typeof globalThis.window === "undefined") return null;
+  const safe = safeUrl(url, opts);
+  if (!safe) return null;
+  const merged = mergeNoopenerFeatures(features);
+  return globalThis.window.open(safe, target, merged);
+}
+function toCssUrl(url, opts = {}) {
+  const safe = safeUrl(url, opts);
+  if (!safe) return void 0;
+  const resolved = resolveAgainstDocument(safe, opts);
+  const escaped = resolved.replace(/[\\"\n\r]/g, (c) => `\\${c.charCodeAt(0).toString(16)} `);
+  return `url("${escaped}")`;
+}
+function resolveAgainstDocument(url, opts = {}) {
+  if (hasAbsoluteScheme(url)) return url;
+  const base = typeof opts.baseUrl === "string" && opts.baseUrl ? opts.baseUrl : globalThis.document?.baseURI ?? globalThis.location?.href;
+  if (!base) return url;
+  try {
+    return new URL(url, base).href;
+  } catch {
+    return url;
+  }
+}
+var DANGEROUS_URI_RE, SCHEME_OBFUSCATION_RE, ABSOLUTE_SCHEME_RE, ALLOWED_ABSOLUTE_SCHEME_RE, sanitizeUrl;
+var init_urlPolicy = __esm({
+  "src/Browser/security/urlPolicy.js"() {
+    DANGEROUS_URI_RE = /^\s*(?:javascript|data|vbscript|file)\s*:/i;
+    SCHEME_OBFUSCATION_RE = /[\u0000-\u001F\u007F]/g;
+    ABSOLUTE_SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i;
+    ALLOWED_ABSOLUTE_SCHEME_RE = /^(?:https?|mailto):/i;
+    sanitizeUrl = safeUrl;
+  }
+});
+
+// src/Browser/components/content/shared.js
+function requireDocument(ctx = {}) {
+  const doc = ctx.document ?? globalThis.document;
+  if (!doc?.createElement) {
+    throw new Error("content component: ctx.document required");
+  }
+  return doc;
+}
+function setClass(el2, className) {
+  el2.setAttribute("class", String(className).trim());
+}
+function setOrRemoveAttr(el2, name, value) {
+  if (value == null || value === false || value === "") {
+    el2.removeAttribute(name);
+  } else {
+    el2.setAttribute(name, value === true ? "true" : String(value));
+  }
+}
+function clearChildren(el2) {
+  while (el2.firstChild) {
+    el2.removeChild(el2.firstChild);
+  }
+}
+function asText(value) {
+  if (value == null) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return "";
+}
+function resolveStatus(props = {}) {
+  const raw = props.status ?? props.state;
+  if (raw === "loading" || raw === "empty" || raw === "error" || raw === "ready") {
+    return raw;
+  }
+  if (props.loading === true) return "loading";
+  if (props.error != null && props.error !== false) return "error";
+  if (props.empty === true) return "empty";
+  return "ready";
+}
+function findStatusTextChild(el2) {
+  const cached = statusTextByHost.get(el2);
+  if (cached && cached.parentNode === el2) return cached;
+  for (const child of el2.childNodes ?? []) {
+    if (child.nodeType === 1 && child.getAttribute?.("data-canvas-status-text") != null) {
+      statusTextByHost.set(el2, child);
+      return child;
+    }
+  }
+  return null;
+}
+function applySurfaceStatus(el2, doc, props = {}, opts = {}) {
+  const status = resolveStatus(props);
+  el2.setAttribute("data-status", status);
+  setOrRemoveAttr(el2, "aria-busy", status === "loading" ? "true" : null);
+  let statusEl = findStatusTextChild(el2);
+  const show = opts.showStatusText !== false && (status === "loading" || status === "empty" || status === "error");
+  if (show) {
+    if (!statusEl) {
+      statusEl = doc.createElement("span");
+      statusEl.setAttribute("data-canvas-status-text", "");
+      statusEl.setAttribute("class", "canvas-status-text");
+      el2.appendChild(statusEl);
+      statusTextByHost.set(el2, statusEl);
+    }
+    const msg = status === "loading" ? asText(props.loadingMessage) || opts.loadingMessage || STATUS_LABELS.loading : status === "empty" ? asText(props.emptyMessage) || opts.emptyMessage || STATUS_LABELS.empty : asText(props.errorMessage ?? props.error) || opts.errorMessage || STATUS_LABELS.error;
+    statusEl.textContent = msg;
+    statusEl.setAttribute("role", "status");
+    setOrRemoveAttr(statusEl, "aria-live", status === "error" ? "assertive" : "polite");
+  } else if (statusEl && statusEl.parentNode) {
+    statusEl.parentNode.removeChild(statusEl);
+    statusTextByHost.delete(el2);
+    statusEl = null;
+  }
+  return { status, statusEl };
+}
+function applyVariantCue(el2, variant, labelMap = {}) {
+  const v = String(variant || "neutral");
+  el2.setAttribute("data-variant", v);
+  const label = labelMap[v] || v;
+  const existing = el2.getAttribute("aria-label");
+  if (!existing) {
+    el2.setAttribute("aria-label", label);
+  }
+  return v;
+}
+function lifecycle(impl) {
+  return {
+    create(props = {}, ctx = {}) {
+      const doc = requireDocument(ctx);
+      const el2 = impl.mount(doc, props, ctx);
+      impl.patch(el2, props, ctx);
+      return el2;
+    },
+    update(el2, props = {}, ctx = {}) {
+      impl.patch(el2, props, ctx);
+    },
+    destroy(el2, ctx = {}) {
+      impl.unmount?.(el2, ctx);
+    },
+    // Content primitives render from props; keyed reconciler must not wipe chrome.
+    ownsChildren: impl.ownsChildren !== false
+  };
+}
+var SURFACE_STATUS, STATUS_LABELS, statusTextByHost;
+var init_shared = __esm({
+  "src/Browser/components/content/shared.js"() {
+    SURFACE_STATUS = Object.freeze({
+      READY: "ready",
+      LOADING: "loading",
+      EMPTY: "empty",
+      ERROR: "error"
+    });
+    STATUS_LABELS = Object.freeze({
+      ready: "",
+      loading: "Loading",
+      empty: "No content",
+      error: "Error"
+    });
+    statusTextByHost = /* @__PURE__ */ new WeakMap();
+  }
+});
+
+// src/Browser/renderer/inlineStyle.js
+function setInlineStyle(el2, declarations) {
+  if (!el2 || !declarations) return;
+  const style = (
+    /** @type {any} */
+    el2.style
+  );
+  if (style && typeof style.setProperty === "function") {
+    for (const [prop, value] of Object.entries(declarations)) {
+      if (value == null || value === "") style.removeProperty(prop);
+      else style.setProperty(prop, String(value));
+    }
+    return;
+  }
+  const existing = parseStyleAttr(el2.getAttribute?.("style") || "");
+  for (const [prop, value] of Object.entries(declarations)) {
+    if (value == null || value === "") delete existing[prop];
+    else existing[prop] = String(value);
+  }
+  const text2 = Object.entries(existing).map(([k, v]) => `${k}: ${v}`).join("; ");
+  if (text2) el2.setAttribute("style", text2);
+  else el2.removeAttribute("style");
+}
+function clearInlineStyle(el2) {
+  if (!el2) return;
+  const style = (
+    /** @type {any} */
+    el2.style
+  );
+  if (style && typeof style.setProperty === "function" && typeof style.cssText === "string") {
+    style.cssText = "";
+  }
+  if (typeof el2.removeAttribute === "function") el2.removeAttribute("style");
+}
+function parseStyleAttr(text2) {
+  const out = {};
+  for (const part of text2.split(";")) {
+    const i = part.indexOf(":");
+    if (i <= 0) continue;
+    const k = part.slice(0, i).trim();
+    const v = part.slice(i + 1).trim();
+    if (k) out[k] = v;
+  }
+  return out;
+}
+var init_inlineStyle = __esm({
+  "src/Browser/renderer/inlineStyle.js"() {
+  }
+});
+
+// src/Browser/lang/builtins.js
+function resolveField(obj, path) {
+  if (!path || obj == null) return void 0;
+  if (!path.includes(".")) return obj[path];
+  let cur = obj;
+  for (const p of path.split(".")) {
+    if (cur == null) return void 0;
+    cur = cur[p];
+  }
+  return cur;
+}
+function toNumber(val) {
+  if (typeof val === "number") return val;
+  if (typeof val === "string") {
+    const n = Number(val);
+    return isNaN(n) ? 0 : n;
+  }
+  if (typeof val === "boolean") return val ? 1 : 0;
+  return 0;
+}
+function isBuiltin(name) {
+  return BUILTIN_NAMES.has(name);
+}
+function isReservedCall(name) {
+  return name in RESERVED_CALLS;
+}
+var BUILTINS, LAZY_BUILTINS, ACTION_STEPS, ACTION_NAMES, BUILTIN_NAMES, RESERVED_CALLS;
+var init_builtins = __esm({
+  "src/Browser/lang/builtins.js"() {
+    BUILTINS = {
+      Count: {
+        name: "Count",
+        signature: "Count(array) \u2192 number",
+        description: "Returns array length",
+        fn: (arr) => Array.isArray(arr) ? arr.length : 0
+      },
+      First: {
+        name: "First",
+        signature: "First(array) \u2192 element",
+        description: "Returns first element of array",
+        fn: (arr) => Array.isArray(arr) ? arr[0] ?? null : null
+      },
+      Last: {
+        name: "Last",
+        signature: "Last(array) \u2192 element",
+        description: "Returns last element of array",
+        fn: (arr) => Array.isArray(arr) ? arr[arr.length - 1] ?? null : null
+      },
+      Sum: {
+        name: "Sum",
+        signature: "Sum(numbers[]) \u2192 number",
+        description: "Sum of numeric array",
+        fn: (arr) => Array.isArray(arr) ? arr.reduce((a, b) => a + toNumber(b), 0) : 0
+      },
+      Avg: {
+        name: "Avg",
+        signature: "Avg(numbers[]) \u2192 number",
+        description: "Average of numeric array",
+        fn: (arr) => Array.isArray(arr) && arr.length ? arr.reduce((a, b) => a + toNumber(b), 0) / arr.length : 0
+      },
+      Min: {
+        name: "Min",
+        signature: "Min(numbers[]) \u2192 number",
+        description: "Minimum value in array",
+        fn: (arr) => Array.isArray(arr) && arr.length ? arr.reduce((acc, b) => Math.min(acc, toNumber(b)), toNumber(arr[0])) : 0
+      },
+      Max: {
+        name: "Max",
+        signature: "Max(numbers[]) \u2192 number",
+        description: "Maximum value in array",
+        fn: (arr) => Array.isArray(arr) && arr.length ? arr.reduce((acc, b) => Math.max(acc, toNumber(b)), toNumber(arr[0])) : 0
+      },
+      Sort: {
+        name: "Sort",
+        signature: "Sort(array, field, direction?) \u2192 sorted array",
+        description: 'Sort array by field. Direction: "asc" (default) or "desc"',
+        fn: (arr, field, dir) => {
+          if (!Array.isArray(arr)) return arr;
+          const f = String(field ?? "");
+          const desc = String(dir ?? "asc") === "desc";
+          return [...arr].sort((a, b) => {
+            const av = f ? resolveField(a, f) : a;
+            const bv = f ? resolveField(b, f) : b;
+            const aIsNumeric = typeof av === "number" || typeof av === "string" && !isNaN(Number(av)) && av !== "";
+            const bIsNumeric = typeof bv === "number" || typeof bv === "string" && !isNaN(Number(bv)) && bv !== "";
+            if (aIsNumeric && bIsNumeric) {
+              const diff = toNumber(av) - toNumber(bv);
+              return desc ? -diff : diff;
+            }
+            const cmp = String(av ?? "").localeCompare(String(bv ?? ""));
+            return desc ? -cmp : cmp;
+          });
+        }
+      },
+      Filter: {
+        name: "Filter",
+        signature: 'Filter(array, field, operator: "==" | "!=" | ">" | "<" | ">=" | "<=" | "contains", value) \u2192 filtered array',
+        description: "Filter array by field value",
+        fn: (arr, field, op, value) => {
+          if (!Array.isArray(arr)) return [];
+          const f = String(field ?? "");
+          const o = String(op ?? "==");
+          return arr.filter((item) => {
+            const v = f ? resolveField(item, f) : item;
+            switch (o) {
+              case "==":
+                return v == value;
+              case "!=":
+                return v != value;
+              case ">":
+                return toNumber(v) > toNumber(value);
+              case "<":
+                return toNumber(v) < toNumber(value);
+              case ">=":
+                return toNumber(v) >= toNumber(value);
+              case "<=":
+                return toNumber(v) <= toNumber(value);
+              case "contains":
+                return String(v ?? "").includes(String(value ?? ""));
+              default:
+                return false;
+            }
+          });
+        }
+      },
+      Round: {
+        name: "Round",
+        signature: "Round(number, decimals?) \u2192 number",
+        description: "Round to N decimal places (default 0)",
+        fn: (n, decimals) => {
+          const num2 = toNumber(n);
+          const d = decimals != null ? toNumber(decimals) : 0;
+          const factor = Math.pow(10, d);
+          return Math.round(num2 * factor) / factor;
+        }
+      },
+      Abs: {
+        name: "Abs",
+        signature: "Abs(number) \u2192 number",
+        description: "Absolute value",
+        fn: (n) => Math.abs(toNumber(n))
+      },
+      Floor: {
+        name: "Floor",
+        signature: "Floor(number) \u2192 number",
+        description: "Round down to nearest integer",
+        fn: (n) => Math.floor(toNumber(n))
+      },
+      Ceil: {
+        name: "Ceil",
+        signature: "Ceil(number) \u2192 number",
+        description: "Round up to nearest integer",
+        fn: (n) => Math.ceil(toNumber(n))
+      }
+    };
+    LAZY_BUILTINS = /* @__PURE__ */ new Set(["Each"]);
+    ACTION_STEPS = {
+      Run: "run",
+      ToAssistant: "continue_conversation",
+      OpenUrl: "open_url",
+      Set: "set",
+      Reset: "reset"
+    };
+    ACTION_NAMES = /* @__PURE__ */ new Set(["Action", ...Object.keys(ACTION_STEPS)]);
+    BUILTIN_NAMES = /* @__PURE__ */ new Set([
+      ...Object.keys(BUILTINS),
+      ...LAZY_BUILTINS,
+      ...ACTION_NAMES
+    ]);
+    RESERVED_CALLS = { Query: "Query", Mutation: "Mutation" };
+  }
+});
+
+// src/Browser/components/chat/continueConversation.js
+function boundContinueText(value, max = MAX_CONTINUE_CHARS) {
+  const s = value == null ? "" : String(value);
+  if (s.length <= max) return s;
+  return s.slice(0, max);
+}
+function isStreaming(ctx = {}) {
+  return ctx.stream?.isStreaming === true;
+}
+function resolveContinuePayload(props = {}, opts = {}) {
+  const action = props.action;
+  let message = "";
+  let context;
+  if (action && typeof action === "object") {
+    const type = String(action.type || "").toLowerCase();
+    if (type && type !== "continue_conversation" && type !== ACTION_STEPS.ToAssistant && type !== "toassistant") {
+      return null;
+    }
+    if (typeof action.message === "string") message = action.message;
+    else if (typeof action.context === "string" && !action.message) {
+      message = action.context;
+    }
+    if (typeof action.context === "string") context = action.context;
+    if (action.params && typeof action.params === "object") {
+      const p = (
+        /** @type {Record<string, unknown>} */
+        action.params
+      );
+      if (!message && typeof p.context === "string") message = p.context;
+      if (!context && typeof p.context === "string") context = p.context;
+      if (typeof p.message === "string") message = p.message;
+    }
+    if (Array.isArray(action.steps)) {
+      const step = action.steps.find(
+        (s) => s && typeof s === "object" && (s.type === ACTION_STEPS.ToAssistant || s.type === "continue_conversation")
+      );
+      if (step) {
+        if (typeof step.message === "string") message = step.message;
+        if (typeof step.context === "string") context = step.context;
+      }
+    }
+  }
+  if (!message) {
+    message = opts.fallbackMessage || (typeof props.text === "string" ? props.text : "") || (typeof props.title === "string" ? props.title : "") || "";
+  }
+  message = boundContinueText(message);
+  if (context != null) context = boundContinueText(context, MAX_CONTINUE_CHARS);
+  if (!message && !context) return null;
+  if (!message && context) message = context;
+  return { message, context };
+}
+function dispatchContinueConversation(ctx = {}, props = {}, opts = {}) {
+  if (opts.userGesture === false) {
+    return { ok: false, reason: "gesture-required" };
+  }
+  if (isStreaming(ctx)) {
+    return { ok: false, reason: "streaming" };
+  }
+  const payload = resolveContinuePayload(props, opts);
+  if (!payload || !payload.message) {
+    return { ok: false, reason: "empty" };
+  }
+  const actions = ctx.actions;
+  if (actions && typeof actions.run === "function") {
+    const plan = {
+      steps: [
+        {
+          type: ACTION_STEPS.ToAssistant,
+          message: payload.message,
+          context: payload.context
+        }
+      ]
+    };
+    void actions.run(plan, { userGesture: true });
+    return { ok: true };
+  }
+  if (actions && typeof actions.continueConversation === "function") {
+    actions.continueConversation(payload.message, payload.context);
+    return { ok: true };
+  }
+  if (typeof ctx.continueConversation === "function") {
+    ctx.continueConversation(payload.message, payload.context);
+    return { ok: true };
+  }
+  if (ctx.host && typeof ctx.host.continueConversation === "function") {
+    ctx.host.continueConversation(payload.message, payload.context);
+    return { ok: true };
+  }
+  return { ok: false, reason: "no-handler" };
+}
+var MAX_CONTINUE_CHARS;
+var init_continueConversation = __esm({
+  "src/Browser/components/chat/continueConversation.js"() {
+    init_builtins();
+    MAX_CONTINUE_CHARS = 4e3;
+  }
+});
+
+// src/Browser/components/content/ListItem.js
+function hasAction(props) {
+  return props.action != null && props.action !== false;
+}
+function renderIndicator(el2, doc, props, ctx) {
+  const variant = VARIANTS7.has(asText(props.variant)) ? asText(props.variant) : "number";
+  const listHasSubtitle = props.listHasSubtitle === true || !!asText(props.subtitle);
+  const index = typeof props.index === "number" ? props.index : 0;
+  const indicator = doc.createElement("div");
+  let indCls = "canvas-list-item__indicator";
+  if (!listHasSubtitle) indCls += " canvas-list-item__indicator--no-subtitle";
+  if (hasAction(props)) indCls += " canvas-list-item__indicator--clickable";
+  indicator.setAttribute("class", indCls);
+  indicator.setAttribute("data-variant", variant);
+  if (variant === "number") {
+    const num2 = doc.createElement("div");
+    num2.setAttribute("class", "canvas-list-item__indicator-number");
+    num2.textContent = String(index + 1);
+    indicator.appendChild(num2);
+  } else if (variant === "image") {
+    const image = props.image && typeof props.image === "object" ? props.image : null;
+    const srcRaw = image && typeof image.src === "string" ? image.src : "";
+    const alt = image && typeof image.alt === "string" ? image.alt : "";
+    const safe = srcRaw && (ctx.urlPolicy?.safeUrl ? ctx.urlPolicy.safeUrl(srcRaw) : safeUrl(srcRaw));
+    if (safe || alt) {
+      const wrap = doc.createElement("div");
+      wrap.setAttribute("class", "canvas-list-item__indicator-image");
+      if (safe) {
+        const img = doc.createElement("img");
+        img.setAttribute("src", safe);
+        img.setAttribute("alt", alt);
+        img.setAttribute("width", "40");
+        img.setAttribute("height", "40");
+        wrap.appendChild(img);
+      } else {
+        wrap.textContent = alt;
+      }
+      indicator.appendChild(wrap);
+    }
+  } else if (variant === "icon" && asText(props.icon)) {
+    const icon = doc.createElement("span");
+    icon.setAttribute("class", "canvas-list-item__indicator-icon");
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = asText(props.icon);
+    indicator.appendChild(icon);
+  }
+  el2.appendChild(indicator);
+}
+var VARIANTS7, SIZES3, ListItem;
+var init_ListItem = __esm({
+  "src/Browser/components/content/ListItem.js"() {
+    init_shared();
+    init_continueConversation();
+    init_urlPolicy();
+    VARIANTS7 = /* @__PURE__ */ new Set(["number", "image", "icon"]);
+    SIZES3 = /* @__PURE__ */ new Set(["default", "small"]);
+    ListItem = lifecycle({
+      mount(doc) {
+        const el2 = doc.createElement("div");
+        el2.setAttribute("data-canvas-component", "ListItem");
+        return el2;
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        const size = SIZES3.has(asText(props.size)) ? asText(props.size) : "default";
+        const actionable = hasAction(props);
+        const streaming = ctx.stream?.isStreaming === true;
+        let wrapCls = "canvas-list-item-wrapper";
+        if (size === "small") wrapCls += " canvas-list-item-wrapper--small";
+        if (actionable) wrapCls += " canvas-list-item-wrapper--with-action";
+        setClass(el2, wrapCls);
+        el2.setAttribute("data-size", size);
+        el2.setAttribute("data-actionable", actionable ? "true" : "false");
+        setOrRemoveAttr(el2, "data-streaming-blocked", streaming && actionable ? "true" : null);
+        clearChildren(el2);
+        const row = doc.createElement("div");
+        let rowCls = "canvas-list-item";
+        if (actionable) rowCls += " canvas-list-item--clickable";
+        if (streaming && actionable) rowCls += " canvas-list-item--disabled";
+        row.setAttribute("class", rowCls);
+        if (actionable) {
+          row.setAttribute("role", "button");
+          row.setAttribute("tabindex", streaming ? "-1" : "0");
+          setOrRemoveAttr(row, "aria-disabled", streaming ? "true" : null);
+          const activate = () => {
+            dispatchContinueConversation(ctx, props, {
+              fallbackMessage: asText(props.title),
+              userGesture: true
+            });
+          };
+          row.onclick = () => activate();
+          row.onkeydown = (ev) => {
+            const key = ev?.key;
+            if (key === "Enter" || key === " ") {
+              ev?.preventDefault?.();
+              activate();
+            }
+          };
+        } else {
+          row.removeAttribute("role");
+          row.removeAttribute("tabindex");
+          row.onclick = null;
+          row.onkeydown = null;
+        }
+        renderIndicator(row, doc, props, ctx);
+        const contentWrap = doc.createElement("div");
+        contentWrap.setAttribute("class", "canvas-list-item__content-wrapper");
+        const content = doc.createElement("div");
+        content.setAttribute("class", "canvas-list-item__content");
+        const title = asText(props.title);
+        if (title) {
+          const t = doc.createElement("div");
+          t.setAttribute("class", "canvas-list-item__title");
+          t.textContent = title;
+          content.appendChild(t);
+        }
+        const subtitle = asText(props.subtitle);
+        if (subtitle) {
+          const s = doc.createElement("div");
+          s.setAttribute("class", "canvas-list-item__subtitle");
+          s.textContent = subtitle;
+          content.appendChild(s);
+        }
+        contentWrap.appendChild(content);
+        if (actionable) {
+          const actionLabel = asText(props.actionLabel);
+          if (actionLabel) {
+            const act = doc.createElement("div");
+            act.setAttribute("class", "canvas-list-item__action");
+            const lab = doc.createElement("div");
+            lab.setAttribute("class", "canvas-list-item__action-label");
+            lab.textContent = actionLabel;
+            act.appendChild(lab);
+            const chevron = doc.createElement("span");
+            chevron.setAttribute("class", "canvas-list-item__action-icon");
+            chevron.setAttribute("aria-hidden", "true");
+            chevron.textContent = "\u203A";
+            act.appendChild(chevron);
+            contentWrap.appendChild(act);
+          }
+        }
+        row.appendChild(contentWrap);
+        el2.appendChild(row);
+      }
+    });
+  }
+});
+
+// src/Browser/components/content/ListBlock.js
+function normalizeListItems(props = {}) {
+  if (Array.isArray(props.items)) {
+    return props.items.map((item) => {
+      if (!item || typeof item !== "object") return null;
+      if (item.props && typeof item.props === "object") {
+        return (
+          /** @type {Record<string, unknown>} */
+          item.props
+        );
+      }
+      return (
+        /** @type {Record<string, unknown>} */
+        item
+      );
+    }).filter(Boolean);
+  }
+  return [];
+}
+var VARIANTS8, SIZES4, ListBlock;
+var init_ListBlock = __esm({
+  "src/Browser/components/content/ListBlock.js"() {
+    init_shared();
+    init_ListItem();
+    VARIANTS8 = /* @__PURE__ */ new Set(["number", "image", "icon"]);
+    SIZES4 = /* @__PURE__ */ new Set(["default", "small"]);
+    ListBlock = lifecycle({
+      mount(doc) {
+        const el2 = doc.createElement("div");
+        el2.setAttribute("data-canvas-component", "ListBlock");
+        el2.setAttribute("role", "list");
+        return el2;
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        const variant = VARIANTS8.has(asText(props.variant)) ? asText(props.variant) : "number";
+        const size = SIZES4.has(asText(props.size)) ? asText(props.size) : "default";
+        const items = normalizeListItems(props);
+        const listHasSubtitle = items.some((it) => !!asText(it.subtitle));
+        let cls = "canvas-list-block";
+        if (size === "small") cls += " canvas-list-block--small";
+        setClass(el2, cls);
+        el2.setAttribute("data-variant", variant);
+        el2.setAttribute("data-size", size);
+        el2.setAttribute("data-item-count", String(items.length));
+        clearChildren(el2);
+        if (typeof ctx.renderChildren === "function" && Array.isArray(props.children) && props.children.length) {
+          const enhanced = props.children.map((child, index) => {
+            if (!child || typeof child !== "object") return child;
+            const c = (
+              /** @type {Record<string, unknown>} */
+              child
+            );
+            const childProps = c.props && typeof c.props === "object" ? (
+              /** @type {Record<string, unknown>} */
+              c.props
+            ) : {};
+            return {
+              ...c,
+              props: {
+                ...childProps,
+                variant,
+                size,
+                listHasSubtitle,
+                index: typeof childProps.index === "number" ? childProps.index : index
+              }
+            };
+          });
+          ctx.renderChildren(el2, enhanced);
+          return;
+        }
+        for (let i = 0; i < items.length; i++) {
+          const itemProps = {
+            ...items[i],
+            variant,
+            size,
+            listHasSubtitle,
+            index: i
+          };
+          const child = ListItem.create(itemProps, ctx);
+          child.setAttribute("role", "listitem");
+          el2.appendChild(child);
+        }
+      }
+    });
+  }
+});
+
+// src/Browser/components/content/CodeBlock.js
+async function copyTextNoFocusSteal(text2) {
+  const value = String(text2 ?? "");
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(value);
+      return true;
+    } catch {
+    }
+  }
+  if (typeof document === "undefined") return false;
+  const prev = document.activeElement;
+  const ta = document.createElement("textarea");
+  ta.value = value;
+  ta.setAttribute("readonly", "true");
+  ta.style.position = "fixed";
+  ta.style.left = "-9999px";
+  document.body?.appendChild(ta);
+  if (typeof ta.select === "function") {
+    ta.select();
+  } else if (typeof ta.setSelectionRange === "function") {
+    ta.setSelectionRange(0, value.length);
+  }
+  let ok = false;
+  try {
+    ok = typeof document.execCommand === "function" && document.execCommand("copy") === true;
+  } catch {
+    ok = false;
+  }
+  if (typeof ta.remove === "function") {
+    ta.remove();
+  } else if (ta.parentNode) {
+    ta.parentNode.removeChild(ta);
+  }
+  if (prev && typeof prev.focus === "function") {
+    try {
+      prev.focus();
+    } catch {
+    }
+  }
+  return ok;
+}
+function clearCopiedTimer(el2) {
+  const t = copiedTimers.get(el2);
+  if (t != null) {
+    clearTimeout(t);
+    copiedTimers.delete(el2);
+  }
+}
+var copiedTimers, CodeBlock;
+var init_CodeBlock = __esm({
+  "src/Browser/components/content/CodeBlock.js"() {
+    init_shared();
+    init_inlineStyle();
+    copiedTimers = /* @__PURE__ */ new WeakMap();
+    CodeBlock = lifecycle({
+      mount(doc) {
+        const el2 = doc.createElement("div");
+        el2.setAttribute("data-canvas-component", "CodeBlock");
+        return el2;
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        const language = asText(props.language) || "text";
+        const codeString = asText(props.codeString ?? props.code ?? props.children);
+        setClass(el2, "canvas-code-block");
+        el2.setAttribute("data-language", language);
+        clearChildren(el2);
+        clearCopiedTimer(el2);
+        const live = doc.createElement("span");
+        live.setAttribute("class", "canvas-code-block__live");
+        live.setAttribute("aria-live", "polite");
+        live.setAttribute("aria-atomic", "true");
+        live.setAttribute("data-canvas-copy-live", "");
+        setInlineStyle(live, { position: "absolute", width: "1px", height: "1px", overflow: "hidden", clip: "rect(0,0,0,0)" });
+        const btn = doc.createElement("button");
+        btn.setAttribute("type", "button");
+        btn.setAttribute("class", "canvas-code-block__copy");
+        btn.setAttribute("aria-label", "Copy code");
+        btn.setAttribute("data-copied", "false");
+        btn.textContent = "Copy";
+        const setCopied = (copied) => {
+          btn.setAttribute("data-copied", copied ? "true" : "false");
+          btn.setAttribute("aria-label", copied ? "Copied to clipboard" : "Copy code");
+          btn.textContent = copied ? "Copied" : "Copy";
+          setOrRemoveAttr(btn, "class", null);
+          btn.setAttribute(
+            "class",
+            copied ? "canvas-code-block__copy canvas-code-block__copy--copied" : "canvas-code-block__copy"
+          );
+          live.textContent = copied ? "Copied to clipboard" : "";
+        };
+        btn.onclick = async (ev) => {
+          ev?.preventDefault?.();
+          const ok = await copyTextNoFocusSteal(codeString);
+          if (!ok) {
+            live.textContent = "Copy failed";
+            return;
+          }
+          setCopied(true);
+          clearCopiedTimer(el2);
+          const timer = setTimeout(() => {
+            setCopied(false);
+            copiedTimers.delete(el2);
+          }, 1e3);
+          copiedTimers.set(el2, timer);
+        };
+        const pre = doc.createElement("pre");
+        pre.setAttribute("class", "canvas-code-block__pre");
+        const code = doc.createElement("code");
+        code.setAttribute("class", `canvas-code-block__code language-${language}`);
+        code.textContent = codeString;
+        pre.appendChild(code);
+        el2.appendChild(btn);
+        el2.appendChild(pre);
+        el2.appendChild(live);
+      },
+      unmount(el2) {
+        clearCopiedTimer(el2);
+      }
+    });
+  }
+});
+
+// src/Browser/components/content/Image.js
+function resolveImageAccessibility(props = {}) {
+  const decorative = props.decorative === true || props.decorative === "true" || props.role === "presentation" || props.role === "none";
+  const alt = asText(props.alt);
+  if (decorative) {
+    return { ok: true, alt: "", decorative: true };
+  }
+  if (alt) {
+    return { ok: true, alt, decorative: false };
+  }
+  return { ok: false, reason: "alt-or-decorative-required" };
+}
+function resolveSafeSrc(props, ctx) {
+  const raw = asText(props.src);
+  if (!raw) return void 0;
+  const policy = ctx.urlPolicy && typeof ctx.urlPolicy.safeUrl === "function" ? ctx.urlPolicy.safeUrl : safeUrl;
+  return policy(raw);
+}
+function showFallback(el2, doc, message) {
+  el2.setAttribute("data-status", "error");
+  el2.setAttribute("data-broken", "true");
+  const fb = doc.createElement("div");
+  fb.setAttribute("class", "canvas-image__fallback");
+  fb.setAttribute("role", "img");
+  fb.setAttribute("aria-label", message);
+  fb.textContent = message;
+  el2.appendChild(fb);
+}
+var ASPECT, SCALE, ASPECT_RATIO, Image;
+var init_Image = __esm({
+  "src/Browser/components/content/Image.js"() {
+    init_shared();
+    init_urlPolicy();
+    init_inlineStyle();
+    ASPECT = /* @__PURE__ */ new Set(["1:1", "3:2", "3:4", "4:3", "16:9"]);
+    SCALE = /* @__PURE__ */ new Set(["fit", "fill"]);
+    ASPECT_RATIO = {
+      "1:1": "1 / 1",
+      "3:2": "3 / 2",
+      "3:4": "3 / 4",
+      "4:3": "4 / 3",
+      "16:9": "16 / 9"
+    };
+    Image = lifecycle({
+      mount(doc) {
+        const el2 = doc.createElement("div");
+        el2.setAttribute("data-canvas-component", "Image");
+        return el2;
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        const aspect = ASPECT.has(asText(props.aspectRatio)) ? asText(props.aspectRatio) : "3:2";
+        const scale = SCALE.has(asText(props.scale)) ? asText(props.scale) : "fill";
+        setClass(el2, `canvas-image canvas-image--scale-${scale}`);
+        el2.setAttribute("data-aspect", aspect);
+        setInlineStyle(el2, { "aspect-ratio": ASPECT_RATIO[aspect] });
+        clearChildren(el2);
+        const a11y = resolveImageAccessibility(props);
+        if (!a11y.ok) {
+          showFallback(el2, doc, "Image missing alt text");
+          el2.setAttribute("data-a11y", "missing-alt");
+          return;
+        }
+        const safe = resolveSafeSrc(props, ctx);
+        if (!safe) {
+          showFallback(el2, doc, props.src ? "Unsafe image URL blocked" : "Image unavailable");
+          el2.setAttribute("data-a11y", a11y.decorative ? "decorative" : "labelled");
+          return;
+        }
+        el2.setAttribute("data-status", "ready");
+        el2.setAttribute("data-a11y", a11y.decorative ? "decorative" : "labelled");
+        el2.removeAttribute("data-broken");
+        const img = doc.createElement("img");
+        img.setAttribute("class", `canvas-image__img canvas-image__img--${scale}`);
+        img.setAttribute("src", safe);
+        if (a11y.decorative) {
+          img.setAttribute("alt", "");
+          img.setAttribute("role", "presentation");
+        } else {
+          img.setAttribute("alt", a11y.alt);
+        }
+        img.onload = () => {
+          el2.setAttribute("data-status", "ready");
+          el2.removeAttribute("data-broken");
+          setOrRemoveAttr(img, "data-broken", null);
+        };
+        img.onerror = () => {
+          el2.setAttribute("data-broken", "true");
+          el2.setAttribute("data-status", "error");
+          img.setAttribute("data-broken", "true");
+          clearChildren(el2);
+          showFallback(el2, doc, "Image failed to load");
+        };
+        el2.appendChild(img);
+      }
+    });
+  }
+});
+
+// src/Browser/components/content/ImageBlock.js
+var ImageBlock;
+var init_ImageBlock = __esm({
+  "src/Browser/components/content/ImageBlock.js"() {
+    init_shared();
+    init_Image();
+    init_urlPolicy();
+    init_inlineStyle();
+    ImageBlock = lifecycle({
+      mount(doc) {
+        const el2 = doc.createElement("div");
+        el2.setAttribute("data-canvas-component", "ImageBlock");
+        return el2;
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        setClass(el2, "canvas-image-block");
+        clearChildren(el2);
+        const a11y = resolveImageAccessibility(props);
+        if (!a11y.ok) {
+          el2.setAttribute("data-status", "error");
+          el2.setAttribute("data-a11y", "missing-alt");
+          const fb = doc.createElement("div");
+          fb.setAttribute("class", "canvas-image-block__fallback");
+          fb.setAttribute("role", "img");
+          fb.setAttribute("aria-label", "Image missing alt text");
+          fb.textContent = "Image missing alt text";
+          el2.appendChild(fb);
+          return;
+        }
+        const safe = resolveSafeSrc(props, ctx);
+        if (!safe) {
+          el2.setAttribute("data-status", "error");
+          el2.setAttribute("data-a11y", a11y.decorative ? "decorative" : "labelled");
+          const fb = doc.createElement("div");
+          fb.setAttribute("class", "canvas-image-block__fallback");
+          fb.setAttribute("role", "img");
+          fb.setAttribute(
+            "aria-label",
+            props.src ? "Unsafe image URL blocked" : "Image unavailable"
+          );
+          fb.textContent = props.src ? "Unsafe image URL blocked" : "Image unavailable";
+          el2.appendChild(fb);
+          return;
+        }
+        el2.setAttribute("data-status", "loading");
+        el2.setAttribute("data-a11y", a11y.decorative ? "decorative" : "labelled");
+        el2.removeAttribute("data-broken");
+        const cssUrl = ctx.urlPolicy && typeof ctx.urlPolicy.toCssUrl === "function" ? ctx.urlPolicy.toCssUrl(safe) : toCssUrl(safe);
+        if (cssUrl) {
+          setInlineStyle(el2, { "--canvas-image-block-bg": cssUrl });
+          el2.setAttribute("class", "canvas-image-block canvas-image-block--has-bg");
+        }
+        const img = doc.createElement("img");
+        img.setAttribute("class", "canvas-image-block__image");
+        img.setAttribute("src", safe);
+        if (a11y.decorative) {
+          img.setAttribute("alt", "");
+          img.setAttribute("role", "presentation");
+        } else {
+          img.setAttribute("alt", a11y.alt);
+        }
+        const loader = doc.createElement("div");
+        loader.setAttribute("class", "canvas-image-block__loader");
+        loader.setAttribute("aria-hidden", "true");
+        if (props.imageLoading === false) {
+          loader.setAttribute("hidden", "true");
+          el2.setAttribute("data-status", "ready");
+        }
+        img.onload = () => {
+          el2.setAttribute("data-status", "ready");
+          el2.removeAttribute("data-broken");
+          loader.setAttribute("hidden", "true");
+          img.removeAttribute("data-broken");
+        };
+        img.onerror = () => {
+          el2.setAttribute("data-broken", "true");
+          el2.setAttribute("data-status", "error");
+          el2.removeAttribute("style");
+          setClass(el2, "canvas-image-block canvas-image-block--error");
+          clearChildren(el2);
+          const fb = doc.createElement("div");
+          fb.setAttribute("class", "canvas-image-block__fallback");
+          fb.setAttribute("role", "img");
+          fb.setAttribute("aria-label", "Image failed to load");
+          fb.textContent = "Image failed to load";
+          el2.appendChild(fb);
+        };
+        el2.appendChild(img);
+        el2.appendChild(loader);
+      }
+    });
+  }
+});
+
+// src/Browser/components/containers/shared.js
+function requireDocument2(ctx = {}) {
+  const doc = ctx.document ?? globalThis.document;
+  if (!doc?.createElement) {
+    throw new Error("container component: ctx.document required");
+  }
+  return doc;
+}
+function setClass2(el2, className) {
+  el2.setAttribute("class", String(className).trim());
+}
+function clearChildren2(el2) {
+  while (el2.firstChild) {
+    el2.removeChild(el2.firstChild);
+  }
+}
+function resolveIsStreaming(props = {}, ctx = {}) {
+  if (props.isStreaming === true || props.streaming === true) return true;
+  if (props.isStreaming === false || props.streaming === false) return false;
+  const stream = ctx.stream;
+  if (stream && typeof stream === "object" && stream.isStreaming === true) {
+    return true;
+  }
+  return false;
+}
+function normalizeSectionEntry(raw, index) {
+  if (raw == null) {
+    return { value: String(index), trigger: "", content: null };
+  }
+  if (typeof raw === "string") {
+    return { value: String(index), trigger: raw, content: null };
+  }
+  let obj = (
+    /** @type {Record<string, unknown>} */
+    raw
+  );
+  if (obj.props && typeof obj.props === "object") {
+    obj = /** @type {Record<string, unknown>} */
+    obj.props;
+  }
+  const value = asText2(obj.value) || String(index);
+  const trigger = asText2(obj.trigger ?? obj.title ?? obj.label);
+  const content = obj.content !== void 0 ? obj.content : obj.children !== void 0 ? obj.children : null;
+  return { value, trigger, content };
+}
+function normalizeSections(sections) {
+  if (!Array.isArray(sections)) return [];
+  return sections.map((s, i) => normalizeSectionEntry(s, i));
+}
+function normalizeStepEntry(raw, index) {
+  if (raw == null) {
+    return { title: "", details: null, number: index + 1 };
+  }
+  let obj = (
+    /** @type {Record<string, unknown>} */
+    raw
+  );
+  if (obj.props && typeof obj.props === "object") {
+    obj = /** @type {Record<string, unknown>} */
+    obj.props;
+  }
+  const num2 = Number.isInteger(obj.number) && /** @type {number} */
+  obj.number > 0 ? (
+    /** @type {number} */
+    obj.number
+  ) : index + 1;
+  return {
+    title: asText2(obj.title),
+    details: obj.details !== void 0 ? obj.details : obj.content ?? null,
+    number: num2
+  };
+}
+function normalizeSteps(items) {
+  if (!Array.isArray(items)) return [];
+  return items.map((s, i) => normalizeStepEntry(s, i));
+}
+function renderPanelContent(panel, content, ctx) {
+  clearChildren2(panel);
+  const doc = requireDocument2(ctx);
+  if (content == null) return;
+  if (typeof content === "string" || typeof content === "number") {
+    panel.appendChild(doc.createTextNode(String(content)));
+    return;
+  }
+  if (Array.isArray(content)) {
+    if (typeof ctx.renderChildren === "function") {
+      ctx.renderChildren(panel, content);
+    } else {
+      for (const part of content) {
+        if (typeof part === "string" || typeof part === "number") {
+          panel.appendChild(doc.createTextNode(String(part)));
+        }
+      }
+    }
+    return;
+  }
+  if (typeof content === "object" && content !== null && "type" in /** @type {object} */
+  content) {
+    if (typeof ctx.renderChildren === "function") {
+      ctx.renderChildren(panel, [content]);
+    }
+  }
+}
+function setOrRemoveAttr2(el2, name, value) {
+  if (value == null || value === false || value === "") {
+    el2.removeAttribute(name);
+  } else {
+    el2.setAttribute(name, value === true ? "true" : String(value));
+  }
+}
+function asText2(value) {
+  if (value == null) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return "";
+}
+function normalizeItem(raw) {
+  if (raw == null) return null;
+  if (typeof raw !== "object") return null;
+  const obj = (
+    /** @type {Record<string, unknown>} */
+    raw
+  );
+  const props = obj.props && typeof obj.props === "object" ? (
+    /** @type {Record<string, unknown>} */
+    obj.props
+  ) : obj;
+  const value = asText2(props.value);
+  if (!value) return null;
+  const trigger = asText2(props.trigger ?? props.label ?? props.title);
+  let content = props.content;
+  if (content == null && Array.isArray(obj.children)) {
+    content = obj.children;
+  }
+  if (content == null && Array.isArray(props.children)) {
+    content = props.children;
+  }
+  if (!Array.isArray(content)) {
+    content = content == null ? [] : [content];
+  }
+  const out = { value, trigger, content };
+  if (obj.id != null) out.id = /** @type {string|number} */
+  obj.id;
+  else if (props.id != null) out.id = /** @type {string|number} */
+  props.id;
+  if (obj.key != null) out.key = /** @type {string|number} */
+  obj.key;
+  else if (props.key != null) out.key = /** @type {string|number} */
+  props.key;
+  return out;
+}
+function normalizeItems(props = {}, itemType) {
+  const rawList = Array.isArray(props.items) ? props.items : Array.isArray(props.children) ? props.children : [];
+  const out = [];
+  for (const raw of rawList) {
+    if (itemType && raw && typeof raw === "object" && /** @type {Record<string, unknown>} */
+    raw.type != null && /** @type {Record<string, unknown>} */
+    raw.type !== itemType) {
+      continue;
+    }
+    const item = normalizeItem(raw);
+    if (item) out.push(item);
+  }
+  return out;
+}
+function itemKey(item, index) {
+  if (item.key != null) return String(item.key);
+  if (item.id != null) return String(item.id);
+  return item.value || String(index);
+}
+function contentSize(content) {
+  try {
+    return JSON.stringify(content ?? null).length;
+  } catch {
+    return Array.isArray(content) ? content.length : content == null ? 0 : 1;
+  }
+}
+function findDirectByAttr(parent, attr, value) {
+  const out = [];
+  for (const child of parent.childNodes ?? []) {
+    if (child.nodeType !== 1) continue;
+    const el2 = (
+      /** @type {Element} */
+      child
+    );
+    if (value == null) {
+      if (el2.getAttribute?.(attr) != null) out.push(el2);
+    } else if (el2.getAttribute?.(attr) === value) {
+      out.push(el2);
+    }
+  }
+  return out;
+}
+function renderItemContent(host, content, ctx) {
+  if (typeof ctx.renderChildren === "function") {
+    ctx.renderChildren(host, content ?? []);
+    return;
+  }
+  while (host.firstChild) host.removeChild(host.firstChild);
+  const doc = ctx.document ?? host.ownerDocument ?? globalThis.document;
+  for (const child of content ?? []) {
+    if (child == null) continue;
+    if (typeof child === "string" || typeof child === "number") {
+      host.appendChild(doc.createTextNode(String(child)));
+    } else if (typeof child === "object" && /** @type {Record<string, unknown>} */
+    child.nodeType === 1) {
+      host.appendChild(
+        /** @type {Node} */
+        child
+      );
+    } else if (typeof child === "object" && typeof /** @type {Record<string, unknown>} */
+    child.type === "string") {
+      const span = doc.createElement("span");
+      span.setAttribute("data-canvas-stub", String(
+        /** @type {Record<string, unknown>} */
+        child.type
+      ));
+      const text2 = (
+        /** @type {Record<string, unknown>} */
+        child.props && typeof /** @type {Record<string, unknown>} */
+        child.props === "object" ? asText2(
+          /** @type {Record<string, unknown>} */
+          /** @type {Record<string, unknown>} */
+          child.props.text ?? /** @type {Record<string, unknown>} */
+          /** @type {Record<string, unknown>} */
+          child.props.content
+        ) : ""
+      );
+      if (text2) span.textContent = text2;
+      host.appendChild(span);
+    }
+  }
+}
+function nextUid() {
+  _uid += 1;
+  return `c${_uid}`;
+}
+function lifecycle2(impl) {
+  return {
+    create(props = {}, ctx = {}) {
+      const doc = requireDocument2(ctx);
+      const el2 = impl.mount(doc, props, ctx);
+      impl.patch(el2, props, ctx);
+      return el2;
+    },
+    update(el2, props = {}, ctx = {}) {
+      impl.patch(el2, props, ctx);
+    },
+    destroy(el2, ctx = {}) {
+      impl.unmount?.(el2, ctx);
+    },
+    // When true, keyed reconciler will not wipe this element's children.
+    ownsChildren: impl.ownsChildren === true
+  };
+}
+var _uid;
+var init_shared2 = __esm({
+  "src/Browser/components/containers/shared.js"() {
+    _uid = 0;
+  }
+});
+
+// src/Browser/runtime/formValidation.js
+function compileSafePattern(pattern) {
+  if (typeof pattern !== "string" || pattern.length === 0 || pattern.length > 200) {
+    return null;
+  }
+  if (!SAFE_PATTERN_RE.test(pattern)) return null;
+  if (/\(\?/.test(pattern) || /\*\*/.test(pattern)) return null;
+  if (/\([^)]*[+*][^)]*\)[+*]/.test(pattern)) return null;
+  try {
+    return new RegExp(`^(?:${pattern})$`);
+  } catch {
+    return null;
+  }
+}
+function validateField(value, rules = {}) {
+  const str = value == null ? "" : String(value);
+  if (rules.required && (value == null || str.trim() === "")) {
+    return { ok: false, code: "required", message: "required" };
+  }
+  if (!rules.required && (value == null || str === "")) {
+    return { ok: true };
+  }
+  if (rules.email && !EMAIL_RE.test(str)) {
+    return { ok: false, code: "email", message: "invalid email" };
+  }
+  if (rules.url && !URL_RE.test(str)) {
+    return { ok: false, code: "url", message: "invalid url" };
+  }
+  if (rules.number || rules.numeric) {
+    if (Number.isNaN(Number(str)) || str.trim() === "") {
+      return { ok: false, code: "number", message: "not a number" };
+    }
+  }
+  const num2 = Number(str);
+  if (rules.min != null && num2 < rules.min) {
+    return { ok: false, code: "min", message: `min ${rules.min}` };
+  }
+  if (rules.max != null && num2 > rules.max) {
+    return { ok: false, code: "max", message: `max ${rules.max}` };
+  }
+  if (rules.minLength != null && str.length < rules.minLength) {
+    return { ok: false, code: "minLength", message: `minLength ${rules.minLength}` };
+  }
+  if (rules.maxLength != null && str.length > rules.maxLength) {
+    return { ok: false, code: "maxLength", message: `maxLength ${rules.maxLength}` };
+  }
+  if (rules.pattern) {
+    const re = compileSafePattern(rules.pattern);
+    if (!re) {
+      return { ok: false, code: "unsafe-pattern", message: "pattern rejected" };
+    }
+    if (!re.test(str)) {
+      return { ok: false, code: "pattern", message: "pattern mismatch" };
+    }
+  }
+  return { ok: true };
+}
+var EMAIL_RE, URL_RE, SAFE_PATTERN_RE;
+var init_formValidation = __esm({
+  "src/Browser/runtime/formValidation.js"() {
+    EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    URL_RE = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
+    SAFE_PATTERN_RE = /^[\^]?[\[\]a-zA-Z0-9\s\\\.\+\*\?\-\|_(){,}]+[$]?$/;
+  }
+});
+
+// src/Browser/components/containers/sectionOpenState.js
+function createSectionOpenState() {
+  return {
+    openItems: [],
+    userSelected: false,
+    prevLength: 0,
+    prevIsStreaming: false
+  };
+}
+function ensureIncludes(open, value) {
+  if (!value) return open.slice();
+  return open.includes(value) ? open.slice() : [...open, value];
+}
+function applySectionStreamTick(state, input) {
+  const values = Array.isArray(input.sectionValues) ? input.sectionValues : [];
+  const isStreaming2 = input.isStreaming === true;
+  const first = values[0];
+  const len = values.length;
+  if (state.prevIsStreaming && !isStreaming2 && !state.userSelected && len > 0) {
+    state.openItems = first ? [first] : [];
+  } else if (isStreaming2 && len > state.prevLength && !state.userSelected) {
+    const last = values[len - 1];
+    if (last) {
+      state.openItems = ensureIncludes(state.openItems, last);
+    }
+  } else if (!state.userSelected) {
+    if (state.openItems.length === 0 && first) {
+      state.openItems = [first];
+    }
+  }
+  if (values.length > 0) {
+    const allowed = new Set(values);
+    state.openItems = state.openItems.filter((v) => allowed.has(v));
+    if (!state.userSelected && state.openItems.length === 0 && first) {
+      state.openItems = [first];
+    }
+  } else if (!state.userSelected) {
+    state.openItems = [];
+  }
+  state.prevLength = len;
+  state.prevIsStreaming = isStreaming2;
+  return state.openItems.slice();
+}
+function applySectionUserChange(state, next) {
+  state.userSelected = true;
+  if (Array.isArray(next)) {
+    state.openItems = next.map(String);
+  } else if (next == null || next === "") {
+    state.openItems = [];
+  } else {
+    state.openItems = [String(next)];
+  }
+  return state.openItems.slice();
+}
+function toggleSectionValue(state, value) {
+  const v = String(value);
+  const cur = state.openItems.slice();
+  const idx = cur.indexOf(v);
+  if (idx >= 0) cur.splice(idx, 1);
+  else cur.push(v);
+  return applySectionUserChange(state, cur);
+}
+function createStepsProgressState() {
+  return {
+    currentIndex: -1,
+    userSelected: false,
+    prevLength: 0,
+    prevIsStreaming: false
+  };
+}
+function applyStepsStreamTick(state, input) {
+  const count = Math.max(0, Number(input.itemCount) || 0);
+  const isStreaming2 = input.isStreaming === true;
+  if (count === 0) {
+    if (!state.userSelected) state.currentIndex = -1;
+    state.prevLength = 0;
+    state.prevIsStreaming = isStreaming2;
+    return state.currentIndex;
+  }
+  if (!state.userSelected) {
+    if (isStreaming2 && count > state.prevLength) {
+      state.currentIndex = count - 1;
+    } else if (state.currentIndex < 0 || state.currentIndex >= count) {
+      state.currentIndex = 0;
+    }
+  } else if (state.currentIndex >= count) {
+    state.currentIndex = count - 1;
+  }
+  state.prevLength = count;
+  state.prevIsStreaming = isStreaming2;
+  return state.currentIndex;
+}
+function applyStepsUserSelect(state, index) {
+  state.userSelected = true;
+  state.currentIndex = Math.max(0, Number(index) || 0);
+  return state.currentIndex;
+}
+var init_sectionOpenState = __esm({
+  "src/Browser/components/containers/sectionOpenState.js"() {
+  }
+});
+
+// src/Browser/components/containers/SectionBlock.js
+function getOpenState(host) {
+  let s = openStateByHost.get(host);
+  if (!s) {
+    s = createSectionOpenState();
+    openStateByHost.set(host, s);
+  }
+  return s;
+}
+function getItemMap(host) {
+  let m = itemElsByHost.get(host);
+  if (!m) {
+    m = /* @__PURE__ */ new Map();
+    itemElsByHost.set(host, m);
+  }
+  return m;
+}
+function syncOpenDom(host, openItems) {
+  const open = new Set(openItems);
+  host.setAttribute("data-open-values", openItems.join(","));
+  const map = getItemMap(host);
+  for (const [value, itemEl] of map) {
+    const isOpen = open.has(value);
+    itemEl.setAttribute("data-state", isOpen ? "open" : "closed");
+    const trigger = itemEl._canvasTrigger;
+    const panel = itemEl._canvasPanel;
+    if (trigger) {
+      trigger.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      trigger.setAttribute("data-state", isOpen ? "open" : "closed");
+    }
+    if (panel) {
+      panel.setAttribute("data-state", isOpen ? "open" : "closed");
+      if (isOpen) panel.removeAttribute("hidden");
+      else panel.setAttribute("hidden", "true");
+    }
+  }
+}
+function buildItem(doc, section, host, ctx, foldable) {
+  const item = doc.createElement("div");
+  item.setAttribute("data-canvas-component", "SectionItem");
+  item.setAttribute("data-section-value", section.value);
+  setClass2(
+    item,
+    foldable ? "canvas-section-block__item" : "canvas-section-v2"
+  );
+  if (foldable) {
+    const header = doc.createElement("h3");
+    setClass2(header, "canvas-section-block__header");
+    const trigger = doc.createElement("button");
+    trigger.setAttribute("type", "button");
+    setClass2(trigger, "canvas-section-block__trigger");
+    trigger.setAttribute("aria-expanded", "false");
+    trigger.setAttribute("data-state", "closed");
+    trigger.setAttribute("id", `canvas-section-trigger-${section.value}`);
+    const icon = doc.createElement("span");
+    setClass2(icon, "canvas-section-block__icon");
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = "\u203A";
+    const label = doc.createElement("span");
+    setClass2(label, "canvas-section-block__trigger-text");
+    label.textContent = section.trigger;
+    trigger.appendChild(icon);
+    trigger.appendChild(label);
+    const panel = doc.createElement("div");
+    setClass2(panel, "canvas-section-block__content");
+    panel.setAttribute("role", "region");
+    panel.setAttribute("data-state", "closed");
+    panel.setAttribute("hidden", "true");
+    panel.setAttribute(
+      "aria-labelledby",
+      `canvas-section-trigger-${section.value}`
+    );
+    trigger.setAttribute(
+      "aria-controls",
+      `canvas-section-panel-${section.value}`
+    );
+    panel.setAttribute("id", `canvas-section-panel-${section.value}`);
+    trigger.onclick = () => {
+      const state = getOpenState(host);
+      const next = toggleSectionValue(state, section.value);
+      syncOpenDom(host, next);
+    };
+    header.appendChild(trigger);
+    item.appendChild(header);
+    item.appendChild(panel);
+    item._canvasTrigger = trigger;
+    item._canvasPanel = panel;
+    renderPanelContent(panel, section.content, ctx);
+  } else {
+    const head = doc.createElement("div");
+    setClass2(head, "canvas-section-v2__header");
+    const t = doc.createElement("div");
+    setClass2(t, "canvas-section-v2__trigger");
+    t.textContent = section.trigger;
+    head.appendChild(t);
+    const panel = doc.createElement("div");
+    setClass2(panel, "canvas-section-v2__content");
+    item.appendChild(head);
+    item.appendChild(panel);
+    item._canvasPanel = panel;
+    item.setAttribute("data-state", "open");
+    renderPanelContent(panel, section.content, ctx);
+  }
+  return item;
+}
+var openStateByHost, itemElsByHost, SectionBlock;
+var init_SectionBlock = __esm({
+  "src/Browser/components/containers/SectionBlock.js"() {
+    init_shared2();
+    init_sectionOpenState();
+    openStateByHost = /* @__PURE__ */ new WeakMap();
+    itemElsByHost = /* @__PURE__ */ new WeakMap();
+    SectionBlock = lifecycle2({
+      ownsChildren: true,
+      mount(doc) {
+        const el2 = doc.createElement("div");
+        el2.setAttribute("data-canvas-component", "SectionBlock");
+        return el2;
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = requireDocument2(ctx);
+        const foldable = props.isFoldable !== false;
+        const sections = normalizeSections(
+          props.sections ?? props.items ?? props.children
+        );
+        const isStreaming2 = resolveIsStreaming(props, ctx);
+        setClass2(
+          el2,
+          foldable ? "canvas-section-block" : "canvas-section-block canvas-section-block--static"
+        );
+        el2.setAttribute("data-foldable", foldable ? "true" : "false");
+        el2.setAttribute("data-streaming", isStreaming2 ? "true" : "false");
+        el2.setAttribute("data-section-count", String(sections.length));
+        if (foldable) {
+          el2.setAttribute("role", "region");
+          el2.setAttribute("aria-label", asText2(props["aria-label"]) || "Sections");
+        } else {
+          el2.removeAttribute("role");
+        }
+        const state = getOpenState(el2);
+        const values = sections.map((s) => s.value);
+        if (foldable) {
+          applySectionStreamTick(state, {
+            sectionValues: values,
+            isStreaming: isStreaming2
+          });
+        } else {
+          state.openItems = values.slice();
+          state.prevLength = values.length;
+          state.prevIsStreaming = isStreaming2;
+        }
+        clearChildren2(el2);
+        const map = /* @__PURE__ */ new Map();
+        itemElsByHost.set(el2, map);
+        for (const section of sections) {
+          const item = buildItem(doc, section, el2, ctx, foldable);
+          el2.appendChild(item);
+          map.set(section.value, item);
+        }
+        if (foldable) {
+          syncOpenDom(el2, state.openItems);
+          el2.setAttribute(
+            "data-user-intervened",
+            state.userSelected ? "true" : "false"
+          );
+        } else {
+          el2.setAttribute("data-open-values", values.join(","));
+          el2.setAttribute("data-user-intervened", "false");
+        }
+      },
+      unmount(el2) {
+        openStateByHost.delete(el2);
+        itemElsByHost.delete(el2);
+      }
+    });
+  }
+});
+
+// src/Browser/components/containers/SectionItem.js
+var SectionItem;
+var init_SectionItem = __esm({
+  "src/Browser/components/containers/SectionItem.js"() {
+    init_shared2();
+    SectionItem = lifecycle2({
+      mount(doc) {
+        const el2 = doc.createElement("div");
+        el2.setAttribute("data-canvas-component", "SectionItem");
+        return el2;
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = requireDocument2(ctx);
+        const section = normalizeSectionEntry(props, 0);
+        setClass2(el2, "canvas-section-item canvas-section-v2");
+        el2.setAttribute("data-section-value", section.value);
+        el2.setAttribute("data-state", "open");
+        clearChildren2(el2);
+        const head = doc.createElement("div");
+        setClass2(head, "canvas-section-v2__header");
+        const trigger = doc.createElement("div");
+        setClass2(trigger, "canvas-section-v2__trigger");
+        trigger.textContent = section.trigger || asText2(props.trigger);
+        head.appendChild(trigger);
+        const panel = doc.createElement("div");
+        setClass2(panel, "canvas-section-v2__content");
+        renderPanelContent(panel, section.content, ctx);
+        el2.appendChild(head);
+        el2.appendChild(panel);
+      }
+    });
+  }
+});
+
+// src/Browser/components/containers/Steps.js
+function getProgress(host) {
+  let s = progressByHost.get(host);
+  if (!s) {
+    s = createStepsProgressState();
+    progressByHost.set(host, s);
+  }
+  return s;
+}
+function syncProgressDom(host, currentIndex, count) {
+  const now = currentIndex < 0 ? 0 : currentIndex + 1;
+  const max = Math.max(count, 0);
+  host.setAttribute("data-current-index", String(currentIndex));
+  host.setAttribute("aria-valuenow", String(now));
+  host.setAttribute("aria-valuemin", "0");
+  host.setAttribute("aria-valuemax", String(max));
+  const label = max === 0 ? "No steps" : `Step ${now} of ${max}`;
+  host.setAttribute("aria-valuetext", label);
+  const status = host._canvasProgressStatus;
+  if (status) {
+    status.textContent = label;
+  }
+  const list = host._canvasList;
+  if (!list) return;
+  for (const child of list.childNodes ?? []) {
+    if (child.nodeType !== 1) continue;
+    const idx = Number(child.getAttribute("data-step-index"));
+    const isCurrent = idx === currentIndex;
+    child.setAttribute("data-current", isCurrent ? "true" : "false");
+    if (isCurrent) child.setAttribute("aria-current", "step");
+    else child.removeAttribute("aria-current");
+  }
+}
+function stepsUserSelect(host, index) {
+  const state = getProgress(host);
+  const next = applyStepsUserSelect(state, index);
+  const count = Number(host.getAttribute("data-step-count") || 0);
+  syncProgressDom(host, next, count);
+  host.setAttribute("data-user-intervened", "true");
+  return next;
+}
+var progressByHost, Steps;
+var init_Steps = __esm({
+  "src/Browser/components/containers/Steps.js"() {
+    init_shared2();
+    init_sectionOpenState();
+    progressByHost = /* @__PURE__ */ new WeakMap();
+    Steps = lifecycle2({
+      ownsChildren: true,
+      mount(doc) {
+        const el2 = doc.createElement("div");
+        el2.setAttribute("data-canvas-component", "Steps");
+        return el2;
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = requireDocument2(ctx);
+        const items = normalizeSteps(props.items ?? props.steps ?? props.children);
+        const isStreaming2 = resolveIsStreaming(props, ctx);
+        const state = getProgress(el2);
+        setClass2(el2, "canvas-steps");
+        el2.setAttribute("role", "group");
+        el2.setAttribute("aria-label", asText2(props["aria-label"]) || "Steps");
+        el2.setAttribute("aria-roledescription", "progress");
+        el2.setAttribute("data-streaming", isStreaming2 ? "true" : "false");
+        el2.setAttribute("data-step-count", String(items.length));
+        applyStepsStreamTick(state, {
+          itemCount: items.length,
+          isStreaming: isStreaming2
+        });
+        clearChildren2(el2);
+        const status = doc.createElement("span");
+        setClass2(status, "canvas-steps__progress-status");
+        status.setAttribute("role", "status");
+        status.setAttribute("aria-live", "polite");
+        status.setAttribute("data-canvas-steps-status", "");
+        el2._canvasProgressStatus = status;
+        el2.appendChild(status);
+        const list = doc.createElement("ol");
+        setClass2(list, "canvas-steps__list");
+        list.setAttribute("role", "list");
+        el2._canvasList = list;
+        items.forEach((step, index) => {
+          const li = doc.createElement("li");
+          setClass2(li, "canvas-steps__item");
+          li.setAttribute("data-canvas-component", "StepsItem");
+          li.setAttribute("data-step-index", String(index));
+          li.setAttribute("data-step-number", String(step.number));
+          li.setAttribute("role", "listitem");
+          const connector = doc.createElement("div");
+          setClass2(connector, "canvas-steps__connector");
+          const num2 = doc.createElement("div");
+          setClass2(num2, "canvas-steps__number");
+          const numInner = doc.createElement("span");
+          setClass2(numInner, "canvas-steps__number-inner");
+          numInner.textContent = String(step.number);
+          num2.appendChild(numInner);
+          const line = doc.createElement("div");
+          setClass2(line, "canvas-steps__line");
+          line.setAttribute("aria-hidden", "true");
+          connector.appendChild(num2);
+          connector.appendChild(line);
+          const body = doc.createElement("div");
+          setClass2(body, "canvas-steps__content");
+          const titleBtn = doc.createElement("button");
+          titleBtn.setAttribute("type", "button");
+          setClass2(titleBtn, "canvas-steps__title");
+          titleBtn.textContent = step.title;
+          titleBtn.onclick = () => {
+            stepsUserSelect(el2, index);
+          };
+          const details = doc.createElement("div");
+          setClass2(details, "canvas-steps__details");
+          renderPanelContent(details, step.details, ctx);
+          body.appendChild(titleBtn);
+          body.appendChild(details);
+          li.appendChild(connector);
+          li.appendChild(body);
+          list.appendChild(li);
+        });
+        el2.appendChild(list);
+        syncProgressDom(el2, state.currentIndex, items.length);
+        el2.setAttribute(
+          "data-user-intervened",
+          state.userSelected ? "true" : "false"
+        );
+      },
+      unmount(el2) {
+        progressByHost.delete(el2);
+        el2._canvasList = null;
+        el2._canvasProgressStatus = null;
+      }
+    });
+  }
+});
+
+// src/Browser/components/containers/StepsItem.js
+var StepsItem;
+var init_StepsItem = __esm({
+  "src/Browser/components/containers/StepsItem.js"() {
+    init_shared2();
+    StepsItem = lifecycle2({
+      mount(doc) {
+        const el2 = doc.createElement("div");
+        el2.setAttribute("data-canvas-component", "StepsItem");
+        return el2;
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = requireDocument2(ctx);
+        const step = normalizeStepEntry(props, Number(props.index) || 0);
+        setClass2(el2, "canvas-steps__item canvas-steps-item--standalone");
+        el2.setAttribute("data-step-number", String(step.number));
+        clearChildren2(el2);
+        const num2 = doc.createElement("span");
+        setClass2(num2, "canvas-steps__number-inner");
+        num2.textContent = String(step.number);
+        const title = doc.createElement("span");
+        setClass2(title, "canvas-steps__title");
+        title.textContent = step.title || asText2(props.title);
+        const details = doc.createElement("div");
+        setClass2(details, "canvas-steps__details");
+        renderPanelContent(details, step.details, ctx);
+        el2.appendChild(num2);
+        el2.appendChild(title);
+        el2.appendChild(details);
+      }
+    });
+  }
+});
+
+// src/Browser/components/containers/registerSectionSteps.js
+var registerSectionSteps_exports = {};
+__export(registerSectionSteps_exports, {
+  SECTION_STEPS_COMPONENTS: () => SECTION_STEPS_COMPONENTS,
+  SectionBlock: () => SectionBlock,
+  SectionItem: () => SectionItem,
+  Steps: () => Steps,
+  StepsItem: () => StepsItem,
+  default: () => registerSectionSteps_default,
+  registerSectionSteps: () => registerSectionSteps
+});
+function registerSectionSteps(registry) {
+  if (!registry || typeof registry.register !== "function") {
+    throw new Error("registerSectionSteps: registry with register() required");
+  }
+  for (const [type, entry] of Object.entries(SECTION_STEPS_COMPONENTS)) {
+    registry.register(type, entry);
+  }
+  return registry;
+}
+var SECTION_STEPS_COMPONENTS, registerSectionSteps_default;
+var init_registerSectionSteps = __esm({
+  "src/Browser/components/containers/registerSectionSteps.js"() {
+    init_SectionBlock();
+    init_SectionItem();
+    init_Steps();
+    init_StepsItem();
+    SECTION_STEPS_COMPONENTS = {
+      SectionBlock,
+      SectionItem,
+      Steps,
+      StepsItem
+    };
+    registerSectionSteps_default = registerSectionSteps;
+  }
+});
+
+// src/Browser/components/containers/Carousel.js
+function slideStructureSignature(slide) {
+  if (!Array.isArray(slide)) return "";
+  return slide.map((n) => {
+    if (n == null || n === false) return "";
+    if (typeof n === "string" || typeof n === "number") return "#text";
+    if (typeof n === "object" && n !== null && "type" in n) {
+      return String(
+        /** @type {{ type: unknown }} */
+        n.type
+      );
+    }
+    return "?";
+  }).join("|");
+}
+function enforceSlideStructure(slides) {
+  if (!Array.isArray(slides) || slides.length === 0) {
+    return { ok: true, slides: [], signature: "", dropped: 0 };
+  }
+  let signature = "";
+  for (const slide of slides) {
+    const sig = slideStructureSignature(Array.isArray(slide) ? slide : [slide]);
+    if (sig) {
+      signature = sig;
+      break;
+    }
+  }
+  if (!signature) {
+    return { ok: true, slides: (
+      /** @type {unknown[][]} */
+      slides
+    ), signature: "", dropped: 0 };
+  }
+  const kept = [];
+  let dropped = 0;
+  for (const raw of slides) {
+    const slide = Array.isArray(raw) ? raw : [raw];
+    if (slideStructureSignature(slide) === signature) kept.push(slide);
+    else dropped += 1;
+  }
+  return { ok: dropped === 0, slides: kept, signature, dropped };
+}
+function normalizeSlides(props = {}) {
+  const kids = props.children;
+  if (!Array.isArray(kids)) return [];
+  if (kids.length === 0) return [];
+  if (Array.isArray(kids[0])) {
+    return (
+      /** @type {unknown[][]} */
+      kids.map((s) => Array.isArray(s) ? s : [s])
+    );
+  }
+  return kids.map((k) => Array.isArray(k) ? k : [k]);
+}
+function normalizeVariant2(props = {}) {
+  const v = asText2(props.variant) || "card";
+  return VARIANTS12.has(v) ? v : "card";
+}
+function prefersReducedMotion(doc) {
+  try {
+    const view = (
+      /** @type {{ matchMedia?: (q: string) => { matches: boolean } }} */
+      doc.defaultView ?? globalThis
+    );
+    if (typeof view.matchMedia === "function") {
+      return !!view.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    }
+  } catch {
+  }
+  return false;
+}
+function slideEls(track) {
+  return [...track.childNodes ?? []].filter(
+    (n) => n.nodeType === 1 && /** @type {Element} */
+    n.getAttribute?.("data-canvas-carousel-slide") != null
+  );
+}
+function indexFromScroll(track) {
+  const slides = slideEls(track);
+  if (slides.length === 0) return 0;
+  const left = Number(track.scrollLeft) || 0;
+  let best = 0;
+  let bestDist = Infinity;
+  for (let i = 0; i < slides.length; i++) {
+    const el2 = (
+      /** @type {Element & { offsetLeft?: number }} */
+      slides[i]
+    );
+    const offset = typeof el2.offsetLeft === "number" ? el2.offsetLeft : i * 280;
+    const dist = Math.abs(offset - left);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = i;
+    }
+  }
+  return best;
+}
+function goTo(state, index, opts = {}) {
+  const slides = slideEls(state.track);
+  if (slides.length === 0) return;
+  const i = Math.max(0, Math.min(slides.length - 1, index));
+  state.index = i;
+  const target = (
+    /** @type {Element & { offsetLeft?: number }} */
+    slides[i]
+  );
+  const left = typeof target.offsetLeft === "number" ? target.offsetLeft : i * 280;
+  const behavior = opts.instant || state.reducedMotion ? "auto" : "smooth";
+  if (typeof /** @type {{ scrollTo?: Function }} */
+  state.track.scrollTo === "function") {
+    state.track.scrollTo({ left, behavior });
+  } else {
+    state.track.scrollLeft = left;
+  }
+  state.scrollLeft = left;
+  syncChrome(state);
+}
+function syncChrome(state) {
+  const slides = slideEls(state.track);
+  const n = slides.length;
+  const i = n === 0 ? 0 : Math.min(state.index, n - 1);
+  state.index = i;
+  const label = n === 0 ? "No slides" : `Slide ${i + 1} of ${n}`;
+  state.status.textContent = label;
+  state.track.setAttribute("aria-label", label);
+  if (i <= 0) state.prevBtn.setAttribute("disabled", "");
+  else state.prevBtn.removeAttribute("disabled");
+  if (i >= n - 1 || n === 0) state.nextBtn.setAttribute("disabled", "");
+  else state.nextBtn.removeAttribute("disabled");
+  for (let s = 0; s < slides.length; s++) {
+    const el2 = slides[s];
+    el2.setAttribute("aria-hidden", s === i ? "false" : "true");
+    el2.setAttribute("data-active", s === i ? "true" : "false");
+  }
+}
+function renderSlides(root, slides, ctx, state) {
+  const track = state.track;
+  const prevLeft = Number(track.scrollLeft) || state.scrollLeft || 0;
+  const prevIndex = state.index;
+  clearChildren2(track);
+  const doc = requireDocument2(ctx);
+  slides.forEach((slide, i) => {
+    const wrap = doc.createElement("div");
+    wrap.setAttribute("class", "canvas-carousel__slide");
+    wrap.setAttribute("data-canvas-carousel-slide", String(i));
+    wrap.setAttribute("role", "group");
+    wrap.setAttribute("aria-roledescription", "slide");
+    wrap.setAttribute("aria-label", `Slide ${i + 1} of ${slides.length}`);
+    try {
+      const desc = Object.getOwnPropertyDescriptor(wrap, "offsetLeft");
+      const proto = Object.getPrototypeOf(wrap);
+      const protoDesc = proto ? Object.getOwnPropertyDescriptor(proto, "offsetLeft") : void 0;
+      const hasLayoutGetter = !!(protoDesc && protoDesc.get && !protoDesc.set);
+      if (!hasLayoutGetter && (!desc || desc.writable)) {
+        wrap.offsetLeft = i * 280;
+      }
+    } catch {
+    }
+    if (typeof ctx.renderChildren === "function") {
+      ctx.renderChildren(wrap, slide);
+    } else {
+      for (const part of slide) {
+        if (typeof part === "string" || typeof part === "number") {
+          wrap.appendChild(doc.createTextNode(String(part)));
+        }
+      }
+    }
+    track.appendChild(wrap);
+  });
+  if (slides.length === 0) {
+    state.index = 0;
+    state.scrollLeft = 0;
+  } else if (prevIndex < slides.length) {
+    goTo(state, prevIndex, { instant: true });
+  } else {
+    track.scrollLeft = Math.min(prevLeft, (slides.length - 1) * 280);
+    state.scrollLeft = track.scrollLeft;
+    state.index = indexFromScroll(track);
+    syncChrome(state);
+  }
+}
+var VARIANTS12, STATE18, Carousel;
+var init_Carousel = __esm({
+  "src/Browser/components/containers/Carousel.js"() {
+    init_shared2();
+    VARIANTS12 = /* @__PURE__ */ new Set(["card", "sunk"]);
+    STATE18 = /* @__PURE__ */ new WeakMap();
+    Carousel = lifecycle2({
+      ownsChildren: true,
+      mount(doc) {
+        const root = doc.createElement("div");
+        root.setAttribute("data-canvas-component", "Carousel");
+        root.setAttribute("role", "region");
+        root.setAttribute("aria-roledescription", "carousel");
+        const track = doc.createElement("div");
+        track.setAttribute("class", "canvas-carousel__track");
+        track.setAttribute("data-canvas-carousel-track", "");
+        track.setAttribute("tabindex", "0");
+        track.setAttribute("role", "group");
+        const prevBtn = doc.createElement("button");
+        prevBtn.setAttribute("type", "button");
+        prevBtn.setAttribute("class", "canvas-carousel__btn canvas-carousel__btn--prev");
+        prevBtn.setAttribute("aria-label", "Previous slide");
+        prevBtn.textContent = "\u2039";
+        const nextBtn = doc.createElement("button");
+        nextBtn.setAttribute("type", "button");
+        nextBtn.setAttribute("class", "canvas-carousel__btn canvas-carousel__btn--next");
+        nextBtn.setAttribute("aria-label", "Next slide");
+        nextBtn.textContent = "\u203A";
+        const status = doc.createElement("div");
+        status.setAttribute("class", "canvas-carousel__status");
+        status.setAttribute("role", "status");
+        status.setAttribute("aria-live", "polite");
+        status.setAttribute("aria-atomic", "true");
+        root.appendChild(prevBtn);
+        root.appendChild(track);
+        root.appendChild(nextBtn);
+        root.appendChild(status);
+        const state = {
+          index: 0,
+          scrollLeft: 0,
+          track,
+          status,
+          prevBtn,
+          nextBtn,
+          reducedMotion: prefersReducedMotion(doc),
+          signature: "",
+          onKey: () => {
+          },
+          onScroll: () => {
+          },
+          onPrev: () => {
+          },
+          onNext: () => {
+          }
+        };
+        state.onPrev = () => goTo(state, state.index - 1);
+        state.onNext = () => goTo(state, state.index + 1);
+        state.onScroll = () => {
+          state.scrollLeft = Number(track.scrollLeft) || 0;
+          state.index = indexFromScroll(track);
+          syncChrome(state);
+        };
+        state.onKey = (e) => {
+          const key = e?.key;
+          if (key === "ArrowLeft" || key === "Left") {
+            e.preventDefault?.();
+            state.onPrev();
+          } else if (key === "ArrowRight" || key === "Right") {
+            e.preventDefault?.();
+            state.onNext();
+          } else if (key === "Home") {
+            e.preventDefault?.();
+            goTo(state, 0);
+          } else if (key === "End") {
+            e.preventDefault?.();
+            goTo(state, slideEls(track).length - 1);
+          }
+        };
+        if (typeof prevBtn.addEventListener === "function") {
+          prevBtn.addEventListener("click", state.onPrev);
+          nextBtn.addEventListener("click", state.onNext);
+          track.addEventListener("keydown", state.onKey);
+          track.addEventListener("scroll", state.onScroll, { passive: true });
+        }
+        STATE18.set(root, state);
+        return root;
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const state = STATE18.get(el2);
+        if (!state) return;
+        const doc = requireDocument2(ctx);
+        const variant = normalizeVariant2(props);
+        state.reducedMotion = prefersReducedMotion(doc);
+        setClass2(
+          el2,
+          `canvas-carousel canvas-carousel--${variant}${state.reducedMotion ? " canvas-carousel--reduced-motion" : ""}`
+        );
+        el2.setAttribute("data-variant", variant);
+        el2.setAttribute("data-reduced-motion", state.reducedMotion ? "true" : "false");
+        const raw = normalizeSlides(props);
+        const enforced = enforceSlideStructure(raw);
+        state.signature = enforced.signature;
+        if (!enforced.ok) {
+          el2.setAttribute("data-structure-error", "true");
+          el2.setAttribute(
+            "data-structure-dropped",
+            String(enforced.dropped)
+          );
+        } else {
+          el2.removeAttribute("data-structure-error");
+          el2.removeAttribute("data-structure-dropped");
+        }
+        if (enforced.signature) {
+          el2.setAttribute("data-slide-signature", enforced.signature);
+        } else {
+          el2.removeAttribute("data-slide-signature");
+        }
+        renderSlides(el2, enforced.slides, ctx, state);
+      },
+      unmount(el2) {
+        const state = STATE18.get(el2);
+        if (!state) return;
+        if (typeof state.prevBtn.removeEventListener === "function") {
+          state.prevBtn.removeEventListener("click", state.onPrev);
+          state.nextBtn.removeEventListener("click", state.onNext);
+          state.track.removeEventListener("keydown", state.onKey);
+          state.track.removeEventListener("scroll", state.onScroll);
+        }
+        STATE18.delete(el2);
+      }
+    });
+  }
+});
+
+// src/Browser/components/containers/Modal.js
+function normalizeSize(props = {}) {
+  const s = asText2(props.size) || "md";
+  return SIZES6.has(s) ? s : "md";
+}
+function resolveOpen(props = {}) {
+  const o = props.open;
+  if (o === true || o === false) return o;
+  if (o && typeof o === "object") {
+    if (typeof /** @type {{ get?: unknown }} */
+    o.get === "function") {
+      return !!/** @type {{ get: () => unknown }} */
+      o.get();
+    }
+    if ("value" in /** @type {object} */
+    o) {
+      return !!/** @type {{ value: unknown }} */
+      o.value;
+    }
+  }
+  return false;
+}
+function writeOpen(props, value, ctx = {}) {
+  const o = props.open;
+  if (o && typeof o === "object" && typeof /** @type {{ set?: unknown }} */
+  o.set === "function") {
+    o.set(value);
+  }
+  if (typeof props.onOpenChange === "function") {
+    props.onOpenChange(value);
+  }
+  if (typeof ctx.onOpenChange === "function") {
+    ctx.onOpenChange(value);
+  }
+}
+function focusableElements(root) {
+  const out = [];
+  const walk = (n) => {
+    if (!n || n.nodeType !== 1) return;
+    const el2 = (
+      /** @type {Element} */
+      n
+    );
+    if (el2.getAttribute?.("disabled") != null) {
+    } else {
+      const tag = (el2.tagName || "").toLowerCase();
+      const tabindex = el2.getAttribute?.("tabindex");
+      const focusableTag = tag === "button" || tag === "a" || tag === "input" || tag === "select" || tag === "textarea" || tag === "summary";
+      const tabIdx = tabindex == null ? null : Number(tabindex);
+      if (focusableTag || tabIdx != null && !Number.isNaN(tabIdx) && tabIdx >= 0) {
+        if (el2.getAttribute?.("hidden") == null) out.push(el2);
+      }
+    }
+    for (const c of el2.childNodes ?? []) walk(c);
+  };
+  walk(root);
+  return out;
+}
+function setScrollLock(doc, lock) {
+  const body = doc.body;
+  if (!body) return;
+  let count = SCROLL_LOCK.get(doc) ?? 0;
+  if (lock) {
+    count += 1;
+    SCROLL_LOCK.set(doc, count);
+    if (count === 1) {
+      body.setAttribute("data-canvas-scroll-lock", "1");
+      if (body.style) body.style.overflow = "hidden";
+      else body.setAttribute("style", "overflow: hidden");
+    }
+  } else {
+    count = Math.max(0, count - 1);
+    SCROLL_LOCK.set(doc, count);
+    if (count === 0) {
+      body.removeAttribute("data-canvas-scroll-lock");
+      if (body.style) body.style.overflow = "";
+      else body.removeAttribute("style");
+    }
+  }
+}
+function applyOpen2(dialog, state, open, props, ctx) {
+  const doc = requireDocument2(ctx);
+  const wasOpen = state.open;
+  if (open && !wasOpen) {
+    state.restoreFocus = (props.trigger && typeof props.trigger.focus === "function" ? (
+      /** @type {Element} */
+      props.trigger
+    ) : null) || (doc.activeElement && doc.activeElement !== dialog ? (
+      /** @type {Element} */
+      doc.activeElement
+    ) : state.restoreFocus);
+    state.propsRef = props;
+    state.ctxRef = ctx;
+    const finishOpen = () => {
+      setScrollLock(doc, true);
+      state.open = true;
+      dialog.setAttribute("data-open", "true");
+      queueMicrotaskOrNow(() => {
+        if (!state.open) return;
+        const focusables = focusableElements(dialog);
+        const preferred = focusables.find((el2) => el2 !== state.closeBtn) || state.closeBtn || dialog;
+        preferred.focus?.();
+      });
+    };
+    let shown = false;
+    try {
+      if (typeof /** @type {{ showModal?: Function }} */
+      dialog.showModal === "function") {
+        dialog.showModal();
+        shown = true;
+      } else {
+        dialog.setAttribute("open", "");
+        dialog.open = true;
+        shown = true;
+      }
+    } catch {
+      shown = false;
+    }
+    if (!shown) {
+      queueMicrotaskOrNow(() => {
+        if (!resolveOpen(state.propsRef) || state.open) return;
+        try {
+          if (typeof /** @type {{ showModal?: Function }} */
+          dialog.showModal === "function") {
+            dialog.showModal();
+          } else {
+            dialog.setAttribute("open", "");
+            dialog.open = true;
+          }
+          finishOpen();
+        } catch {
+        }
+      });
+      return;
+    }
+    finishOpen();
+  } else if (!open && wasOpen) {
+    if (typeof /** @type {{ close?: Function }} */
+    dialog.close === "function") {
+      dialog.close();
+    } else {
+      dialog.removeAttribute("open");
+      dialog.open = false;
+    }
+    setScrollLock(doc, false);
+    state.open = false;
+    dialog.setAttribute("data-open", "false");
+    const restore = state.restoreFocus;
+    state.restoreFocus = null;
+    queueMicrotaskOrNow(() => {
+      restore?.focus?.();
+    });
+  }
+}
+function queueMicrotaskOrNow(fn) {
+  if (typeof queueMicrotask === "function") queueMicrotask(fn);
+  else fn();
+}
+function requestClose(dialog, state) {
+  writeOpen(state.propsRef, false, state.ctxRef);
+  applyOpen2(dialog, state, false, state.propsRef, state.ctxRef);
+}
+var SIZES6, STATE19, SCROLL_LOCK, Modal;
+var init_Modal = __esm({
+  "src/Browser/components/containers/Modal.js"() {
+    init_shared2();
+    SIZES6 = /* @__PURE__ */ new Set(["sm", "md", "lg"]);
+    STATE19 = /* @__PURE__ */ new WeakMap();
+    SCROLL_LOCK = /* @__PURE__ */ new WeakMap();
+    Modal = lifecycle2({
+      ownsChildren: true,
+      mount(doc) {
+        const dialog = doc.createElement("dialog");
+        dialog.setAttribute("data-canvas-component", "Modal");
+        dialog.setAttribute("class", "canvas-modal");
+        dialog.setAttribute("aria-modal", "true");
+        dialog.setAttribute("role", "dialog");
+        const header = doc.createElement("div");
+        header.setAttribute("class", "canvas-modal__header");
+        const titleEl = doc.createElement("h2");
+        titleEl.setAttribute("class", "canvas-modal__title");
+        const titleId = `canvas-modal-title-${Math.random().toString(36).slice(2, 9)}`;
+        titleEl.setAttribute("id", titleId);
+        dialog.setAttribute("aria-labelledby", titleId);
+        const closeBtn = doc.createElement("button");
+        closeBtn.setAttribute("type", "button");
+        closeBtn.setAttribute("class", "canvas-modal__close");
+        closeBtn.setAttribute("aria-label", "Close");
+        closeBtn.textContent = "\xD7";
+        header.appendChild(titleEl);
+        header.appendChild(closeBtn);
+        const bodyEl = doc.createElement("div");
+        bodyEl.setAttribute("class", "canvas-modal__body");
+        bodyEl.setAttribute("data-canvas-modal-body", "");
+        dialog.appendChild(header);
+        dialog.appendChild(bodyEl);
+        const state = {
+          open: false,
+          titleEl,
+          bodyEl,
+          closeBtn,
+          restoreFocus: null,
+          propsRef: {},
+          ctxRef: {},
+          onKeyDown: () => {
+          },
+          onCancel: () => {
+          },
+          onClick: () => {
+          },
+          onCloseClick: () => {
+          }
+        };
+        state.onCloseClick = () => requestClose(dialog, state);
+        state.onCancel = (e) => {
+          e?.preventDefault?.();
+          requestClose(dialog, state);
+        };
+        state.onClick = (e) => {
+          if (e?.target === dialog) {
+            requestClose(dialog, state);
+          }
+        };
+        state.onKeyDown = (e) => {
+          if (!state.open) return;
+          if (e?.key === "Escape") {
+            e.preventDefault?.();
+            requestClose(dialog, state);
+            return;
+          }
+          if (e?.key !== "Tab") return;
+          const focusables = focusableElements(dialog);
+          if (focusables.length === 0) {
+            e.preventDefault?.();
+            dialog.focus?.();
+            return;
+          }
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          const active = dialog.ownerDocument?.activeElement;
+          if (e.shiftKey) {
+            if (active === first || active === dialog) {
+              e.preventDefault?.();
+              last.focus?.();
+            }
+          } else if (active === last) {
+            e.preventDefault?.();
+            first.focus?.();
+          }
+        };
+        if (typeof dialog.addEventListener === "function") {
+          dialog.addEventListener("cancel", state.onCancel);
+          dialog.addEventListener("click", state.onClick);
+          dialog.addEventListener("keydown", state.onKeyDown);
+          closeBtn.addEventListener("click", state.onCloseClick);
+        }
+        dialog.setAttribute("tabindex", "-1");
+        STATE19.set(dialog, state);
+        dialog.setAttribute("data-open", "false");
+        return dialog;
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const state = STATE19.get(el2);
+        if (!state) return;
+        state.propsRef = props;
+        state.ctxRef = ctx;
+        const size = normalizeSize(props);
+        setClass2(el2, `canvas-modal canvas-modal--${size}`);
+        el2.setAttribute("data-size", size);
+        const title = asText2(props.title) || "Dialog";
+        state.titleEl.textContent = title;
+        const kids = Array.isArray(props.children) ? props.children : null;
+        if (kids && typeof ctx.renderChildren === "function") {
+          ctx.renderChildren(state.bodyEl, kids);
+        } else if (kids) {
+          clearChildren2(state.bodyEl);
+          const doc = requireDocument2(ctx);
+          for (const part of kids) {
+            if (typeof part === "string" || typeof part === "number") {
+              state.bodyEl.appendChild(doc.createTextNode(String(part)));
+            }
+          }
+        }
+        const wantOpen = resolveOpen(props);
+        applyOpen2(el2, state, wantOpen, props, ctx);
+      },
+      unmount(el2, ctx = {}) {
+        const state = STATE19.get(el2);
+        if (!state) return;
+        if (state.open) {
+          const doc = requireDocument2(ctx);
+          setScrollLock(doc, false);
+          state.open = false;
+        }
+        if (typeof el2.removeEventListener === "function") {
+          el2.removeEventListener("cancel", state.onCancel);
+          el2.removeEventListener("click", state.onClick);
+          el2.removeEventListener("keydown", state.onKeyDown);
+          state.closeBtn.removeEventListener("click", state.onCloseClick);
+        }
+        STATE19.delete(el2);
+      }
+    });
+  }
+});
+
+// src/Browser/components/containers/registerCarouselModal.js
+var registerCarouselModal_exports = {};
+__export(registerCarouselModal_exports, {
+  CAROUSEL_MODAL_COMPONENTS: () => CAROUSEL_MODAL_COMPONENTS,
+  Carousel: () => Carousel,
+  Modal: () => Modal,
+  default: () => registerCarouselModal_default,
+  registerCarouselModal: () => registerCarouselModal
+});
+function registerCarouselModal(registry) {
+  if (!registry || typeof registry.register !== "function") {
+    throw new Error("registerCarouselModal: registry with register() required");
+  }
+  registry.register("Carousel", Carousel);
+  registry.register("Modal", Modal);
+  return registry;
+}
+var CAROUSEL_MODAL_COMPONENTS, registerCarouselModal_default;
+var init_registerCarouselModal = __esm({
+  "src/Browser/components/containers/registerCarouselModal.js"() {
+    init_Carousel();
+    init_Modal();
+    CAROUSEL_MODAL_COMPONENTS = Object.freeze({
+      Carousel,
+      Modal
+    });
+    registerCarouselModal_default = registerCarouselModal;
+  }
+});
+
+// src/Browser/components/table/shared.js
+function requireDocument5(ctx = {}) {
+  const doc = ctx.document ?? globalThis.document;
+  if (!doc?.createElement) {
+    throw new Error("table component: ctx.document required");
+  }
+  return doc;
+}
+function setClass5(el2, className) {
+  el2.setAttribute("class", String(className).trim());
+}
+function setOrRemoveAttr5(el2, name, value) {
+  if (value == null || value === false || value === "") {
+    el2.removeAttribute(name);
+  } else {
+    el2.setAttribute(name, value === true ? "true" : String(value));
+  }
+}
+function clearChildren5(el2) {
+  while (el2.firstChild) {
+    el2.removeChild(el2.firstChild);
+  }
+}
+function asText5(value) {
+  if (value == null) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return "";
+}
+function asArray(value) {
+  if (value == null) return [];
+  if (Array.isArray(value)) return value;
+  return [value];
+}
+function normalizeCol(raw, index) {
+  if (raw == null) {
+    return { label: "", data: [], type: "string", key: String(index) };
+  }
+  let obj = (
+    /** @type {Record<string, unknown>} */
+    raw
+  );
+  if (obj.props && typeof obj.props === "object" && (obj.type === "Col" || obj.label == null)) {
+    obj = /** @type {Record<string, unknown>} */
+    obj.props;
+  }
+  const label = asText5(obj.label ?? obj.header);
+  const type = asText5(obj.type) || "string";
+  const key = asText5(obj.key) || String(index);
+  const align = asText5(obj.align);
+  return {
+    label,
+    data: asArray(obj.data),
+    type,
+    key,
+    sortable: obj.sortable === true,
+    align: align === "center" || align === "right" ? align : "left"
+  };
+}
+function normalizeColumns(columns) {
+  if (!Array.isArray(columns)) return [];
+  return columns.filter((c) => c != null).map((c, i) => normalizeCol(c, i));
+}
+function columnsToRows(cols) {
+  const labels = cols.map((c) => c.label);
+  const rowCount = cols.length ? Math.max(...cols.map((c) => c.data.length), 0) : 0;
+  const rows = [];
+  for (let r = 0; r < rowCount; r++) {
+    rows.push(cols.map((c) => r < c.data.length ? c.data[r] : ""));
+  }
+  return { labels, rows, rowCount };
+}
+function formatCellDisplay(value, type = "string") {
+  if (value == null) return "";
+  if (typeof value === "object") {
+    if (value && typeof value === "object" && "label" in /** @type {object} */
+    value) {
+      return asText5(
+        /** @type {{ label?: unknown }} */
+        value.label
+      );
+    }
+    return "";
+  }
+  if (type === "number" || type === "action") {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      try {
+        return value.toLocaleString();
+      } catch {
+        return String(value);
+      }
+    }
+  }
+  return asText5(value);
+}
+function sortRowIndices(rows, colIndex, dir = "asc", type = "string") {
+  const indices = rows.map((_, i) => i);
+  const mult = dir === "desc" ? -1 : 1;
+  indices.sort((a, b) => {
+    const va = rows[a]?.[colIndex];
+    const vb = rows[b]?.[colIndex];
+    if (type === "number") {
+      const na = Number(va);
+      const nb = Number(vb);
+      const aOk = Number.isFinite(na);
+      const bOk = Number.isFinite(nb);
+      if (aOk && bOk) return (na - nb) * mult;
+      if (aOk) return -1 * mult;
+      if (bOk) return 1 * mult;
+      return 0;
+    }
+    const sa = asText5(va).toLowerCase();
+    const sb = asText5(vb).toLowerCase();
+    if (sa < sb) return -1 * mult;
+    if (sa > sb) return 1 * mult;
+    return 0;
+  });
+  return indices;
+}
+function resolveTableStatus(props = {}, ctx = {}) {
+  const raw = props.status ?? props.state;
+  if (raw === "loading" || raw === "empty" || raw === "error" || raw === "ready" || raw === "refetching") {
+    return raw;
+  }
+  if (props.loading === true) return "loading";
+  if (props.refetching === true || props.isRefetching === true) return "refetching";
+  if (props.error != null && props.error !== false) return "error";
+  if (props.empty === true) return "empty";
+  const query = ctx.query;
+  if (query && typeof query === "object") {
+    const loading = (
+      /** @type {{ __openui_loading?: unknown[] }} */
+      query.__openui_loading
+    );
+    const refetching = (
+      /** @type {{ __openui_refetching?: unknown[] }} */
+      query.__openui_refetching
+    );
+    const errors = (
+      /** @type {{ __openui_errors?: unknown[] }} */
+      query.__openui_errors
+    );
+    if (Array.isArray(errors) && errors.length > 0) return "error";
+    if (Array.isArray(loading) && loading.length > 0) return "loading";
+    if (Array.isArray(refetching) && refetching.length > 0) return "refetching";
+  }
+  return "ready";
+}
+function findStatusTextChild2(el2) {
+  const cached = statusTextByHost2.get(el2);
+  if (cached && cached.parentNode === el2) return cached;
+  for (const child of el2.childNodes ?? []) {
+    if (child.nodeType === 1 && child.getAttribute?.("data-canvas-status-text") != null) {
+      statusTextByHost2.set(el2, child);
+      return child;
+    }
+  }
+  return null;
+}
+function applyTableStatus(el2, doc, props = {}, ctx = {}, opts = {}) {
+  const status = resolveTableStatus(props, ctx);
+  el2.setAttribute("data-status", status);
+  setOrRemoveAttr5(
+    el2,
+    "aria-busy",
+    status === "loading" || status === "refetching" ? "true" : null
+  );
+  let statusEl = findStatusTextChild2(el2);
+  const show = opts.showStatusText !== false && (status === "loading" || status === "empty" || status === "error" || status === "refetching");
+  if (show) {
+    if (!statusEl) {
+      statusEl = doc.createElement("span");
+      statusEl.setAttribute("data-canvas-status-text", "");
+      statusEl.setAttribute("class", "canvas-status-text");
+      el2.appendChild(statusEl);
+      statusTextByHost2.set(el2, statusEl);
+    }
+    const msg = status === "loading" ? asText5(props.loadingMessage) || opts.loadingMessage || STATUS_LABELS2.loading : status === "refetching" ? asText5(props.refetchingMessage) || opts.refetchingMessage || STATUS_LABELS2.refetching : status === "empty" ? asText5(props.emptyMessage) || opts.emptyMessage || STATUS_LABELS2.empty : asText5(props.errorMessage ?? props.error) || opts.errorMessage || STATUS_LABELS2.error;
+    statusEl.textContent = msg;
+    statusEl.setAttribute("role", "status");
+    setOrRemoveAttr5(statusEl, "aria-live", status === "error" ? "assertive" : "polite");
+  } else if (statusEl && statusEl.parentNode) {
+    statusEl.parentNode.removeChild(statusEl);
+    statusTextByHost2.delete(el2);
+    statusEl = null;
+  }
+  return { status, statusEl };
+}
+function lifecycle5(impl) {
+  return {
+    create(props = {}, ctx = {}) {
+      const doc = requireDocument5(ctx);
+      const el2 = impl.mount(doc, props, ctx);
+      impl.patch(el2, props, ctx);
+      return el2;
+    },
+    update(el2, props = {}, ctx = {}) {
+      impl.patch(el2, props, ctx);
+    },
+    destroy(el2, ctx = {}) {
+      impl.unmount?.(el2, ctx);
+    },
+    ownsChildren: impl.ownsChildren !== false
+  };
+}
+function normalizeEditableCellType(type) {
+  const t = asText5(type);
+  if (t === "number" || t === "date-single" || t === "select" || t === "url" || t === "text") {
+    return t;
+  }
+  if (t === "date") return "date-single";
+  return "text";
+}
+function normalizeEditableColumn(raw, index) {
+  let obj = raw && typeof raw === "object" ? (
+    /** @type {Record<string, unknown>} */
+    raw
+  ) : {};
+  if (obj.props && typeof obj.props === "object") {
+    obj = /** @type {Record<string, unknown>} */
+    obj.props;
+  }
+  const optionsRaw = Array.isArray(obj.options) ? obj.options : [];
+  const options = optionsRaw.filter((o) => o && typeof o === "object").map((o) => {
+    const opt = (
+      /** @type {Record<string, unknown>} */
+      o
+    );
+    return {
+      value: asText5(opt.value),
+      label: asText5(opt.label ?? opt.value)
+    };
+  });
+  const width = typeof obj.width === "number" ? obj.width : void 0;
+  return {
+    type: normalizeEditableCellType(asText5(obj.type)),
+    key: asText5(obj.key) || `col-${index}`,
+    header: asText5(obj.header ?? obj.label),
+    width,
+    options
+  };
+}
+function toKeyedRows(data, columnKeys) {
+  if (!Array.isArray(data)) return [];
+  return data.map((row, i) => {
+    let obj = row && typeof row === "object" ? (
+      /** @type {Record<string, unknown>} */
+      row
+    ) : {};
+    if (obj.props && typeof obj.props === "object" && obj.id == null) {
+      obj = /** @type {Record<string, unknown>} */
+      obj.props;
+    }
+    const id = asText5(obj.id) || `row-${i}`;
+    const values = {};
+    if (Array.isArray(obj.values)) {
+      columnKeys.forEach((key, idx) => {
+        const v = obj.values[idx];
+        values[key] = typeof v === "number" ? v : asText5(v);
+      });
+    } else {
+      for (const key of columnKeys) {
+        const v = obj[key];
+        values[key] = typeof v === "number" ? v : asText5(v);
+      }
+    }
+    return { id, values };
+  });
+}
+function fromKeyedRows(rows, columnKeys) {
+  return rows.map((row) => ({
+    id: row.id,
+    values: columnKeys.map((key) => {
+      const v = row.values[key];
+      return typeof v === "number" ? v : asText5(v);
+    })
+  }));
+}
+function countChangedCells(rows, baseline, columnKeys) {
+  if (!baseline) return 0;
+  let count = 0;
+  const current = new Map(rows.map((r) => [r.id, r.values]));
+  for (const [id, baseValues] of baseline) {
+    const cur = current.get(id);
+    if (!cur) continue;
+    for (const key of columnKeys) {
+      if (cur[key] !== baseValues[key]) count++;
+    }
+  }
+  return count;
+}
+var DEFAULT_PAGE_SIZE, SURFACE_STATUS2, STATUS_LABELS2, statusTextByHost2;
+var init_shared3 = __esm({
+  "src/Browser/components/table/shared.js"() {
+    DEFAULT_PAGE_SIZE = 10;
+    SURFACE_STATUS2 = Object.freeze({
+      READY: "ready",
+      LOADING: "loading",
+      EMPTY: "empty",
+      ERROR: "error",
+      REFETCHING: "refetching"
+    });
+    STATUS_LABELS2 = Object.freeze({
+      ready: "",
+      loading: "Loading",
+      empty: "No rows",
+      error: "Error",
+      refetching: "Refreshing"
+    });
+    statusTextByHost2 = /* @__PURE__ */ new WeakMap();
+  }
+});
+
+// src/Browser/components/table/Col.js
+var Col;
+var init_Col = __esm({
+  "src/Browser/components/table/Col.js"() {
+    init_shared3();
+    Col = lifecycle5({
+      mount(doc) {
+        const el2 = doc.createElement("div");
+        el2.setAttribute("data-canvas-component", "Col");
+        el2.setAttribute("hidden", "");
+        return el2;
+      },
+      patch(el2, props = {}) {
+        setClass5(el2, "canvas-table-col");
+        el2.setAttribute("data-label", String(props.label ?? ""));
+        el2.setAttribute("data-col-type", String(props.type ?? "string"));
+      }
+    });
+  }
+});
+
+// src/Browser/components/table/Table.js
+function resolveTableColumns(props = {}) {
+  if (Array.isArray(props.columns) && props.columns.length) {
+    return normalizeColumns(props.columns);
+  }
+  if (Array.isArray(props.children) && props.children.length) {
+    const cols = props.children.filter(
+      (c) => c && typeof c === "object" && /** @type {{ type?: string }} */
+      (c.type === "Col" || /** @type {{ props?: object }} */
+      c.props && "label" in /** @type {object} */
+      (c.props ?? {}) && "data" in /** @type {object} */
+      (c.props ?? {}))
+    );
+    if (cols.length) return normalizeColumns(cols);
+  }
+  return [];
+}
+function getState4(host) {
+  let s = STATE20.get(host);
+  if (!s) {
+    s = { page: 0, sortCol: null, sortDir: "asc", wired: false };
+    STATE20.set(host, s);
+  }
+  return s;
+}
+function makePageBtn(doc, label) {
+  const btn = doc.createElement("button");
+  btn.type = "button";
+  btn.setAttribute("class", "canvas-table__page-btn");
+  btn.setAttribute("aria-label", label);
+  btn.textContent = label === "Previous page" ? "\u2039" : "\u203A";
+  return (
+    /** @type {HTMLButtonElement} */
+    btn
+  );
+}
+function fillCell(doc, td, value, type, ctx) {
+  clearChildren5(td);
+  if (value && typeof value === "object" && typeof ctx.renderChildren === "function" && ("type" in /** @type {object} */
+  value || Array.isArray(value))) {
+    const kids = Array.isArray(value) ? value : [value];
+    ctx.renderChildren(td, kids);
+    return;
+  }
+  if (type === "action" && value && typeof value === "object") {
+    const obj = (
+      /** @type {Record<string, unknown>} */
+      value
+    );
+    const btn = doc.createElement("button");
+    btn.type = "button";
+    btn.setAttribute("class", "canvas-table__action");
+    btn.textContent = asText5(obj.label) || "Action";
+    if (typeof obj.onClick === "function") {
+      btn.addEventListener(
+        "click",
+        /** @type {EventListener} */
+        obj.onClick
+      );
+    }
+    td.appendChild(btn);
+    return;
+  }
+  td.textContent = formatCellDisplay(value, type);
+}
+function ensureScrollKeyboard(host, scrollEl, state) {
+  if (state.wired) return;
+  state.wired = true;
+  setOrRemoveAttr5(scrollEl, "tabindex", "0");
+  state.onKey = (e) => {
+    const ev = (
+      /** @type {KeyboardEvent} */
+      e
+    );
+    const target = (
+      /** @type {Element & { scrollLeft?: number, clientWidth?: number, scrollWidth?: number, scrollTo?: Function }} */
+      scrollEl
+    );
+    if (ev.key === "ArrowRight") {
+      ev.preventDefault?.();
+      const next = (target.scrollLeft || 0) + Math.max(40, (target.clientWidth || 200) * 0.4);
+      if (typeof target.scrollTo === "function") {
+        target.scrollTo({ left: next });
+      } else {
+        target.scrollLeft = next;
+      }
+    } else if (ev.key === "ArrowLeft") {
+      ev.preventDefault?.();
+      const next = Math.max(
+        0,
+        (target.scrollLeft || 0) - Math.max(40, (target.clientWidth || 200) * 0.4)
+      );
+      if (typeof target.scrollTo === "function") {
+        target.scrollTo({ left: next });
+      } else {
+        target.scrollLeft = next;
+      }
+    } else if (ev.key === "Home") {
+      ev.preventDefault?.();
+      if (typeof target.scrollTo === "function") target.scrollTo({ left: 0 });
+      else target.scrollLeft = 0;
+    } else if (ev.key === "End") {
+      ev.preventDefault?.();
+      const max = Math.max(0, (target.scrollWidth || 0) - (target.clientWidth || 0));
+      if (typeof target.scrollTo === "function") target.scrollTo({ left: max });
+      else target.scrollLeft = max;
+    }
+  };
+  scrollEl.addEventListener("keydown", state.onKey);
+}
+var STATE20, Table;
+var init_Table = __esm({
+  "src/Browser/components/table/Table.js"() {
+    init_shared3();
+    STATE20 = /* @__PURE__ */ new WeakMap();
+    Table = lifecycle5({
+      mount(doc) {
+        const el2 = doc.createElement("div");
+        el2.setAttribute("data-canvas-component", "Table");
+        el2.setAttribute("class", "canvas-table");
+        const statusSlot = doc.createElement("div");
+        statusSlot.setAttribute("data-canvas-table-status", "");
+        statusSlot.setAttribute("class", "canvas-table__status");
+        el2.appendChild(statusSlot);
+        const scroll = doc.createElement("div");
+        scroll.setAttribute("class", "canvas-table__scroll");
+        scroll.setAttribute("data-canvas-table-scroll", "");
+        el2.appendChild(scroll);
+        const table = doc.createElement("table");
+        table.setAttribute("class", "canvas-table__grid");
+        scroll.appendChild(table);
+        const thead = doc.createElement("thead");
+        thead.setAttribute("class", "canvas-table__head");
+        table.appendChild(thead);
+        const tbody = doc.createElement("tbody");
+        tbody.setAttribute("class", "canvas-table__body");
+        table.appendChild(tbody);
+        const pager = doc.createElement("div");
+        pager.setAttribute("class", "canvas-table__pager");
+        pager.setAttribute("data-canvas-table-pager", "");
+        pager.hidden = true;
+        el2.appendChild(pager);
+        return el2;
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        const state = getState4(el2);
+        const cols = resolveTableColumns(props);
+        const pageSize = typeof props.pageSize === "number" && props.pageSize > 0 ? Math.floor(props.pageSize) : DEFAULT_PAGE_SIZE;
+        setClass5(el2, "canvas-table");
+        const statusHost = [...el2.childNodes ?? []].find(
+          (n) => n.nodeType === 1 && n.getAttribute?.("data-canvas-table-status") != null
+        ) ?? el2;
+        const { status } = applyTableStatus(
+          /** @type {Element} */
+          statusHost,
+          doc,
+          props,
+          ctx,
+          { emptyMessage: asText5(props.emptyMessage) || "No rows" }
+        );
+        el2.setAttribute("data-status", status);
+        setOrRemoveAttr5(
+          el2,
+          "aria-busy",
+          status === "loading" || status === "refetching" ? "true" : null
+        );
+        const scroll = [...el2.childNodes ?? []].find(
+          (n) => n.nodeType === 1 && n.getAttribute?.("data-canvas-table-scroll") != null
+        );
+        const pager = [...el2.childNodes ?? []].find(
+          (n) => n.nodeType === 1 && n.getAttribute?.("data-canvas-table-pager") != null
+        );
+        const table = scroll?.firstChild;
+        const thead = table?.firstChild;
+        const tbody = table?.childNodes?.[1];
+        if (!scroll || !table || !thead || !tbody) return;
+        ensureScrollKeyboard(
+          el2,
+          /** @type {Element} */
+          scroll,
+          state
+        );
+        if (status === "loading" || status === "error") {
+          clearChildren5(
+            /** @type {Element} */
+            thead
+          );
+          clearChildren5(
+            /** @type {Element} */
+            tbody
+          );
+          if (pager) pager.hidden = true;
+          return;
+        }
+        if (!cols.length) {
+          applyTableStatus(
+            /** @type {Element} */
+            statusHost,
+            doc,
+            { ...props, status: "empty" },
+            ctx,
+            {
+              emptyMessage: asText5(props.emptyMessage) || "No rows"
+            }
+          );
+          el2.setAttribute("data-status", "empty");
+          clearChildren5(
+            /** @type {Element} */
+            thead
+          );
+          clearChildren5(
+            /** @type {Element} */
+            tbody
+          );
+          if (pager) pager.hidden = true;
+          return;
+        }
+        const { rows, rowCount } = columnsToRows(cols);
+        if (rowCount === 0 && status !== "refetching") {
+          applyTableStatus(
+            /** @type {Element} */
+            statusHost,
+            doc,
+            { ...props, status: "empty" },
+            ctx,
+            {
+              emptyMessage: asText5(props.emptyMessage) || "No rows"
+            }
+          );
+          el2.setAttribute("data-status", "empty");
+        } else if (status === "refetching") {
+        } else if (statusHost.getAttribute?.("data-status") === "empty" && rowCount > 0) {
+          applyTableStatus(
+            /** @type {Element} */
+            statusHost,
+            doc,
+            { ...props, status: "ready" },
+            ctx
+          );
+          el2.setAttribute("data-status", "ready");
+        }
+        let sortCol = state.sortCol;
+        let sortDir = state.sortDir;
+        if (props.sortBy != null) {
+          if (typeof props.sortBy === "number") sortCol = props.sortBy;
+          else {
+            const label = asText5(props.sortBy);
+            const idx = cols.findIndex((c) => c.label === label || c.key === label);
+            sortCol = idx >= 0 ? idx : null;
+          }
+        }
+        if (props.sortDir === "asc" || props.sortDir === "desc") {
+          sortDir = props.sortDir;
+        }
+        let order = rows.map((_, i) => i);
+        if (sortCol != null && sortCol >= 0 && sortCol < cols.length) {
+          order = sortRowIndices(rows, sortCol, sortDir, cols[sortCol].type);
+        }
+        const totalPages = Math.max(1, Math.ceil(order.length / pageSize));
+        if (state.page >= totalPages) state.page = Math.max(0, totalPages - 1);
+        if (typeof props.page === "number" && props.page >= 0) {
+          state.page = Math.min(Math.floor(props.page), totalPages - 1);
+        }
+        const start = state.page * pageSize;
+        const end = Math.min(start + pageSize, order.length);
+        const pageOrder = order.slice(start, end);
+        clearChildren5(
+          /** @type {Element} */
+          thead
+        );
+        const hr = doc.createElement("tr");
+        hr.setAttribute("class", "canvas-table__row canvas-table__row--head");
+        cols.forEach((col, ci) => {
+          const th = doc.createElement("th");
+          th.setAttribute("class", `canvas-table__th canvas-table__align-${col.align || "left"}`);
+          th.setAttribute("scope", "col");
+          th.setAttribute("data-col-type", col.type);
+          th.setAttribute("data-col-key", col.key);
+          const labelEl = doc.createElement("span");
+          labelEl.setAttribute("class", "canvas-table__th-label");
+          labelEl.textContent = col.label;
+          th.appendChild(labelEl);
+          if (col.sortable || props.sortable === true) {
+            th.setAttribute("tabindex", "0");
+            th.setAttribute("role", "button");
+            const active = sortCol === ci;
+            setOrRemoveAttr5(th, "aria-sort", active ? sortDir === "asc" ? "ascending" : "descending" : "none");
+            const activate = () => {
+              if (state.sortCol === ci) {
+                state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+              } else {
+                state.sortCol = ci;
+                state.sortDir = "asc";
+              }
+              Table.update(el2, props, ctx);
+            };
+            th.addEventListener("click", activate);
+            th.addEventListener("keydown", (e) => {
+              const ev = (
+                /** @type {KeyboardEvent} */
+                e
+              );
+              if (ev.key === "Enter" || ev.key === " ") {
+                ev.preventDefault?.();
+                activate();
+              }
+            });
+          }
+          hr.appendChild(th);
+        });
+        thead.appendChild(hr);
+        clearChildren5(
+          /** @type {Element} */
+          tbody
+        );
+        for (const ri of pageOrder) {
+          const tr = doc.createElement("tr");
+          tr.setAttribute("class", "canvas-table__row");
+          tr.setAttribute("data-row-index", String(ri));
+          cols.forEach((col, ci) => {
+            const td = doc.createElement("td");
+            td.setAttribute("class", `canvas-table__td canvas-table__align-${col.align || "left"}`);
+            td.setAttribute("data-col-type", col.type);
+            fillCell(
+              doc,
+              /** @type {HTMLTableCellElement} */
+              td,
+              rows[ri][ci],
+              col.type,
+              ctx
+            );
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        }
+        el2.setAttribute("data-row-count", String(rowCount));
+        el2.setAttribute("data-page", String(state.page));
+        el2.setAttribute("data-page-size", String(pageSize));
+        el2.setAttribute("data-visible-rows", String(pageOrder.length));
+        if (pager) {
+          const p = (
+            /** @type {HTMLElement} */
+            pager
+          );
+          if (totalPages > 1) {
+            p.hidden = false;
+            clearChildren5(p);
+            const prev = makePageBtn(doc, "Previous page");
+            prev.disabled = state.page <= 0;
+            prev.addEventListener("click", () => {
+              if (state.page > 0) {
+                state.page -= 1;
+                Table.update(el2, props, ctx);
+              }
+            });
+            const info = doc.createElement("span");
+            info.setAttribute("class", "canvas-table__page-info");
+            info.setAttribute("aria-live", "polite");
+            info.textContent = `${state.page + 1} / ${totalPages}`;
+            const next = makePageBtn(doc, "Next page");
+            next.disabled = state.page >= totalPages - 1;
+            next.addEventListener("click", () => {
+              if (state.page < totalPages - 1) {
+                state.page += 1;
+                Table.update(el2, props, ctx);
+              }
+            });
+            p.appendChild(prev);
+            p.appendChild(info);
+            p.appendChild(next);
+          } else {
+            p.hidden = true;
+            clearChildren5(p);
+          }
+        }
+      },
+      unmount(el2) {
+        const state = STATE20.get(el2);
+        if (state?.onKey) {
+          const scroll = [...el2.childNodes ?? []].find(
+            (n) => n.nodeType === 1 && n.getAttribute?.("data-canvas-table-scroll") != null
+          );
+          scroll?.removeEventListener?.("keydown", state.onKey);
+        }
+        STATE20.delete(el2);
+      }
+    });
+  }
+});
+
+// src/Browser/components/table/EditableTable.js
+function normalizeEditableColumns(columns) {
+  if (!Array.isArray(columns)) return [];
+  return columns.filter((c) => c != null).map((c, i) => normalizeEditableColumn(c, i));
+}
+function getState5(host) {
+  let s = STATE21.get(host);
+  if (!s) {
+    s = {
+      rows: [],
+      baseline: null,
+      selected: null,
+      editing: null,
+      editBuffer: "",
+      justCancelled: false,
+      columnKeys: [],
+      mutationStatus: "idle",
+      mutationError: "",
+      cellErrors: /* @__PURE__ */ new Map(),
+      wired: false,
+      initializedFrom: ""
+    };
+    STATE21.set(host, s);
+  }
+  return s;
+}
+function rulesForCellType(type) {
+  const t = normalizeEditableCellType(type);
+  if (t === "number") return { number: true };
+  if (t === "url") return { url: true };
+  if (t === "date-single") {
+    return { pattern: "\\d{4}-\\d{2}-\\d{2}" };
+  }
+  return {};
+}
+function validateEditableCell(value, type, options = []) {
+  const t = normalizeEditableCellType(type);
+  if (t === "select") {
+    const str = asText5(value);
+    if (options.length && !options.some((o) => o.value === str)) {
+      return { ok: false, code: "select", message: "invalid option" };
+    }
+    return { ok: true, value: str };
+  }
+  if (t === "number") {
+    const raw = value == null ? "" : String(value);
+    if (raw.trim() === "") return { ok: true, value: 0 };
+    const parsed = parseFloat(raw);
+    if (!Number.isFinite(parsed)) {
+      return { ok: false, code: "number", message: "not a number" };
+    }
+    return { ok: true, value: parsed };
+  }
+  const result = validateField(value, rulesForCellType(t));
+  if (!result.ok) return result;
+  return { ok: true, value: typeof value === "number" ? value : asText5(value) };
+}
+function validateEditableTable(rows, columns) {
+  const errors = [];
+  for (const row of rows) {
+    for (const col of columns) {
+      const v = row.values[col.key];
+      const r = validateEditableCell(v, col.type, col.options);
+      if (!r.ok) {
+        errors.push({ rowId: row.id, key: col.key, message: r.message });
+      }
+    }
+  }
+  if (errors.length) return { ok: false, errors };
+  return {
+    ok: true,
+    data: fromKeyedRows(rows, columns.map((c) => c.key))
+  };
+}
+function navigateCell(row, col, direction, rowCount, columnKeys) {
+  const ci = columnKeys.indexOf(col);
+  let newRow = row;
+  let newCi = ci < 0 ? 0 : ci;
+  switch (direction) {
+    case "up":
+      newRow = Math.max(0, row - 1);
+      break;
+    case "down":
+      newRow = Math.min(Math.max(0, rowCount - 1), row + 1);
+      break;
+    case "left":
+      newCi = Math.max(0, newCi - 1);
+      break;
+    case "right":
+      newCi = Math.min(columnKeys.length - 1, newCi + 1);
+      break;
+    default:
+      break;
+  }
+  return { row: newRow, col: columnKeys[newCi] || col };
+}
+function dataSignature(data, keys) {
+  try {
+    return JSON.stringify({ keys, data });
+  } catch {
+    return String(keys.join(","));
+  }
+}
+function renderChangesBar(doc, host, state, columns, props, ctx) {
+  let bar = [...host.childNodes ?? []].find(
+    (n) => n.nodeType === 1 && n.getAttribute?.("data-canvas-editable-changes") != null
+  );
+  const count = countChangedCells(state.rows, state.baseline, state.columnKeys);
+  if (count <= 0) {
+    if (bar && bar.parentNode) bar.parentNode.removeChild(bar);
+    return;
+  }
+  if (!bar) {
+    bar = doc.createElement("div");
+    bar.setAttribute("data-canvas-editable-changes", "");
+    bar.setAttribute("class", "canvas-editable-table__changes");
+    host.appendChild(bar);
+  }
+  clearChildren5(
+    /** @type {Element} */
+    bar
+  );
+  const countEl = doc.createElement("div");
+  countEl.setAttribute("class", "canvas-editable-table__changes-count");
+  countEl.textContent = `${count} changes made`;
+  bar.appendChild(countEl);
+  const btns = doc.createElement("div");
+  btns.setAttribute("class", "canvas-editable-table__changes-buttons");
+  const reset = doc.createElement("button");
+  reset.type = "button";
+  reset.setAttribute("class", "canvas-editable-table__btn canvas-editable-table__btn--secondary");
+  reset.textContent = asText5(props.resetLabel) || "Reset";
+  reset.addEventListener("click", () => {
+    if (state.baseline) {
+      state.rows = [...state.baseline.entries()].map(([id, values]) => ({
+        id,
+        values: { ...values }
+      }));
+    }
+    state.selected = null;
+    state.editing = null;
+    state.cellErrors.clear();
+    state.mutationStatus = "idle";
+    state.mutationError = "";
+    EditableTable.update(host, props, ctx);
+  });
+  btns.appendChild(reset);
+  const save = doc.createElement("button");
+  save.type = "button";
+  save.setAttribute("class", "canvas-editable-table__btn canvas-editable-table__btn--primary");
+  save.textContent = asText5(props.saveLabel) || "Save Changes";
+  setOrRemoveAttr5(save, "disabled", state.mutationStatus === "loading" ? "true" : null);
+  save.addEventListener("click", () => {
+    void commitMutation(host, state, columns, props, ctx);
+  });
+  btns.appendChild(save);
+  bar.appendChild(btns);
+  if (state.mutationStatus === "error" && state.mutationError) {
+    const err = doc.createElement("div");
+    err.setAttribute("class", "canvas-editable-table__mutation-error");
+    err.setAttribute("role", "alert");
+    err.textContent = state.mutationError;
+    bar.appendChild(err);
+  }
+  if (state.mutationStatus === "loading") {
+    const busy = doc.createElement("div");
+    busy.setAttribute("class", "canvas-editable-table__mutation-busy");
+    busy.setAttribute("role", "status");
+    busy.textContent = "Saving\u2026";
+    bar.appendChild(busy);
+  }
+}
+async function commitMutation(host, state, columns, props, ctx) {
+  const validated = validateEditableTable(state.rows, columns);
+  state.cellErrors.clear();
+  if (!validated.ok) {
+    for (const e of validated.errors) {
+      state.cellErrors.set(`${e.rowId}:${e.key}`, e.message);
+    }
+    state.mutationStatus = "error";
+    state.mutationError = "Validation failed";
+    EditableTable.update(host, props, ctx);
+    return;
+  }
+  const mutationId = asText5(props.mutationId) || asText5(props.name) || "EditableTable";
+  const mutations = ctx.mutations;
+  state.mutationStatus = "loading";
+  state.mutationError = "";
+  EditableTable.update(host, props, ctx);
+  try {
+    if (mutations && typeof mutations.runMutation === "function") {
+      if (typeof mutations.register === "function") {
+        mutations.register({
+          statementId: mutationId,
+          toolName: asText5(props.toolName) || "saveEditableTable",
+          args: {},
+          refreshQueries: Array.isArray(props.refreshQueries) ? props.refreshQueries : []
+        });
+      }
+      const result = await mutations.runMutation(mutationId, {
+        name: asText5(props.name),
+        data: validated.data
+      });
+      if (result?.status === "error") {
+        state.mutationStatus = "error";
+        state.mutationError = asText5(result.error) || "Save failed";
+      } else {
+        state.mutationStatus = "success";
+        state.baseline = new Map(state.rows.map((r) => [r.id, { ...r.values }]));
+      }
+    } else if (typeof props.onSave === "function") {
+      await /** @type {Function} */
+      props.onSave(validated.data);
+      state.mutationStatus = "success";
+      state.baseline = new Map(state.rows.map((r) => [r.id, { ...r.values }]));
+    } else {
+      state.mutationStatus = "success";
+      state.baseline = new Map(state.rows.map((r) => [r.id, { ...r.values }]));
+      if (typeof ctx.reportError === "function" && props.requireMutation === true) {
+        ctx.reportError(new Error("editable-table-missing-mutations"));
+      }
+    }
+  } catch (err) {
+    state.mutationStatus = "error";
+    state.mutationError = err instanceof Error ? err.message : String(err);
+  }
+  EditableTable.update(host, props, ctx);
+}
+function renderDisplayValue(doc, cell, value, col, ctx, invalid) {
+  clearChildren5(cell);
+  const type = col.type;
+  if (type === "url") {
+    const raw = asText5(value);
+    const policy = ctx.urlPolicy && typeof ctx.urlPolicy.safeUrl === "function" ? ctx.urlPolicy.safeUrl : safeUrl;
+    const href = policy(raw);
+    const wrap = doc.createElement("span");
+    wrap.setAttribute("class", "canvas-editable-table__url");
+    if (href) {
+      const a = doc.createElement("a");
+      a.setAttribute("href", href);
+      a.setAttribute("target", "_blank");
+      a.setAttribute("rel", "noopener noreferrer");
+      a.setAttribute("class", "canvas-editable-table__url-link");
+      a.textContent = raw;
+      a.addEventListener("click", (e) => e.stopPropagation?.());
+      wrap.appendChild(a);
+    } else {
+      const span = doc.createElement("span");
+      span.setAttribute("class", "canvas-editable-table__url-text");
+      span.textContent = raw;
+      wrap.appendChild(span);
+    }
+    if (invalid || raw && !href) {
+      const warn = doc.createElement("span");
+      warn.setAttribute("class", "canvas-editable-table__url-warn");
+      warn.setAttribute("title", "This might not be a valid URL");
+      warn.setAttribute("aria-label", "Invalid URL");
+      warn.textContent = "!";
+      wrap.appendChild(warn);
+    }
+    cell.appendChild(wrap);
+    return;
+  }
+  if (type === "select") {
+    const match = col.options.find((o) => o.value === asText5(value));
+    cell.textContent = match ? match.label : asText5(value);
+    return;
+  }
+  cell.textContent = value == null ? "" : String(value);
+}
+function renderCell(doc, host, state, columns, props, ctx, rowIndex, col, td) {
+  const row = state.rows[rowIndex];
+  if (!row) return;
+  const value = row.values[col.key];
+  const isSelected = state.selected?.row === rowIndex && state.selected?.col === col.key;
+  const isEditing = state.editing?.row === rowIndex && state.editing?.col === col.key;
+  const errKey = `${row.id}:${col.key}`;
+  const errMsg = state.cellErrors.get(errKey);
+  setClass5(
+    td,
+    [
+      "canvas-editable-table__td",
+      isSelected ? "canvas-editable-table__td--selected" : "",
+      isEditing ? "canvas-editable-table__td--editing" : "",
+      errMsg ? "canvas-editable-table__td--invalid" : ""
+    ].filter(Boolean).join(" ")
+  );
+  td.setAttribute("data-row-id", row.id);
+  td.setAttribute("data-col-key", col.key);
+  td.setAttribute("data-cell-type", col.type);
+  setOrRemoveAttr5(td, "aria-selected", isSelected ? "true" : null);
+  setOrRemoveAttr5(td, "aria-invalid", errMsg ? "true" : null);
+  const inner = doc.createElement("div");
+  inner.setAttribute("class", "canvas-editable-table__cell");
+  inner.setAttribute("tabindex", "0");
+  setOrRemoveAttr5(inner, "data-selected", isSelected ? "true" : null);
+  setOrRemoveAttr5(inner, "data-editing", isEditing ? "true" : null);
+  const startEdit = (seed) => {
+    state.selected = { row: rowIndex, col: col.key };
+    state.editing = { row: rowIndex, col: col.key };
+    state.editBuffer = seed != null ? String(seed) : value == null ? "" : String(value);
+    EditableTable.update(host, props, ctx);
+  };
+  const finishEdit = (save) => {
+    if (save && state.editing) {
+      const parsed = validateEditableCell(state.editBuffer, col.type, col.options);
+      if (!parsed.ok) {
+        state.cellErrors.set(errKey, parsed.message);
+      } else {
+        state.cellErrors.delete(errKey);
+        row.values[col.key] = /** @type {string|number} */
+        parsed.value;
+      }
+    }
+    state.editing = null;
+    EditableTable.update(host, props, ctx);
+  };
+  const cancelEdit = () => {
+    state.justCancelled = true;
+    state.editBuffer = value == null ? "" : String(value);
+    state.editing = null;
+    EditableTable.update(host, props, ctx);
+  };
+  const move = (dir) => {
+    const next = navigateCell(
+      rowIndex,
+      col.key,
+      dir,
+      state.rows.length,
+      state.columnKeys
+    );
+    state.selected = next;
+    state.editing = null;
+    EditableTable.update(host, props, ctx);
+  };
+  inner.addEventListener("click", (e) => {
+    e.stopPropagation?.();
+    if (!isSelected && !isEditing) {
+      state.selected = { row: rowIndex, col: col.key };
+      state.editing = null;
+      EditableTable.update(host, props, ctx);
+    } else if (!isEditing) {
+      startEdit();
+    }
+  });
+  inner.addEventListener("keydown", (e) => {
+    const ev = (
+      /** @type {KeyboardEvent} */
+      e
+    );
+    if (isEditing) {
+      if (ev.key === "Enter") {
+        ev.preventDefault?.();
+        finishEdit(true);
+        move("down");
+      } else if (ev.key === "Tab") {
+        ev.preventDefault?.();
+        finishEdit(true);
+        move(ev.shiftKey ? "left" : "right");
+      } else if (ev.key === "Escape") {
+        ev.preventDefault?.();
+        cancelEdit();
+      }
+      return;
+    }
+    if (!isSelected) return;
+    if (ev.key === "Enter" || ev.key === "F2") {
+      ev.preventDefault?.();
+      startEdit();
+    } else if (ev.key === "Tab") {
+      ev.preventDefault?.();
+      move(ev.shiftKey ? "left" : "right");
+    } else if (ev.key === "ArrowUp") {
+      ev.preventDefault?.();
+      move("up");
+    } else if (ev.key === "ArrowDown") {
+      ev.preventDefault?.();
+      move("down");
+    } else if (ev.key === "ArrowLeft") {
+      ev.preventDefault?.();
+      move("left");
+    } else if (ev.key === "ArrowRight") {
+      ev.preventDefault?.();
+      move("right");
+    } else if (ev.key && ev.key.length === 1 && !ev.ctrlKey && !ev.metaKey && !ev.altKey) {
+      ev.preventDefault?.();
+      startEdit(ev.key);
+    }
+  });
+  inner.addEventListener("blur", (e) => {
+    if (state.justCancelled) {
+      state.justCancelled = false;
+      return;
+    }
+    if (!state.editing || state.editing.row !== rowIndex || state.editing.col !== col.key) {
+      return;
+    }
+    const related = (
+      /** @type {FocusEvent} */
+      e.relatedTarget
+    );
+    if (related && inner.contains?.(
+      /** @type {Node} */
+      related
+    )) return;
+    finishEdit(true);
+  });
+  if (isEditing) {
+    let input;
+    if (col.type === "select") {
+      input = doc.createElement("select");
+      input.setAttribute("class", "canvas-editable-table__input");
+      for (const opt of col.options) {
+        const o = doc.createElement("option");
+        o.value = opt.value;
+        o.textContent = opt.label;
+        if (opt.value === state.editBuffer) o.selected = true;
+        input.appendChild(o);
+      }
+      input.addEventListener("change", () => {
+        state.editBuffer = /** @type {HTMLSelectElement} */
+        input.value;
+      });
+    } else {
+      input = doc.createElement("input");
+      const inputType = col.type === "number" ? "number" : col.type === "date-single" ? "date" : col.type === "url" ? "url" : "text";
+      input.setAttribute("type", inputType);
+      input.setAttribute("class", "canvas-editable-table__input");
+      input.value = state.editBuffer;
+      input.addEventListener("input", () => {
+        state.editBuffer = /** @type {HTMLInputElement} */
+        input.value;
+      });
+    }
+    input.addEventListener("keydown", (e) => {
+      const ev = (
+        /** @type {KeyboardEvent} */
+        e
+      );
+      if (ev.key === "Enter") {
+        ev.preventDefault?.();
+        finishEdit(true);
+        move("down");
+      } else if (ev.key === "Tab") {
+        ev.preventDefault?.();
+        finishEdit(true);
+        move(ev.shiftKey ? "left" : "right");
+      } else if (ev.key === "Escape") {
+        ev.preventDefault?.();
+        cancelEdit();
+      }
+    });
+    inner.appendChild(input);
+    Promise.resolve().then(() => {
+      if (typeof input.focus === "function") input.focus();
+      if (typeof input.setSelectionRange === "function" && "value" in input) {
+        try {
+          input.setSelectionRange(0, String(input.value ?? "").length);
+        } catch {
+        }
+      }
+    });
+  } else {
+    renderDisplayValue(doc, inner, value, col, ctx, !!errMsg);
+  }
+  if (errMsg) {
+    const tip = doc.createElement("span");
+    tip.setAttribute("class", "canvas-editable-table__cell-error");
+    tip.textContent = errMsg;
+    inner.appendChild(tip);
+  }
+  clearChildren5(td);
+  td.appendChild(inner);
+  if (isSelected && !isEditing) {
+    void Promise.resolve().then(() => {
+      if (typeof inner.focus === "function") inner.focus();
+    });
+  }
+}
+var STATE21, EditableTable;
+var init_EditableTable = __esm({
+  "src/Browser/components/table/EditableTable.js"() {
+    init_formValidation();
+    init_urlPolicy();
+    init_shared3();
+    STATE21 = /* @__PURE__ */ new WeakMap();
+    EditableTable = lifecycle5({
+      mount(doc) {
+        const el2 = doc.createElement("div");
+        el2.setAttribute("data-canvas-component", "EditableTable");
+        el2.setAttribute("class", "canvas-editable-table");
+        el2.setAttribute("tabindex", "0");
+        const statusSlot = doc.createElement("div");
+        statusSlot.setAttribute("data-canvas-table-status", "");
+        statusSlot.setAttribute("class", "canvas-table__status");
+        el2.appendChild(statusSlot);
+        const scroll = doc.createElement("div");
+        scroll.setAttribute("class", "canvas-table__scroll canvas-editable-table__scroll");
+        scroll.setAttribute("data-canvas-table-scroll", "");
+        scroll.setAttribute("tabindex", "0");
+        el2.appendChild(scroll);
+        const table = doc.createElement("table");
+        table.setAttribute("class", "canvas-table__grid canvas-editable-table__grid");
+        scroll.appendChild(table);
+        const thead = doc.createElement("thead");
+        thead.setAttribute("class", "canvas-table__head");
+        table.appendChild(thead);
+        const tbody = doc.createElement("tbody");
+        tbody.setAttribute("class", "canvas-table__body");
+        table.appendChild(tbody);
+        return el2;
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        const state = getState5(el2);
+        const columns = normalizeEditableColumns(props.columns);
+        const columnKeys = columns.map((c) => c.key);
+        state.columnKeys = columnKeys;
+        const name = asText5(props.name);
+        if (name) el2.setAttribute("data-table-name", name);
+        setClass5(el2, "canvas-editable-table");
+        setOrRemoveAttr5(el2, "data-mutation-status", state.mutationStatus);
+        const statusHost = [...el2.childNodes ?? []].find(
+          (n) => n.nodeType === 1 && n.getAttribute?.("data-canvas-table-status") != null
+        ) ?? el2;
+        const { status } = applyTableStatus(
+          /** @type {Element} */
+          statusHost,
+          doc,
+          props,
+          ctx,
+          { emptyMessage: "No rows" }
+        );
+        el2.setAttribute("data-status", status);
+        const scroll = [...el2.childNodes ?? []].find(
+          (n) => n.nodeType === 1 && n.getAttribute?.("data-canvas-table-scroll") != null
+        );
+        const table = scroll?.firstChild;
+        const thead = table?.firstChild;
+        const tbody = table?.childNodes?.[1];
+        if (!scroll || !table || !thead || !tbody) return;
+        if (status === "loading" || status === "error") {
+          clearChildren5(
+            /** @type {Element} */
+            thead
+          );
+          clearChildren5(
+            /** @type {Element} */
+            tbody
+          );
+          return;
+        }
+        const sig = dataSignature(props.data, columnKeys);
+        const streaming = props.isStreaming === true || ctx.stream && typeof ctx.stream === "object" && ctx.stream.isStreaming === true;
+        if (!state.editing) {
+          if (state.initializedFrom !== sig) {
+            state.rows = toKeyedRows(props.data, columnKeys);
+            state.initializedFrom = sig;
+            if (!streaming) {
+              state.baseline = new Map(state.rows.map((r) => [r.id, { ...r.values }]));
+            }
+          }
+        }
+        if (!streaming && state.baseline == null && state.rows.length) {
+          state.baseline = new Map(state.rows.map((r) => [r.id, { ...r.values }]));
+        }
+        if (!columns.length || !state.rows.length) {
+          if (!state.rows.length) {
+            applyTableStatus(
+              /** @type {Element} */
+              statusHost,
+              doc,
+              { ...props, status: "empty" },
+              ctx
+            );
+            el2.setAttribute("data-status", "empty");
+          }
+          clearChildren5(
+            /** @type {Element} */
+            thead
+          );
+          clearChildren5(
+            /** @type {Element} */
+            tbody
+          );
+          renderChangesBar(doc, el2, state, columns, props, ctx);
+          return;
+        }
+        clearChildren5(
+          /** @type {Element} */
+          thead
+        );
+        const hr = doc.createElement("tr");
+        columns.forEach((col) => {
+          const th = doc.createElement("th");
+          th.setAttribute("class", "canvas-table__th");
+          th.setAttribute("scope", "col");
+          th.setAttribute("data-col-key", col.key);
+          th.setAttribute("data-cell-type", col.type);
+          if (col.width) th.setAttribute("data-min-width", String(col.width));
+          th.textContent = col.header;
+          hr.appendChild(th);
+        });
+        thead.appendChild(hr);
+        clearChildren5(
+          /** @type {Element} */
+          tbody
+        );
+        state.rows.forEach((row, ri) => {
+          const tr = doc.createElement("tr");
+          tr.setAttribute("class", "canvas-table__row");
+          tr.setAttribute("data-row-id", row.id);
+          columns.forEach((col) => {
+            const td = doc.createElement("td");
+            renderCell(
+              doc,
+              el2,
+              state,
+              columns,
+              props,
+              ctx,
+              ri,
+              col,
+              /** @type {HTMLTableCellElement} */
+              td
+            );
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+        el2.setAttribute(
+          "data-changed-cells",
+          String(countChangedCells(state.rows, state.baseline, columnKeys))
+        );
+        el2.setAttribute("data-row-count", String(state.rows.length));
+        renderChangesBar(doc, el2, state, columns, props, ctx);
+        if (!state.wired) {
+          state.wired = true;
+          state.onKey = (e) => {
+            const ev = (
+              /** @type {KeyboardEvent} */
+              e
+            );
+            if (!state.editing && ev.key === "Tab" && (ctx.document?.activeElement === el2 || /** @type {Document} */
+            el2.ownerDocument?.activeElement === el2)) {
+              if (!state.selected && state.rows.length && columnKeys.length) {
+                ev.preventDefault?.();
+                state.selected = { row: 0, col: columnKeys[0] };
+                EditableTable.update(el2, props, ctx);
+              }
+            }
+          };
+          el2.addEventListener("keydown", state.onKey);
+        }
+      },
+      unmount(el2) {
+        const state = STATE21.get(el2);
+        if (state?.onKey) el2.removeEventListener("keydown", state.onKey);
+        STATE21.delete(el2);
+      }
+    });
+  }
+});
+
+// src/Browser/components/table/registerTable.js
+var registerTable_exports = {};
+__export(registerTable_exports, {
+  Col: () => Col,
+  EditableTable: () => EditableTable,
+  TABLE_COMPONENTS: () => TABLE_COMPONENTS,
+  Table: () => Table,
+  default: () => registerTable_default,
+  registerTable: () => registerTable
+});
+function registerTable(registry) {
+  if (!registry || typeof registry.register !== "function") {
+    throw new Error("registerTable: registry with register() required");
+  }
+  registry.register("Col", Col);
+  registry.register("Table", Table);
+  registry.register("EditableTable", EditableTable);
+  return registry;
+}
+var TABLE_COMPONENTS, registerTable_default;
+var init_registerTable = __esm({
+  "src/Browser/components/table/registerTable.js"() {
+    init_Col();
+    init_Table();
+    init_EditableTable();
+    TABLE_COMPONENTS = Object.freeze({
+      Col,
+      Table,
+      EditableTable
+    });
+    registerTable_default = registerTable;
+  }
+});
+
+// src/Browser/components/charts/kernel/scales.js
+function linearScale(domainMin, domainMax, range) {
+  const [r0, r1] = range;
+  const d0 = Number(domainMin);
+  const d1 = Number(domainMax);
+  const span = d1 - d0;
+  if (!Number.isFinite(d0) || !Number.isFinite(d1) || span === 0) {
+    const mid = (r0 + r1) / 2;
+    return () => mid;
+  }
+  return (v) => {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return r0;
+    return r0 + (n - d0) / span * (r1 - r0);
+  };
+}
+function bandScale(domain, range, opts = {}) {
+  const labels = Array.isArray(domain) ? domain : [];
+  const [r0, r1] = range;
+  const n = Math.max(labels.length, 1);
+  const padInner = opts.paddingInner ?? opts.padding ?? 0.2;
+  const padOuter = opts.paddingOuter ?? opts.padding ?? 0.1;
+  const span = r1 - r0;
+  const step = span / (n - padInner + 2 * padOuter);
+  const bandwidth = Math.max(0, step * (1 - padInner));
+  const start = r0 + padOuter * step;
+  function scale(i) {
+    const idx = Number(i);
+    if (!Number.isFinite(idx) || idx < 0) return start;
+    return start + idx * step;
+  }
+  scale.bandwidth = bandwidth;
+  scale.step = step;
+  return scale;
+}
+function niceDomain(values, opts = {}) {
+  const nums = (Array.isArray(values) ? values : []).map(Number).filter((n) => Number.isFinite(n));
+  if (!nums.length) return [0, 1];
+  let min = Math.min(...nums);
+  let max = Math.max(...nums);
+  if (opts.includeZero !== false) {
+    if (min > 0) min = 0;
+    if (max < 0) max = 0;
+  }
+  if (min === max) {
+    if (min === 0) return [0, 1];
+    const pad2 = Math.abs(min) * 0.1 || 1;
+    return [min - pad2, max + pad2];
+  }
+  const pad = (opts.pad ?? 0.05) * (max - min);
+  return [min - (opts.includeZero === false ? pad : 0), max + pad];
+}
+function niceTicks(min, max, count = 5) {
+  const d0 = Number(min);
+  const d1 = Number(max);
+  const n = Math.max(2, Math.floor(count) || 5);
+  if (!Number.isFinite(d0) || !Number.isFinite(d1)) return [0, 1];
+  if (d0 === d1) return [d0];
+  const span = d1 - d0;
+  const step0 = span / (n - 1);
+  const mag = Math.pow(10, Math.floor(Math.log10(Math.abs(step0) || 1)));
+  const err = step0 / mag;
+  let niceStep;
+  if (err <= 1.5) niceStep = 1 * mag;
+  else if (err <= 3) niceStep = 2 * mag;
+  else if (err <= 7) niceStep = 5 * mag;
+  else niceStep = 10 * mag;
+  const start = Math.ceil(d0 / niceStep) * niceStep;
+  const ticks = [];
+  for (let v = start; v <= d1 + niceStep * 1e-9; v += niceStep) {
+    const rounded = Math.abs(v) < 1e-12 ? 0 : Number(v.toPrecision(12));
+    ticks.push(rounded);
+    if (ticks.length > 20) break;
+  }
+  if (!ticks.length) ticks.push(d0, d1);
+  return ticks;
+}
+function formatTick(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return "";
+  if (Math.abs(n) >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  if (Math.abs(n) >= 1e3) return `${(n / 1e3).toFixed(1)}k`;
+  if (Number.isInteger(n)) return String(n);
+  return String(Number(n.toPrecision(4)));
+}
+var init_scales = __esm({
+  "src/Browser/components/charts/kernel/scales.js"() {
+  }
+});
+
+// src/Browser/components/charts/kernel/geometry.js
+function polarToCartesian(cx, cy, r, angleRad) {
+  return {
+    x: cx + r * Math.cos(angleRad),
+    y: cy + r * Math.sin(angleRad)
+  };
+}
+function donutArcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
+  const large = Math.abs(endAngle - startAngle) > Math.PI ? 1 : 0;
+  const sweep = endAngle >= startAngle ? 1 : 0;
+  const o0 = polarToCartesian(cx, cy, rOuter, startAngle);
+  const o1 = polarToCartesian(cx, cy, rOuter, endAngle);
+  if (rInner <= 0) {
+    return [
+      `M ${cx} ${cy}`,
+      `L ${o0.x} ${o0.y}`,
+      `A ${rOuter} ${rOuter} 0 ${large} ${sweep} ${o1.x} ${o1.y}`,
+      "Z"
+    ].join(" ");
+  }
+  const i0 = polarToCartesian(cx, cy, rInner, endAngle);
+  const i1 = polarToCartesian(cx, cy, rInner, startAngle);
+  return [
+    `M ${o0.x} ${o0.y}`,
+    `A ${rOuter} ${rOuter} 0 ${large} ${sweep} ${o1.x} ${o1.y}`,
+    `L ${i0.x} ${i0.y}`,
+    `A ${rInner} ${rInner} 0 ${large} ${sweep ? 0 : 1} ${i1.x} ${i1.y}`,
+    "Z"
+  ].join(" ");
+}
+function pieSlices(slices, opts) {
+  const items = (Array.isArray(slices) ? slices : []).map((s) => ({
+    label: String(s.label ?? ""),
+    value: Math.max(0, Number(s.value) || 0)
+  }));
+  const total = items.reduce((a, s) => a + s.value, 0);
+  const start0 = opts.startAngle ?? -Math.PI / 2;
+  const end0 = opts.endAngle ?? start0 + Math.PI * 2;
+  const span = end0 - start0;
+  const pad = opts.padAngle ?? 0;
+  const rInner = opts.rInner ?? 0;
+  const out = [];
+  if (!items.length || total <= 0 || !Number.isFinite(span) || span === 0) {
+    return out;
+  }
+  let angle = start0;
+  const usable = span - pad * items.length;
+  for (const item of items) {
+    const portion = item.value / total;
+    const sliceSpan = Math.max(0, usable * portion);
+    const a0 = angle + pad / 2;
+    const a1 = a0 + sliceSpan;
+    out.push({
+      ...item,
+      percent: portion * 100,
+      startAngle: a0,
+      endAngle: a1,
+      midAngle: (a0 + a1) / 2,
+      path: donutArcPath(opts.cx, opts.cy, opts.rOuter, rInner, a0, a1)
+    });
+    angle = a1 + pad / 2;
+  }
+  return out;
+}
+function barRects(data, plot) {
+  const labels = data.labels || [];
+  const series = data.series || [];
+  const variant = data.variant === "stacked" ? "stacked" : "grouped";
+  const xScale = bandScale(labels, [plot.x0, plot.x1]);
+  const yScale = linearScale(plot.yDomain[0], plot.yDomain[1], [plot.y1, plot.y0]);
+  const out = [];
+  if (variant === "stacked") {
+    for (let i = 0; i < labels.length; i++) {
+      let accPos = 0;
+      let accNeg = 0;
+      const bw = xScale.bandwidth;
+      const x = xScale(i);
+      for (let si = 0; si < series.length; si++) {
+        const s = series[si];
+        const v = Number(s.values?.[i]) || 0;
+        const yBase = v >= 0 ? accPos : accNeg;
+        const y1 = yScale(yBase);
+        const y0 = yScale(yBase + v);
+        const top = Math.min(y0, y1);
+        const h = Math.abs(y1 - y0);
+        out.push({
+          series: s.name,
+          label: labels[i],
+          value: v,
+          x,
+          y: top,
+          width: bw,
+          height: h,
+          i,
+          si
+        });
+        if (v >= 0) accPos += v;
+        else accNeg += v;
+      }
+    }
+    return out;
+  }
+  const group = xScale.bandwidth;
+  const n = Math.max(series.length, 1);
+  const gap = group * 0.08;
+  const barW = Math.max(1, (group - gap * (n - 1)) / n);
+  const y0line = yScale(0);
+  for (let i = 0; i < labels.length; i++) {
+    const baseX = xScale(i);
+    for (let si = 0; si < series.length; si++) {
+      const s = series[si];
+      const v = Number(s.values?.[i]) || 0;
+      const yv = yScale(v);
+      const top = Math.min(yv, y0line);
+      const h = Math.abs(yv - y0line);
+      out.push({
+        series: s.name,
+        label: labels[i],
+        value: v,
+        x: baseX + si * (barW + gap),
+        y: top,
+        width: barW,
+        height: h,
+        i,
+        si
+      });
+    }
+  }
+  return out;
+}
+function horizontalBarRects(data, plot) {
+  const labels = data.labels || [];
+  const series = data.series || [];
+  const variant = data.variant === "stacked" ? "stacked" : "grouped";
+  const yScale = bandScale(labels, [plot.y0, plot.y1]);
+  const xScale = linearScale(plot.xDomain[0], plot.xDomain[1], [plot.x0, plot.x1]);
+  const out = [];
+  const x0line = xScale(0);
+  if (variant === "stacked") {
+    for (let i = 0; i < labels.length; i++) {
+      let accPos = 0;
+      let accNeg = 0;
+      const bh = yScale.bandwidth;
+      const y = yScale(i);
+      for (let si = 0; si < series.length; si++) {
+        const s = series[si];
+        const v = Number(s.values?.[i]) || 0;
+        const xBase = v >= 0 ? accPos : accNeg;
+        const x1 = xScale(xBase);
+        const x2 = xScale(xBase + v);
+        out.push({
+          series: s.name,
+          label: labels[i],
+          value: v,
+          x: Math.min(x1, x2),
+          y,
+          width: Math.abs(x2 - x1),
+          height: bh,
+          i,
+          si
+        });
+        if (v >= 0) accPos += v;
+        else accNeg += v;
+      }
+    }
+    return out;
+  }
+  const group = yScale.bandwidth;
+  const n = Math.max(series.length, 1);
+  const gap = group * 0.08;
+  const barH = Math.max(1, (group - gap * (n - 1)) / n);
+  for (let i = 0; i < labels.length; i++) {
+    const baseY = yScale(i);
+    for (let si = 0; si < series.length; si++) {
+      const s = series[si];
+      const v = Number(s.values?.[i]) || 0;
+      const xv = xScale(v);
+      out.push({
+        series: s.name,
+        label: labels[i],
+        value: v,
+        x: Math.min(xv, x0line),
+        y: baseY + si * (barH + gap),
+        width: Math.abs(xv - x0line),
+        height: barH,
+        i,
+        si
+      });
+    }
+  }
+  return out;
+}
+function seriesPath(values, plot) {
+  const labels = plot.labels || [];
+  const n = labels.length;
+  const xScale = bandScale(labels, [plot.x0, plot.x1], { paddingInner: 0.1, paddingOuter: 0.05 });
+  const yScale = linearScale(plot.yDomain[0], plot.yDomain[1], [plot.y1, plot.y0]);
+  const bw = xScale.bandwidth;
+  const points = [];
+  for (let i = 0; i < n; i++) {
+    const v = Number(values?.[i]) || 0;
+    points.push({
+      x: xScale(i) + bw / 2,
+      y: yScale(v),
+      value: v,
+      i
+    });
+  }
+  const variant = plot.variant || "linear";
+  let line = "";
+  if (variant === "step") {
+    line = points.map((p, i) => {
+      if (i === 0) return `M ${p.x} ${p.y}`;
+      const prev = points[i - 1];
+      const mid = (prev.x + p.x) / 2;
+      return `L ${mid} ${prev.y} L ${mid} ${p.y} L ${p.x} ${p.y}`;
+    }).join(" ");
+  } else if (variant === "natural" && points.length >= 2) {
+    line = `M ${points[0].x} ${points[0].y}`;
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[i - 1] || points[i];
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const p3 = points[i + 2] || p2;
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+      line += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+    }
+  } else {
+    line = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+  }
+  const yBase = yScale(Math.min(Math.max(0, plot.yDomain[0]), plot.yDomain[1]));
+  let area = "";
+  if (points.length) {
+    area = `${line} L ${points[points.length - 1].x} ${yBase} L ${points[0].x} ${yBase} Z`;
+  }
+  return { line, area, points };
+}
+function radarGeometry(values, opts) {
+  const vals = Array.isArray(values) ? values.map((v) => Number(v) || 0) : [];
+  const n = Math.max(vals.length, 3);
+  const max = opts.max && opts.max > 0 ? opts.max : Math.max(...vals, 1);
+  const start = -Math.PI / 2;
+  const points = [];
+  const axes = [];
+  for (let i = 0; i < n; i++) {
+    const angle = start + i * 2 * Math.PI / n;
+    const tip = polarToCartesian(opts.cx, opts.cy, opts.r, angle);
+    axes.push({ x1: opts.cx, y1: opts.cy, x2: tip.x, y2: tip.y, i });
+    const v = vals[i] ?? 0;
+    const rr = Math.max(0, v) / max * opts.r;
+    const p = polarToCartesian(opts.cx, opts.cy, rr, angle);
+    points.push({ ...p, value: v, i });
+  }
+  const polygon = points.length ? points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z" : "";
+  const levels = opts.levels ?? 4;
+  const rings = [];
+  for (let L = 1; L <= levels; L++) {
+    const rr = opts.r * L / levels;
+    const ringPts = [];
+    for (let i = 0; i < n; i++) {
+      const angle = start + i * 2 * Math.PI / n;
+      const p = polarToCartesian(opts.cx, opts.cy, rr, angle);
+      ringPts.push(`${i === 0 ? "M" : "L"} ${p.x} ${p.y}`);
+    }
+    rings.push(ringPts.join(" ") + " Z");
+  }
+  return { points, polygon, axes, rings };
+}
+function radialBars(items, opts) {
+  const rows = (Array.isArray(items) ? items : []).map((s) => ({
+    label: String(s.label ?? ""),
+    value: Math.max(0, Number(s.value) || 0)
+  }));
+  const max = Math.max(...rows.map((r) => r.value), 1);
+  const start0 = opts.startAngle ?? -Math.PI / 2;
+  const end0 = opts.endAngle ?? start0 + Math.PI * 2;
+  const span = end0 - start0;
+  const n = Math.max(rows.length, 1);
+  const track = (opts.rOuter - opts.rInner) / n;
+  return rows.map((row, i) => {
+    const r1 = opts.rInner + i * track + track * 0.15;
+    const r0 = opts.rInner + (i + 1) * track - track * 0.15;
+    const a1 = start0 + span * (row.value / max);
+    return {
+      ...row,
+      percent: row.value / max * 100,
+      i,
+      rInner: r1,
+      rOuter: r0,
+      startAngle: start0,
+      endAngle: a1,
+      path: donutArcPath(opts.cx, opts.cy, r0, r1, start0, a1)
+    };
+  });
+}
+function scatterPositions(datasets, plot) {
+  const xScale = linearScale(plot.xDomain[0], plot.xDomain[1], [plot.x0, plot.x1]);
+  const yScale = linearScale(plot.yDomain[0], plot.yDomain[1], [plot.y1, plot.y0]);
+  const out = [];
+  (datasets || []).forEach((ds, si) => {
+    (ds.points || []).forEach((pt, i) => {
+      const vx = Number(pt.x);
+      const vy = Number(pt.y);
+      if (!Number.isFinite(vx) || !Number.isFinite(vy)) return;
+      out.push({
+        series: ds.name,
+        x: xScale(vx),
+        y: yScale(vy),
+        vx,
+        vy,
+        z: pt.z != null ? Number(pt.z) : void 0,
+        i,
+        si
+      });
+    });
+  });
+  return out;
+}
+function stackedBarSegments(items, plot) {
+  const rows = (Array.isArray(items) ? items : []).map((s) => ({
+    label: String(s.label ?? ""),
+    value: Math.max(0, Number(s.value) || 0)
+  }));
+  const total = rows.reduce((a, r) => a + r.value, 0) || 1;
+  const width = plot.x1 - plot.x0;
+  let x = plot.x0;
+  return rows.map((row, i) => {
+    const w = row.value / total * width;
+    const seg = {
+      ...row,
+      percent: row.value / total * 100,
+      x,
+      y: plot.y,
+      width: w,
+      height: plot.height,
+      i
+    };
+    x += w;
+    return seg;
+  });
+}
+var init_geometry = __esm({
+  "src/Browser/components/charts/kernel/geometry.js"() {
+    init_scales();
+  }
+});
+
+// src/Browser/components/charts/kernel/palette.js
+function resolvePalette(count, custom) {
+  const n = Math.max(0, Math.floor(count) || 0);
+  if (Array.isArray(custom) && custom.length) {
+    return Array.from({ length: n }, (_, i) => String(custom[i % custom.length]));
+  }
+  return Array.from({ length: n }, (_, i) => {
+    const idx = i % 8 + 1;
+    return `var(--canvas-chart-${idx}, ${CHART_PALETTE_FALLBACKS[i % CHART_PALETTE_FALLBACKS.length]})`;
+  });
+}
+function seriesMark(seriesIndex) {
+  return SERIES_MARKS[seriesIndex % SERIES_MARKS.length];
+}
+function dashForMark(mark) {
+  switch (mark) {
+    case "dashed":
+      return "6 4";
+    case "dotted":
+      return "2 3";
+    case "dashdot":
+      return "8 3 2 3";
+    default:
+      return null;
+  }
+}
+var CHART_PALETTE_FALLBACKS, SERIES_MARKS;
+var init_palette = __esm({
+  "src/Browser/components/charts/kernel/palette.js"() {
+    CHART_PALETTE_FALLBACKS = Object.freeze([
+      "#0D47A1",
+      "#208B3A",
+      "#B12A90",
+      "#E16462",
+      "#FCA636",
+      "#1976D2",
+      "#7014CC",
+      "#CB253E"
+    ]);
+    SERIES_MARKS = Object.freeze(["solid", "dashed", "dotted", "dashdot"]);
+  }
+});
+
+// src/Browser/components/charts/kernel/measure.js
+function observeSize(el2, onSize, defaults = {}) {
+  const fallbackW = Number(defaults.width) || 320;
+  const fallbackH = Number(defaults.height) || 240;
+  const read = () => {
+    const w = Number(el2.clientWidth) || Number(
+      /** @type {any} */
+      el2.offsetWidth
+    ) || fallbackW;
+    const h = Number(el2.clientHeight) || Number(
+      /** @type {any} */
+      el2.offsetHeight
+    ) || fallbackH;
+    return {
+      width: Math.max(40, w),
+      height: Math.max(40, h)
+    };
+  };
+  let current = read();
+  onSize(current);
+  let observer = null;
+  const RO = globalThis.ResizeObserver;
+  if (typeof RO === "function") {
+    const ro = new RO(() => {
+      current = read();
+      onSize(current);
+    });
+    try {
+      ro.observe(el2);
+      observer = ro;
+    } catch {
+      observer = null;
+    }
+  }
+  return {
+    disconnect() {
+      observer?.disconnect?.();
+      observer = null;
+    },
+    getSize() {
+      return current;
+    }
+  };
+}
+function resolveChartSize(props, measured) {
+  const height = Number(props.height);
+  const width = Number(props.width);
+  return {
+    width: Number.isFinite(width) && width > 0 ? width : measured.width,
+    height: Number.isFinite(height) && height > 0 ? height : measured.height || 240
+  };
+}
+var init_measure = __esm({
+  "src/Browser/components/charts/kernel/measure.js"() {
+  }
+});
+
+// src/Browser/components/charts/kernel/normalize.js
+function unwrap(node) {
+  if (node == null) return null;
+  if (typeof node !== "object") return null;
+  const o = (
+    /** @type {Record<string, unknown>} */
+    node
+  );
+  if (o.type === "element" && o.props && typeof o.props === "object") {
+    return (
+      /** @type {Record<string, unknown>} */
+      o.props
+    );
+  }
+  return o;
+}
+function asArray2(v) {
+  if (Array.isArray(v)) return v;
+  if (v == null) return [];
+  return [v];
+}
+function normalizeLabels(labels) {
+  return asArray2(labels).map((l) => String(l ?? ""));
+}
+function normalizeSeries(series) {
+  return asArray2(series).map((item) => {
+    const p = unwrap(item) || {};
+    const name = String(p.category ?? p.name ?? "");
+    const values = asArray2(p.values).map((v) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
+    });
+    return { name, values };
+  }).filter((s) => s.name !== "" || s.values.length);
+}
+function normalizeCartesian(props) {
+  const labels = normalizeLabels(props.labels);
+  let series = normalizeSeries(props.series);
+  const rows = asArray2(props.series);
+  if (rows.length && Array.isArray(rows[0])) {
+    const seriesNames = labels.slice(1);
+    const cats = rows.map((row) => String(
+      /** @type {unknown[]} */
+      row[0] ?? ""
+    ));
+    series = seriesNames.map((name, si) => ({
+      name,
+      values: rows.map((row) => {
+        const n = Number(
+          /** @type {unknown[]} */
+          row[si + 1]
+        );
+        return Number.isFinite(n) ? n : 0;
+      })
+    }));
+    return {
+      labels: cats,
+      series,
+      empty: !cats.length || !series.length
+    };
+  }
+  return {
+    labels,
+    series,
+    empty: !labels.length || !series.length
+  };
+}
+function normalizeSlices(props) {
+  const labels = normalizeLabels(props.labels);
+  const values = asArray2(props.values).map((v) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  });
+  if (labels.length && values.length) {
+    const n = Math.min(labels.length, values.length);
+    const items2 = Array.from({ length: n }, (_, i) => ({
+      label: labels[i],
+      value: values[i]
+    }));
+    return { items: items2, empty: !items2.length || items2.every((x) => x.value === 0) };
+  }
+  const items = asArray2(props.labels).map((node) => {
+    const p = unwrap(node);
+    if (!p || p.category == null) return null;
+    const value = Number(p.value);
+    return {
+      label: String(p.category),
+      value: Number.isFinite(value) ? value : 0
+    };
+  }).filter(Boolean);
+  return {
+    items: (
+      /** @type {{ label: string, value: number }[]} */
+      items
+    ),
+    empty: !items.length
+  };
+}
+function normalizeScatter(props) {
+  const datasets = asArray2(props.datasets).map((ds) => {
+    const p = unwrap(ds) || {};
+    const name = String(p.name ?? "");
+    const points = asArray2(p.points).map((pt) => {
+      const q = unwrap(pt) || {};
+      const x = Number(q.x);
+      const y = Number(q.y);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+      const z = q.z != null ? Number(q.z) : void 0;
+      return Number.isFinite(z) ? { x, y, z } : { x, y };
+    }).filter(Boolean);
+    return {
+      name,
+      points: (
+        /** @type {{ x: number, y: number, z?: number }[]} */
+        points
+      )
+    };
+  }).filter((d) => d.points.length);
+  return { datasets, empty: !datasets.length };
+}
+function collectValues(series, variant = "grouped") {
+  if (variant === "stacked") {
+    const len = Math.max(0, ...series.map((s) => s.values.length));
+    const sums = [];
+    for (let i = 0; i < len; i++) {
+      let pos = 0;
+      let neg = 0;
+      for (const s of series) {
+        const v = Number(s.values[i]) || 0;
+        if (v >= 0) pos += v;
+        else neg += v;
+      }
+      sums.push(pos, neg);
+    }
+    return sums;
+  }
+  return series.flatMap((s) => s.values);
+}
+var init_normalize = __esm({
+  "src/Browser/components/charts/kernel/normalize.js"() {
+  }
+});
+
+// src/Browser/components/charts/kernel/svg.js
+function svgEl(doc, tag, attrs = {}) {
+  const el2 = typeof doc.createElementNS === "function" ? doc.createElementNS(SVG_NS2, tag) : doc.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    el2.setAttribute(k, String(v));
+  }
+  return el2;
+}
+function setAttr(el2, name, value) {
+  if (value == null || value === false || value === "") el2.removeAttribute(name);
+  else el2.setAttribute(name, String(value));
+}
+var SVG_NS2;
+var init_svg = __esm({
+  "src/Browser/components/charts/kernel/svg.js"() {
+    SVG_NS2 = "http://www.w3.org/2000/svg";
+  }
+});
+
+// src/Browser/components/charts/kernel/axes.js
+function renderAxes(doc, opts) {
+  const g = svgEl(doc, "g", { class: "canvas-chart__axes" });
+  g.appendChild(
+    svgEl(doc, "line", {
+      class: "canvas-chart__axis-line canvas-chart__axis-line--x",
+      x1: opts.x0,
+      y1: opts.y1,
+      x2: opts.x1,
+      y2: opts.y1
+    })
+  );
+  g.appendChild(
+    svgEl(doc, "line", {
+      class: "canvas-chart__axis-line canvas-chart__axis-line--y",
+      x1: opts.x0,
+      y1: opts.y0,
+      x2: opts.x0,
+      y2: opts.y1
+    })
+  );
+  for (const t of opts.yTicks || []) {
+    if (opts.grid !== false) {
+      g.appendChild(
+        svgEl(doc, "line", {
+          class: "canvas-chart__grid-line",
+          x1: opts.x0,
+          y1: t.y,
+          x2: opts.x1,
+          y2: t.y
+        })
+      );
+    }
+    g.appendChild(
+      svgEl(doc, "text", {
+        class: "canvas-chart__tick-label canvas-chart__tick-label--y",
+        x: opts.x0 - 6,
+        y: t.y,
+        "text-anchor": "end",
+        "dominant-baseline": "middle"
+      })
+    ).textContent = t.label;
+  }
+  for (const t of opts.xTicks || []) {
+    g.appendChild(
+      svgEl(doc, "text", {
+        class: "canvas-chart__tick-label canvas-chart__tick-label--x",
+        x: t.x,
+        y: opts.y1 + 14,
+        "text-anchor": "middle",
+        "dominant-baseline": "hanging"
+      })
+    ).textContent = t.label;
+  }
+  if (opts.xLabel) {
+    g.appendChild(
+      svgEl(doc, "text", {
+        class: "canvas-chart__axis-title canvas-chart__axis-title--x",
+        x: (opts.x0 + opts.x1) / 2,
+        y: opts.y1 + 32,
+        "text-anchor": "middle"
+      })
+    ).textContent = opts.xLabel;
+  }
+  if (opts.yLabel) {
+    const ty = svgEl(doc, "text", {
+      class: "canvas-chart__axis-title canvas-chart__axis-title--y",
+      x: 12,
+      y: (opts.y0 + opts.y1) / 2,
+      "text-anchor": "middle",
+      transform: `rotate(-90 12 ${(opts.y0 + opts.y1) / 2})`
+    });
+    ty.textContent = opts.yLabel;
+    g.appendChild(ty);
+  }
+  return (
+    /** @type {SVGGElement} */
+    g
+  );
+}
+function buildYTicks(domain, yScale, count = 5) {
+  return niceTicks(domain[0], domain[1], count).map((v) => ({
+    label: formatTick(v),
+    y: yScale(v),
+    value: v
+  }));
+}
+function buildXCategoryTicks(labels, xScale, maxLabels = 12) {
+  const n = labels.length;
+  const step = n > maxLabels ? Math.ceil(n / maxLabels) : 1;
+  const ticks = [];
+  for (let i = 0; i < n; i += step) {
+    ticks.push({
+      label: labels[i],
+      x: xScale(i) + xScale.bandwidth / 2
+    });
+  }
+  return ticks;
+}
+var init_axes = __esm({
+  "src/Browser/components/charts/kernel/axes.js"() {
+    init_svg();
+    init_scales();
+  }
+});
+
+// src/Browser/components/charts/kernel/legend.js
+function renderLegend(doc, items) {
+  const list = doc.createElement("ul");
+  list.setAttribute("class", "canvas-chart__legend");
+  list.setAttribute("role", "list");
+  list.setAttribute("aria-label", "Chart legend");
+  (items || []).forEach((item, i) => {
+    const li = doc.createElement("li");
+    li.setAttribute("class", "canvas-chart__legend-item");
+    li.setAttribute("role", "listitem");
+    const mark = item.mark || seriesMark(i);
+    li.setAttribute("data-mark", mark);
+    const swatch = doc.createElement("span");
+    swatch.setAttribute("class", "canvas-chart__legend-swatch");
+    swatch.setAttribute("data-mark", mark);
+    setInlineStyle(swatch, { background: item.color });
+    swatch.setAttribute("aria-hidden", "true");
+    const label = doc.createElement("span");
+    label.setAttribute("class", "canvas-chart__legend-label");
+    label.textContent = item.name;
+    li.appendChild(swatch);
+    li.appendChild(label);
+    list.appendChild(li);
+  });
+  return list;
+}
+var init_legend = __esm({
+  "src/Browser/components/charts/kernel/legend.js"() {
+    init_palette();
+    init_inlineStyle();
+  }
+});
+
+// src/Browser/components/charts/kernel/dataTable.js
+function renderDataTable(doc, data) {
+  const wrap = doc.createElement("div");
+  wrap.setAttribute("class", "canvas-chart__data-table");
+  wrap.setAttribute("data-canvas-chart-table", "");
+  const table = doc.createElement("table");
+  table.setAttribute("class", "canvas-chart__table");
+  if (data.caption) {
+    const cap = doc.createElement("caption");
+    cap.setAttribute("class", "canvas-chart__table-caption");
+    cap.textContent = data.caption;
+    table.appendChild(cap);
+  }
+  const thead = doc.createElement("thead");
+  const hr = doc.createElement("tr");
+  for (const col of data.columns || []) {
+    const th = doc.createElement("th");
+    th.setAttribute("scope", "col");
+    th.textContent = String(col);
+    hr.appendChild(th);
+  }
+  thead.appendChild(hr);
+  table.appendChild(thead);
+  const tbody = doc.createElement("tbody");
+  for (const row of data.rows || []) {
+    const tr = doc.createElement("tr");
+    row.forEach((cell, i) => {
+      const td = doc.createElement(i === 0 ? "th" : "td");
+      if (i === 0) td.setAttribute("scope", "row");
+      td.textContent = String(cell);
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  return wrap;
+}
+function cartesianTableModel(labels, series, caption) {
+  return {
+    caption: caption || "Chart data",
+    columns: ["Category", ...series.map((s) => s.name)],
+    rows: labels.map((label, i) => [
+      label,
+      ...series.map((s) => Number.isFinite(Number(s.values[i])) ? Number(s.values[i]) : "")
+    ])
+  };
+}
+function slicesTableModel(items, caption) {
+  return {
+    caption: caption || "Chart data",
+    columns: ["Category", "Value"],
+    rows: items.map((it) => [it.label, it.value])
+  };
+}
+function scatterTableModel(datasets, caption) {
+  const rows = [];
+  for (const ds of datasets) {
+    for (const p of ds.points) {
+      rows.push([ds.name, p.x, p.y, p.z != null ? p.z : ""]);
+    }
+  }
+  return {
+    caption: caption || "Scatter data",
+    columns: ["Series", "X", "Y", "Z"],
+    rows
+  };
+}
+var init_dataTable = __esm({
+  "src/Browser/components/charts/kernel/dataTable.js"() {
+  }
+});
+
+// src/Browser/components/charts/kernel/datapoints.js
+function markDatapoint(shape, meta) {
+  setAttr(shape, "tabindex", "0");
+  setAttr(shape, "role", "img");
+  setAttr(shape, "aria-label", meta.label);
+  setAttr(shape, "data-canvas-datapoint", meta.id);
+  setAttr(shape, "focusable", "true");
+}
+function attachDatapointKeyboard(host, tooltipEl) {
+  let activeId = null;
+  const setActive = (id, text2) => {
+    activeId = id;
+    if (id == null) {
+      tooltipEl.setAttribute("hidden", "");
+      tooltipEl.textContent = "";
+      tooltipEl.removeAttribute("data-active-id");
+      return;
+    }
+    tooltipEl.removeAttribute("hidden");
+    tooltipEl.setAttribute("data-active-id", id);
+    if (text2 != null) tooltipEl.textContent = text2;
+  };
+  const onFocusIn = (ev) => {
+    const t = (
+      /** @type {Element} */
+      ev.target
+    );
+    const id = t?.getAttribute?.("data-canvas-datapoint");
+    if (!id) return;
+    setActive(id, t.getAttribute("aria-label") || "");
+  };
+  const onFocusOut = (ev) => {
+    const t = (
+      /** @type {Element} */
+      ev.target
+    );
+    const id = t?.getAttribute?.("data-canvas-datapoint");
+    if (id && activeId === id) setActive(null);
+  };
+  const onKeyDown = (ev) => {
+    const t = (
+      /** @type {Element} */
+      ev.target
+    );
+    if (!t?.getAttribute?.("data-canvas-datapoint")) return;
+    const points = collectDatapoints(host);
+    if (!points.length) return;
+    const idx = points.findIndex((p) => p === t);
+    if (idx < 0) return;
+    let next = idx;
+    if (ev.key === "ArrowRight" || ev.key === "ArrowDown") next = (idx + 1) % points.length;
+    else if (ev.key === "ArrowLeft" || ev.key === "ArrowUp")
+      next = (idx - 1 + points.length) % points.length;
+    else if (ev.key === "Home") next = 0;
+    else if (ev.key === "End") next = points.length - 1;
+    else if (ev.key === "Escape") {
+      setActive(null);
+      t.blur?.();
+      return;
+    } else return;
+    ev.preventDefault?.();
+    const el2 = points[next];
+    el2.focus?.();
+    setActive(
+      el2.getAttribute("data-canvas-datapoint"),
+      el2.getAttribute("aria-label") || ""
+    );
+  };
+  host.addEventListener("focusin", onFocusIn);
+  host.addEventListener("focusout", onFocusOut);
+  host.addEventListener("keydown", onKeyDown);
+  return {
+    setActive,
+    destroy() {
+      host.removeEventListener("focusin", onFocusIn);
+      host.removeEventListener("focusout", onFocusOut);
+      host.removeEventListener("keydown", onKeyDown);
+      setActive(null);
+    }
+  };
+}
+function collectDatapoints(host) {
+  const out = [];
+  const walk = (n) => {
+    if (n.nodeType === 1) {
+      if (n.getAttribute?.("data-canvas-datapoint") != null) out.push(n);
+      for (const c of n.childNodes ?? []) walk(c);
+    }
+  };
+  walk(host);
+  return out;
+}
+function createTooltip(doc) {
+  const el2 = doc.createElement("div");
+  el2.setAttribute("class", "canvas-chart__tooltip");
+  el2.setAttribute("role", "status");
+  el2.setAttribute("aria-live", "polite");
+  el2.setAttribute("hidden", "");
+  return el2;
+}
+function focusDot(doc, cx, cy, r = 4) {
+  return svgEl(doc, "circle", {
+    class: "canvas-chart__point",
+    cx,
+    cy,
+    r
+  });
+}
+var init_datapoints = __esm({
+  "src/Browser/components/charts/kernel/datapoints.js"() {
+    init_svg();
+  }
+});
+
+// src/Browser/components/charts/kernel/shared.js
+function requireDocument6(ctx = {}) {
+  const doc = ctx.document ?? globalThis.document;
+  if (!doc?.createElement) {
+    throw new Error("chart component: ctx.document required");
+  }
+  return doc;
+}
+function setClass6(el2, className) {
+  el2.setAttribute("class", String(className).trim());
+}
+function clearChildren6(el2) {
+  while (el2.firstChild) el2.removeChild(el2.firstChild);
+}
+function asText6(value) {
+  if (value == null) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return "";
+}
+function resolveStatus2(props = {}) {
+  const raw = props.status ?? props.state;
+  if (raw === "loading" || raw === "empty" || raw === "error" || raw === "ready") {
+    return raw;
+  }
+  if (props.loading === true) return "loading";
+  if (props.error != null && props.error !== false) return "error";
+  if (props.empty === true) return "empty";
+  return "ready";
+}
+function applySurfaceStatus2(el2, doc, props = {}, opts = {}) {
+  const status = resolveStatus2(props);
+  el2.setAttribute("data-status", status);
+  if (status === "loading") el2.setAttribute("aria-busy", "true");
+  else el2.removeAttribute("aria-busy");
+  for (const child of [...el2.childNodes ?? []]) {
+    if (child.nodeType === 1 && child.getAttribute?.("data-canvas-status-text") != null) {
+      el2.removeChild(child);
+    }
+  }
+  if (status === "loading" || status === "empty" || status === "error") {
+    const statusEl = doc.createElement("span");
+    statusEl.setAttribute("data-canvas-status-text", "");
+    statusEl.setAttribute("class", "canvas-status-text canvas-chart__status");
+    statusEl.setAttribute("role", "status");
+    statusEl.setAttribute("aria-live", status === "error" ? "assertive" : "polite");
+    statusEl.textContent = status === "loading" ? asText6(props.loadingMessage) || opts.loadingMessage || "Loading" : status === "empty" ? asText6(props.emptyMessage) || opts.emptyMessage || "No data" : asText6(props.errorMessage ?? props.error) || opts.errorMessage || "Error";
+    el2.appendChild(statusEl);
+  }
+  return { status };
+}
+function lifecycle6(impl) {
+  return {
+    create(props = {}, ctx = {}) {
+      const doc = requireDocument6(ctx);
+      const el2 = impl.mount(doc, props, ctx);
+      impl.patch(el2, props, ctx);
+      return el2;
+    },
+    update(el2, props = {}, ctx = {}) {
+      impl.patch(el2, props, ctx);
+    },
+    destroy(el2, ctx = {}) {
+      impl.unmount?.(el2, ctx);
+    },
+    ownsChildren: true
+  };
+}
+function prefersReducedMotion2(doc) {
+  try {
+    const mq = doc.defaultView?.matchMedia?.("(prefers-reduced-motion: reduce)");
+    return !!mq?.matches;
+  } catch {
+    return false;
+  }
+}
+var SURFACE_STATUS3, chartRuntime;
+var init_shared4 = __esm({
+  "src/Browser/components/charts/kernel/shared.js"() {
+    SURFACE_STATUS3 = Object.freeze({
+      READY: "ready",
+      LOADING: "loading",
+      EMPTY: "empty",
+      ERROR: "error"
+    });
+    chartRuntime = /* @__PURE__ */ new WeakMap();
+  }
+});
+
+// src/Browser/components/charts/kernel/chartFrame.js
+function mountChartHost(doc, typeName) {
+  const el2 = doc.createElement("div");
+  el2.setAttribute("data-canvas-component", typeName);
+  el2.setAttribute("class", `canvas-chart canvas-chart--${typeName}`);
+  el2.setAttribute("role", "group");
+  el2.setAttribute("aria-label", typeName);
+  return el2;
+}
+function patchChartHost(el2, doc, props, spec) {
+  const prev = chartRuntime.get(el2);
+  prev?.disconnect?.();
+  prev?.destroyKeyboard?.();
+  const statusProps = { ...props };
+  if (spec.empty && resolveReady(props)) {
+    statusProps.status = "empty";
+  }
+  setClass6(
+    el2,
+    `canvas-chart canvas-chart--${el2.getAttribute("data-canvas-component")} ${prefersReducedMotion2(doc) ? "canvas-chart--reduced-motion" : ""}`.trim()
+  );
+  clearChildren6(el2);
+  const { status } = applySurfaceStatus2(el2, doc, statusProps, {
+    emptyMessage: spec.emptyMessage || "No chart data"
+  });
+  if (status !== "ready") {
+    chartRuntime.set(el2, {});
+    return;
+  }
+  const body = doc.createElement("div");
+  body.setAttribute("class", "canvas-chart__body");
+  const plotHost = doc.createElement("div");
+  plotHost.setAttribute("class", "canvas-chart__plot");
+  const tooltip = createTooltip(doc);
+  const svg = svgEl(doc, "svg", {
+    class: "canvas-chart__svg",
+    role: "img",
+    "aria-hidden": "true"
+  });
+  plotHost.appendChild(svg);
+  plotHost.appendChild(tooltip);
+  body.appendChild(plotHost);
+  if (spec.legendItems?.length && props.legend !== false) {
+    body.appendChild(renderLegend(doc, spec.legendItems));
+  }
+  el2.appendChild(body);
+  if (spec.tableModel && props.showDataTable !== false) {
+    el2.appendChild(renderDataTable(doc, spec.tableModel));
+  }
+  const keyboard = attachDatapointKeyboard(el2, tooltip);
+  const paint = (size) => {
+    const resolved = resolveChartSize(props, size);
+    if (!Number(props.height) && size.height <= 40) {
+      resolved.height = 240;
+    }
+    svg.setAttribute("width", String(resolved.width));
+    svg.setAttribute("height", String(resolved.height));
+    svg.setAttribute("viewBox", `0 0 ${resolved.width} ${resolved.height}`);
+    clearChildren6(svg);
+    const margin = {
+      top: 16,
+      right: 16,
+      bottom: props.xLabel ? 48 : 36,
+      left: props.yLabel ? 48 : 40
+    };
+    const plot = {
+      x0: margin.left,
+      x1: Math.max(margin.left + 10, resolved.width - margin.right),
+      y0: margin.top,
+      y1: Math.max(margin.top + 10, resolved.height - margin.bottom),
+      width: resolved.width,
+      height: resolved.height
+    };
+    spec.paint(svg, resolved, plot);
+  };
+  const obs = observeSize(plotHost, paint, {
+    width: Number(props.width) || 320,
+    height: Number(props.height) || 240
+  });
+  chartRuntime.set(el2, {
+    disconnect: () => obs.disconnect(),
+    destroyKeyboard: () => keyboard.destroy()
+  });
+}
+function resolveReady(props) {
+  const raw = props.status ?? props.state;
+  if (raw === "loading" || raw === "error") return false;
+  if (props.loading === true) return false;
+  if (props.error != null && props.error !== false) return false;
+  return true;
+}
+function unmountChartHost(el2) {
+  const rt = chartRuntime.get(el2);
+  rt?.disconnect?.();
+  rt?.destroyKeyboard?.();
+  chartRuntime.delete(el2);
+}
+var init_chartFrame = __esm({
+  "src/Browser/components/charts/kernel/chartFrame.js"() {
+    init_shared4();
+    init_measure();
+    init_datapoints();
+    init_legend();
+    init_dataTable();
+    init_svg();
+  }
+});
+
+// src/Browser/components/charts/kernel/index.js
+var init_kernel = __esm({
+  "src/Browser/components/charts/kernel/index.js"() {
+    init_scales();
+    init_geometry();
+    init_palette();
+    init_measure();
+    init_normalize();
+    init_axes();
+    init_legend();
+    init_dataTable();
+    init_datapoints();
+    init_svg();
+    init_shared4();
+    init_chartFrame();
+  }
+});
+
+// src/Browser/components/charts/BarChart.js
+function paintBar(doc, svg, plot, props, data, colors) {
+  const variant = props.variant === "stacked" ? "stacked" : "grouped";
+  const values = collectValues(data.series, variant);
+  const yDomain = niceDomain(values);
+  const xScale = bandScale(data.labels, [plot.x0, plot.x1]);
+  const yScale = linearScale(yDomain[0], yDomain[1], [plot.y1, plot.y0]);
+  svg.appendChild(
+    renderAxes(doc, {
+      x0: plot.x0,
+      x1: plot.x1,
+      y0: plot.y0,
+      y1: plot.y1,
+      xTicks: buildXCategoryTicks(data.labels, xScale),
+      yTicks: buildYTicks(yDomain, yScale),
+      xLabel: props.xLabel ? String(props.xLabel) : void 0,
+      yLabel: props.yLabel ? String(props.yLabel) : void 0,
+      grid: props.grid !== false
+    })
+  );
+  const rects = barRects(
+    { labels: data.labels, series: data.series, variant },
+    { x0: plot.x0, x1: plot.x1, y0: plot.y0, y1: plot.y1, yDomain }
+  );
+  const g = svgEl(doc, "g", { class: "canvas-chart__series" });
+  for (const r of rects) {
+    const mark = seriesMark(r.si);
+    const rect = svgEl(doc, "rect", {
+      class: "canvas-chart__bar",
+      x: r.x,
+      y: r.y,
+      width: Math.max(0, r.width),
+      height: Math.max(0, r.height),
+      fill: colors[r.si % colors.length],
+      "data-mark": mark,
+      "stroke-dasharray": dashForMark(mark)
+    });
+    markDatapoint(rect, {
+      id: `bar-${r.si}-${r.i}`,
+      label: `${r.series}, ${r.label}: ${r.value}`
+    });
+    g.appendChild(rect);
+  }
+  svg.appendChild(g);
+}
+var BarChart;
+var init_BarChart = __esm({
+  "src/Browser/components/charts/BarChart.js"() {
+    init_kernel();
+    BarChart = lifecycle6({
+      mount(doc) {
+        return mountChartHost(doc, "BarChart");
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        const data = normalizeCartesian(props);
+        const colors = resolvePalette(
+          data.series.length,
+          /** @type {string[]} */
+          props.palette
+        );
+        patchChartHost(el2, doc, props, {
+          empty: data.empty,
+          legendItems: data.series.map((s, i) => ({
+            name: s.name,
+            color: colors[i],
+            mark: seriesMark(i)
+          })),
+          tableModel: cartesianTableModel(data.labels, data.series, "Bar chart data"),
+          paint(svg, _size, plot) {
+            paintBar(doc, svg, plot, props, data, colors);
+          }
+        });
+      },
+      unmount(el2) {
+        unmountChartHost(el2);
+      }
+    });
+  }
+});
+
+// src/Browser/components/charts/LineChart.js
+function paintLine(doc, svg, plot, props, data, colors, filled) {
+  const variant = props.variant === "natural" || props.variant === "step" ? props.variant : "linear";
+  const values = collectValues(data.series, "grouped");
+  const yDomain = niceDomain(values);
+  const xScale = bandScale(data.labels, [plot.x0, plot.x1], {
+    paddingInner: 0.1,
+    paddingOuter: 0.05
+  });
+  const yScale = linearScale(yDomain[0], yDomain[1], [plot.y1, plot.y0]);
+  svg.appendChild(
+    renderAxes(doc, {
+      x0: plot.x0,
+      x1: plot.x1,
+      y0: plot.y0,
+      y1: plot.y1,
+      xTicks: buildXCategoryTicks(data.labels, xScale),
+      yTicks: buildYTicks(yDomain, yScale),
+      xLabel: props.xLabel ? String(props.xLabel) : void 0,
+      yLabel: props.yLabel ? String(props.yLabel) : void 0,
+      grid: props.grid !== false
+    })
+  );
+  data.series.forEach((s, si) => {
+    const mark = seriesMark(si);
+    const pathData = seriesPath(s.values, {
+      x0: plot.x0,
+      x1: plot.x1,
+      y0: plot.y0,
+      y1: plot.y1,
+      yDomain,
+      labels: data.labels,
+      variant
+    });
+    const g = svgEl(doc, "g", { class: "canvas-chart__series", "data-series": s.name });
+    if (filled) {
+      g.appendChild(
+        svgEl(doc, "path", {
+          class: "canvas-chart__area",
+          d: pathData.area,
+          fill: colors[si],
+          opacity: "0.25",
+          "data-mark": mark
+        })
+      );
+    }
+    g.appendChild(
+      svgEl(doc, "path", {
+        class: "canvas-chart__line",
+        d: pathData.line,
+        fill: "none",
+        stroke: colors[si],
+        "stroke-width": "2",
+        "stroke-dasharray": dashForMark(mark),
+        "data-mark": mark
+      })
+    );
+    for (const p of pathData.points) {
+      const dot = focusDot(doc, p.x, p.y, 4);
+      dot.setAttribute("fill", colors[si]);
+      markDatapoint(dot, {
+        id: `line-${si}-${p.i}`,
+        label: `${s.name}, ${data.labels[p.i]}: ${p.value}`
+      });
+      g.appendChild(dot);
+    }
+    svg.appendChild(g);
+  });
+}
+function makeLineLike(typeName, filled) {
+  return lifecycle6({
+    mount(doc) {
+      return mountChartHost(doc, typeName);
+    },
+    patch(el2, props = {}, ctx = {}) {
+      const doc = ctx.document ?? el2.ownerDocument;
+      const data = normalizeCartesian(props);
+      const colors = resolvePalette(
+        data.series.length,
+        /** @type {string[]} */
+        props.palette
+      );
+      patchChartHost(el2, doc, props, {
+        empty: data.empty,
+        legendItems: data.series.map((s, i) => ({
+          name: s.name,
+          color: colors[i],
+          mark: seriesMark(i)
+        })),
+        tableModel: cartesianTableModel(
+          data.labels,
+          data.series,
+          filled ? "Area chart data" : "Line chart data"
+        ),
+        paint(svg, _size, plot) {
+          paintLine(doc, svg, plot, props, data, colors, filled);
+        }
+      });
+    },
+    unmount(el2) {
+      unmountChartHost(el2);
+    }
+  });
+}
+var LineChart, AreaChart;
+var init_LineChart = __esm({
+  "src/Browser/components/charts/LineChart.js"() {
+    init_kernel();
+    LineChart = makeLineLike("LineChart", false);
+    AreaChart = makeLineLike("AreaChart", true);
+  }
+});
+
+// src/Browser/components/charts/AreaChart.js
+var init_AreaChart = __esm({
+  "src/Browser/components/charts/AreaChart.js"() {
+    init_LineChart();
+  }
+});
+
+// src/Browser/components/charts/HorizontalBarChart.js
+function paintHBar(doc, svg, plot, props, data, colors) {
+  const variant = props.variant === "stacked" ? "stacked" : "grouped";
+  const values = collectValues(data.series, variant);
+  const xDomain = niceDomain(values);
+  const yScale = bandScale(data.labels, [plot.y0, plot.y1]);
+  const xScale = linearScale(xDomain[0], xDomain[1], [plot.x0, plot.x1]);
+  const xTicks = niceTicks(xDomain[0], xDomain[1], 5).map((v) => ({
+    label: formatTick(v),
+    x: xScale(v)
+  }));
+  const yTicks = data.labels.map((label, i) => ({
+    label,
+    y: yScale(i) + yScale.bandwidth / 2
+  }));
+  svg.appendChild(
+    renderAxes(doc, {
+      x0: plot.x0,
+      x1: plot.x1,
+      y0: plot.y0,
+      y1: plot.y1,
+      xTicks,
+      yTicks: yTicks.map((t) => ({ label: t.label, y: t.y })),
+      xLabel: props.xLabel ? String(props.xLabel) : void 0,
+      yLabel: props.yLabel ? String(props.yLabel) : void 0,
+      grid: props.grid !== false
+    })
+  );
+  const rects = horizontalBarRects(
+    { labels: data.labels, series: data.series, variant },
+    { x0: plot.x0, x1: plot.x1, y0: plot.y0, y1: plot.y1, xDomain }
+  );
+  const g = svgEl(doc, "g", { class: "canvas-chart__series" });
+  for (const r of rects) {
+    const mark = seriesMark(r.si);
+    const rect = svgEl(doc, "rect", {
+      class: "canvas-chart__bar canvas-chart__bar--horizontal",
+      x: r.x,
+      y: r.y,
+      width: Math.max(0, r.width),
+      height: Math.max(0, r.height),
+      fill: colors[r.si % colors.length],
+      "data-mark": mark
+    });
+    markDatapoint(rect, {
+      id: `hbar-${r.si}-${r.i}`,
+      label: `${r.series}, ${r.label}: ${r.value}`
+    });
+    g.appendChild(rect);
+  }
+  svg.appendChild(g);
+}
+var HorizontalBarChart;
+var init_HorizontalBarChart = __esm({
+  "src/Browser/components/charts/HorizontalBarChart.js"() {
+    init_kernel();
+    HorizontalBarChart = lifecycle6({
+      mount(doc) {
+        return mountChartHost(doc, "HorizontalBarChart");
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        const data = normalizeCartesian(props);
+        const colors = resolvePalette(
+          data.series.length,
+          /** @type {string[]} */
+          props.palette
+        );
+        patchChartHost(el2, doc, props, {
+          empty: data.empty,
+          legendItems: data.series.map((s, i) => ({
+            name: s.name,
+            color: colors[i],
+            mark: seriesMark(i)
+          })),
+          tableModel: cartesianTableModel(data.labels, data.series, "Horizontal bar chart data"),
+          paint(svg, _size, plot) {
+            paintHBar(doc, svg, plot, props, data, colors);
+          }
+        });
+      },
+      unmount(el2) {
+        unmountChartHost(el2);
+      }
+    });
+  }
+});
+
+// src/Browser/components/charts/PieChart.js
+var PieChart;
+var init_PieChart = __esm({
+  "src/Browser/components/charts/PieChart.js"() {
+    init_kernel();
+    PieChart = lifecycle6({
+      mount(doc) {
+        return mountChartHost(doc, "PieChart");
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        const { items, empty } = normalizeSlices(props);
+        const colors = resolvePalette(
+          items.length,
+          /** @type {string[]} */
+          props.palette
+        );
+        const variant = props.variant === "donut" ? "donut" : "pie";
+        const appearance = props.appearance === "semiCircular" ? "semiCircular" : "circular";
+        patchChartHost(el2, doc, props, {
+          empty,
+          legendItems: items.map((it, i) => ({
+            name: it.label,
+            color: colors[i],
+            mark: seriesMark(i)
+          })),
+          tableModel: slicesTableModel(items, "Pie chart data"),
+          paint(svg, size, plot) {
+            const cx = (plot.x0 + plot.x1) / 2;
+            const cy = appearance === "semiCircular" ? plot.y0 + (plot.y1 - plot.y0) * 0.75 : (plot.y0 + plot.y1) / 2;
+            const rOuter = Math.max(
+              10,
+              Math.min(plot.x1 - plot.x0, plot.y1 - plot.y0) / 2 - 8
+            );
+            const rInner = variant === "donut" ? rOuter * 0.55 : 0;
+            const startAngle = appearance === "semiCircular" ? Math.PI : -Math.PI / 2;
+            const endAngle = appearance === "semiCircular" ? 2 * Math.PI : startAngle + Math.PI * 2;
+            const slices = pieSlices(items, {
+              cx,
+              cy,
+              rOuter,
+              rInner,
+              startAngle,
+              endAngle,
+              padAngle: 0.02
+            });
+            const g = svgEl(doc, "g", { class: "canvas-chart__series" });
+            slices.forEach((s, i) => {
+              const path = svgEl(doc, "path", {
+                class: "canvas-chart__slice",
+                d: s.path,
+                fill: colors[i],
+                "data-mark": seriesMark(i)
+              });
+              markDatapoint(path, {
+                id: `pie-${i}`,
+                label: `${s.label}: ${s.value} (${s.percent.toFixed(1)}%)`
+              });
+              g.appendChild(path);
+            });
+            svg.appendChild(g);
+          }
+        });
+      },
+      unmount(el2) {
+        unmountChartHost(el2);
+      }
+    });
+  }
+});
+
+// src/Browser/components/charts/SingleStackedBarChart.js
+var SingleStackedBarChart;
+var init_SingleStackedBarChart = __esm({
+  "src/Browser/components/charts/SingleStackedBarChart.js"() {
+    init_kernel();
+    SingleStackedBarChart = lifecycle6({
+      mount(doc) {
+        return mountChartHost(doc, "SingleStackedBarChart");
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        const { items, empty } = normalizeSlices(props);
+        const colors = resolvePalette(
+          items.length,
+          /** @type {string[]} */
+          props.palette
+        );
+        patchChartHost(el2, doc, props, {
+          empty,
+          legendItems: items.map((it, i) => ({
+            name: it.label,
+            color: colors[i],
+            mark: seriesMark(i)
+          })),
+          tableModel: slicesTableModel(items, "Stacked bar data"),
+          paint(svg, _size, plot) {
+            const barY = (plot.y0 + plot.y1) / 2 - 14;
+            const segs = stackedBarSegments(items, {
+              x0: plot.x0,
+              x1: plot.x1,
+              y: barY,
+              height: 28
+            });
+            const g = svgEl(doc, "g", { class: "canvas-chart__series" });
+            g.appendChild(
+              svgEl(doc, "rect", {
+                class: "canvas-chart__stack-track",
+                x: plot.x0,
+                y: barY,
+                width: Math.max(0, plot.x1 - plot.x0),
+                height: 28,
+                rx: 4
+              })
+            );
+            for (const s of segs) {
+              const rect = svgEl(doc, "rect", {
+                class: "canvas-chart__stack-seg",
+                x: s.x,
+                y: s.y,
+                width: Math.max(0, s.width),
+                height: s.height,
+                fill: colors[s.i % colors.length],
+                "data-mark": seriesMark(s.i)
+              });
+              markDatapoint(rect, {
+                id: `stack-${s.i}`,
+                label: `${s.label}: ${s.value} (${s.percent.toFixed(1)}%)`
+              });
+              g.appendChild(rect);
+            }
+            svg.appendChild(g);
+          }
+        });
+      },
+      unmount(el2) {
+        unmountChartHost(el2);
+      }
+    });
+  }
+});
+
+// src/Browser/components/charts/RadarChart.js
+var RadarChart;
+var init_RadarChart = __esm({
+  "src/Browser/components/charts/RadarChart.js"() {
+    init_kernel();
+    RadarChart = lifecycle6({
+      mount(doc) {
+        return mountChartHost(doc, "RadarChart");
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        const data = normalizeCartesian(props);
+        const colors = resolvePalette(
+          data.series.length,
+          /** @type {string[]} */
+          props.palette
+        );
+        const max = Math.max(...collectValues(data.series), 1);
+        patchChartHost(el2, doc, props, {
+          empty: data.empty || data.labels.length < 3,
+          emptyMessage: data.labels.length < 3 ? "Radar needs at least 3 categories" : "No chart data",
+          legendItems: data.series.map((s, i) => ({
+            name: s.name,
+            color: colors[i],
+            mark: seriesMark(i)
+          })),
+          tableModel: cartesianTableModel(data.labels, data.series, "Radar chart data"),
+          paint(svg, _size, plot) {
+            const cx = (plot.x0 + plot.x1) / 2;
+            const cy = (plot.y0 + plot.y1) / 2;
+            const r = Math.max(12, Math.min(plot.x1 - plot.x0, plot.y1 - plot.y0) / 2 - 20);
+            const axisVals = data.labels.map(() => max);
+            const base = radarGeometry(axisVals, { cx, cy, r, max, levels: 4 });
+            const grid = svgEl(doc, "g", { class: "canvas-chart__radar-grid" });
+            for (const ring of base.rings) {
+              grid.appendChild(
+                svgEl(doc, "path", {
+                  class: "canvas-chart__radar-ring",
+                  d: ring,
+                  fill: "none"
+                })
+              );
+            }
+            for (const ax of base.axes) {
+              grid.appendChild(
+                svgEl(doc, "line", {
+                  class: "canvas-chart__radar-axis",
+                  x1: ax.x1,
+                  y1: ax.y1,
+                  x2: ax.x2,
+                  y2: ax.y2
+                })
+              );
+              const label = data.labels[ax.i] || "";
+              if (r >= 48 && label) {
+                const lx = ax.x2 + (ax.x2 - cx) * 0.08;
+                const ly = ax.y2 + (ax.y2 - cy) * 0.08;
+                const t = svgEl(doc, "text", {
+                  class: "canvas-chart__tick-label",
+                  x: lx,
+                  y: ly,
+                  "text-anchor": "middle",
+                  "dominant-baseline": "middle"
+                });
+                t.textContent = label;
+                grid.appendChild(t);
+              }
+            }
+            svg.appendChild(grid);
+            data.series.forEach((s, si) => {
+              const mark = seriesMark(si);
+              const geo = radarGeometry(s.values.slice(0, data.labels.length), {
+                cx,
+                cy,
+                r,
+                max
+              });
+              const g = svgEl(doc, "g", { class: "canvas-chart__series" });
+              g.appendChild(
+                svgEl(doc, "path", {
+                  class: "canvas-chart__radar-area",
+                  d: geo.polygon,
+                  fill: colors[si],
+                  opacity: "0.2",
+                  stroke: colors[si],
+                  "stroke-width": "2",
+                  "stroke-dasharray": dashForMark(mark),
+                  "data-mark": mark
+                })
+              );
+              for (const p of geo.points) {
+                const c = svgEl(doc, "circle", {
+                  class: "canvas-chart__point",
+                  cx: p.x,
+                  cy: p.y,
+                  r: 3.5,
+                  fill: colors[si]
+                });
+                markDatapoint(c, {
+                  id: `radar-${si}-${p.i}`,
+                  label: `${s.name}, ${data.labels[p.i]}: ${p.value}`
+                });
+                g.appendChild(c);
+              }
+              svg.appendChild(g);
+            });
+          }
+        });
+      },
+      unmount(el2) {
+        unmountChartHost(el2);
+      }
+    });
+  }
+});
+
+// src/Browser/components/charts/RadialChart.js
+var RadialChart;
+var init_RadialChart = __esm({
+  "src/Browser/components/charts/RadialChart.js"() {
+    init_kernel();
+    RadialChart = lifecycle6({
+      mount(doc) {
+        return mountChartHost(doc, "RadialChart");
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        const { items, empty } = normalizeSlices(props);
+        const colors = resolvePalette(
+          items.length,
+          /** @type {string[]} */
+          props.palette
+        );
+        patchChartHost(el2, doc, props, {
+          empty,
+          legendItems: items.map((it, i) => ({
+            name: it.label,
+            color: colors[i],
+            mark: seriesMark(i)
+          })),
+          tableModel: slicesTableModel(items, "Radial chart data"),
+          paint(svg, _size, plot) {
+            const cx = (plot.x0 + plot.x1) / 2;
+            const cy = (plot.y0 + plot.y1) / 2;
+            const rOuter = Math.max(12, Math.min(plot.x1 - plot.x0, plot.y1 - plot.y0) / 2 - 8);
+            const rInner = rOuter * 0.35;
+            const start = -Math.PI / 2;
+            const end = start + Math.PI * 2;
+            const bars = radialBars(items, { cx, cy, rOuter, rInner, startAngle: start, endAngle: end });
+            const g = svgEl(doc, "g", { class: "canvas-chart__series" });
+            bars.forEach((b, i) => {
+              g.appendChild(
+                svgEl(doc, "path", {
+                  class: "canvas-chart__radial-track",
+                  d: donutArcPath(cx, cy, b.rOuter, b.rInner, start, end),
+                  fill: "var(--canvas-surface-sunk, #eee)"
+                })
+              );
+              const path = svgEl(doc, "path", {
+                class: "canvas-chart__radial-bar",
+                d: b.path,
+                fill: colors[i],
+                "data-mark": seriesMark(i)
+              });
+              markDatapoint(path, {
+                id: `radial-${i}`,
+                label: `${b.label}: ${b.value}`
+              });
+              g.appendChild(path);
+            });
+            svg.appendChild(g);
+          }
+        });
+      },
+      unmount(el2) {
+        unmountChartHost(el2);
+      }
+    });
+  }
+});
+
+// src/Browser/components/charts/ScatterChart.js
+var ScatterChart;
+var init_ScatterChart = __esm({
+  "src/Browser/components/charts/ScatterChart.js"() {
+    init_kernel();
+    ScatterChart = lifecycle6({
+      mount(doc) {
+        return mountChartHost(doc, "ScatterChart");
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        const { datasets, empty } = normalizeScatter(props);
+        const colors = resolvePalette(
+          datasets.length,
+          /** @type {string[]} */
+          props.palette
+        );
+        patchChartHost(el2, doc, props, {
+          empty,
+          legendItems: datasets.map((d, i) => ({
+            name: d.name || `Series ${i + 1}`,
+            color: colors[i],
+            mark: seriesMark(i)
+          })),
+          tableModel: scatterTableModel(datasets, "Scatter chart data"),
+          paint(svg, _size, plot) {
+            const xs = datasets.flatMap((d) => d.points.map((p) => p.x));
+            const ys = datasets.flatMap((d) => d.points.map((p) => p.y));
+            const xDomain = niceDomain(xs.length ? xs : [0, 1], { includeZero: false, pad: 0.08 });
+            const yDomain = niceDomain(ys.length ? ys : [0, 1], { includeZero: false, pad: 0.08 });
+            const xScale = linearScale(xDomain[0], xDomain[1], [plot.x0, plot.x1]);
+            const yScale = linearScale(yDomain[0], yDomain[1], [plot.y1, plot.y0]);
+            svg.appendChild(
+              renderAxes(doc, {
+                x0: plot.x0,
+                x1: plot.x1,
+                y0: plot.y0,
+                y1: plot.y1,
+                xTicks: niceTicks(xDomain[0], xDomain[1], 5).map((v) => ({
+                  label: formatTick(v),
+                  x: xScale(v)
+                })),
+                yTicks: buildYTicks(yDomain, yScale),
+                xLabel: props.xLabel ? String(props.xLabel) : void 0,
+                yLabel: props.yLabel ? String(props.yLabel) : void 0,
+                grid: props.grid !== false
+              })
+            );
+            const pts = scatterPositions(datasets, {
+              x0: plot.x0,
+              x1: plot.x1,
+              y0: plot.y0,
+              y1: plot.y1,
+              xDomain,
+              yDomain
+            });
+            const g = svgEl(doc, "g", { class: "canvas-chart__series" });
+            const shape = props.shape === "square" ? "square" : "circle";
+            for (const p of pts) {
+              let node;
+              if (shape === "square") {
+                const s = 7;
+                node = svgEl(doc, "rect", {
+                  class: "canvas-chart__point",
+                  x: p.x - s / 2,
+                  y: p.y - s / 2,
+                  width: s,
+                  height: s,
+                  fill: colors[p.si % colors.length],
+                  "data-mark": seriesMark(p.si)
+                });
+              } else {
+                node = svgEl(doc, "circle", {
+                  class: "canvas-chart__point",
+                  cx: p.x,
+                  cy: p.y,
+                  r: 4,
+                  fill: colors[p.si % colors.length],
+                  "data-mark": seriesMark(p.si)
+                });
+              }
+              markDatapoint(node, {
+                id: `scatter-${p.si}-${p.i}`,
+                label: `${p.series || "Point"}: (${p.vx}, ${p.vy})`
+              });
+              g.appendChild(node);
+            }
+            svg.appendChild(g);
+          }
+        });
+      },
+      unmount(el2) {
+        unmountChartHost(el2);
+      }
+    });
+  }
+});
+
+// src/Browser/components/charts/dataLeaf.js
+function dataLeaf(typeName) {
+  return lifecycle({
+    mount(doc) {
+      const el2 = doc.createElement("span");
+      el2.setAttribute("data-canvas-component", typeName);
+      el2.setAttribute("hidden", "");
+      return el2;
+    },
+    patch(el2, props = {}) {
+      el2.setAttribute("data-leaf", typeName);
+      const label = props.category ?? props.label ?? props.name ?? "";
+      if (label !== "") el2.setAttribute("data-label", String(label));
+    }
+  });
+}
+var Series, Slice, ScatterSeries, Point;
+var init_dataLeaf = __esm({
+  "src/Browser/components/charts/dataLeaf.js"() {
+    init_shared();
+    Series = dataLeaf("Series");
+    Slice = dataLeaf("Slice");
+    ScatterSeries = dataLeaf("ScatterSeries");
+    Point = dataLeaf("Point");
+  }
+});
+
+// src/Browser/components/charts/registerCharts.js
+var registerCharts_exports = {};
+__export(registerCharts_exports, {
+  AreaChart: () => AreaChart,
+  BarChart: () => BarChart,
+  CHART_COMPONENTS: () => CHART_COMPONENTS,
+  HorizontalBarChart: () => HorizontalBarChart,
+  LineChart: () => LineChart,
+  PieChart: () => PieChart,
+  RadarChart: () => RadarChart,
+  RadialChart: () => RadialChart,
+  ScatterChart: () => ScatterChart,
+  SingleStackedBarChart: () => SingleStackedBarChart,
+  default: () => registerCharts_default,
+  registerCharts: () => registerCharts
+});
+function registerCharts(registry) {
+  if (!registry || typeof registry.register !== "function") {
+    throw new Error("registerCharts: registry with register() required");
+  }
+  for (const [type, entry] of Object.entries(CHART_COMPONENTS)) {
+    registry.register(type, entry);
+  }
+  return registry;
+}
+var CHART_COMPONENTS, registerCharts_default;
+var init_registerCharts = __esm({
+  "src/Browser/components/charts/registerCharts.js"() {
+    init_BarChart();
+    init_LineChart();
+    init_AreaChart();
+    init_HorizontalBarChart();
+    init_PieChart();
+    init_SingleStackedBarChart();
+    init_RadarChart();
+    init_RadialChart();
+    init_ScatterChart();
+    init_dataLeaf();
+    CHART_COMPONENTS = {
+      BarChart,
+      LineChart,
+      AreaChart,
+      HorizontalBarChart,
+      PieChart,
+      SingleStackedBarChart,
+      RadarChart,
+      RadialChart,
+      ScatterChart,
+      Series,
+      Slice,
+      ScatterSeries,
+      Point
+    };
+    registerCharts_default = registerCharts;
+  }
+});
+
+// src/Browser/components/tools/shared.js
+function requireDocument7(ctx = {}) {
+  const doc = ctx.document ?? globalThis.document;
+  if (!doc?.createElement) {
+    throw new Error("tools component: ctx.document required");
+  }
+  return doc;
+}
+function setClass7(el2, className) {
+  el2.setAttribute("class", String(className).trim());
+}
+function clearChildren7(el2) {
+  while (el2.firstChild) {
+    el2.removeChild(el2.firstChild);
+  }
+}
+function asText7(value) {
+  if (value == null) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return "";
+}
+function prefersReducedMotion3(props = {}, ctx = {}) {
+  if (props.reducedMotion === true || props.reduceMotion === true) return true;
+  if (ctx.reducedMotion === true) return true;
+  try {
+    const mq = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)");
+    if (mq?.matches) return true;
+  } catch {
+  }
+  return false;
+}
+function lifecycle7(impl) {
+  return {
+    create(props = {}, ctx = {}) {
+      const doc = requireDocument7(ctx);
+      const el2 = impl.mount(doc, props, ctx);
+      impl.patch(el2, props, ctx);
+      return el2;
+    },
+    update(el2, props = {}, ctx = {}) {
+      impl.patch(el2, props, ctx);
+    },
+    destroy(el2, ctx = {}) {
+      impl.unmount?.(el2, ctx);
+    },
+    ownsChildren: impl.ownsChildren !== false
+  };
+}
+function defaultToolLabel(status, name) {
+  const key = (
+    /** @type {ToolStatus} */
+    status
+  );
+  if (!TOOL_STATUS_LABELS[key]) return name ? `${name}: ${status}` : String(status);
+  if (!name || !String(name).trim()) return TOOL_NAMELESS_LABELS[key];
+  return TOOL_STATUS_LABELS[key](name);
+}
+function defaultRunLabel(phase) {
+  switch (phase) {
+    case "start":
+      return "Run started";
+    case "finish":
+      return "Run finished";
+    case "error":
+      return "Run failed";
+    default:
+      return `Run ${phase}`;
+  }
+}
+var TOOL_STATUS_LABELS, TOOL_NAMELESS_LABELS;
+var init_shared5 = __esm({
+  "src/Browser/components/tools/shared.js"() {
+    TOOL_STATUS_LABELS = {
+      streaming: (n) => `Calling the ${n} tool`,
+      executing: (n) => `Running the ${n} tool`,
+      complete: (n) => `Called the ${n} tool`,
+      result: (n) => `${n} result`,
+      error: (n) => `${n} failed`
+    };
+    TOOL_NAMELESS_LABELS = {
+      streaming: "Calling the tool",
+      executing: "Running the tool",
+      complete: "Called the tool",
+      result: "Tool result",
+      error: "Tool failed"
+    };
+  }
+});
+
+// src/Browser/components/tools/partialJson.js
+function balanceOpenJSON(raw) {
+  const closers = [];
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === "\\") escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') inString = true;
+    else if (ch === "{") closers.push("}");
+    else if (ch === "[") closers.push("]");
+    else if (ch === "}" || ch === "]") closers.pop();
+  }
+  let out = raw;
+  if (inString) {
+    if (escaped) out = out.slice(0, -1);
+    out += '"';
+  }
+  out = out.replace(/(?:,\s*)?"(?:[^"\\]|\\.)*"\s*:\s*$/, "");
+  out = out.replace(/,\s*$/, "");
+  for (let i = closers.length - 1; i >= 0; i--) out += closers[i];
+  return out;
+}
+function partialJSONParse(raw) {
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+  }
+  try {
+    return JSON.parse(balanceOpenJSON(raw));
+  } catch {
+    return {};
+  }
+}
+function isPartialJsonString(raw) {
+  if (!raw || !String(raw).trim()) return true;
+  try {
+    JSON.parse(raw);
+    return false;
+  } catch {
+    return true;
+  }
+}
+var init_partialJson = __esm({
+  "src/Browser/components/tools/partialJson.js"() {
+  }
+});
+
+// src/Browser/components/tools/redact.js
+function isSensitiveKey(key) {
+  return SENSITIVE_KEY_RE.test(String(key || ""));
+}
+function redactValue(value, opts = {}) {
+  const depth = opts.depth ?? 0;
+  if (depth > 12) return REDACTED;
+  if (value == null) return value;
+  if (typeof value === "string") {
+    if (/^(?:sk-|Bearer\s+)/i.test(value) || value.length > 40 && /^[A-Za-z0-9_\-.=]+$/.test(value)) {
+      return REDACTED;
+    }
+    return value;
+  }
+  if (typeof value !== "object") return value;
+  if (Array.isArray(value)) {
+    return value.map((v) => redactValue(v, { depth: depth + 1 }));
+  }
+  const out = {};
+  for (const [k, v] of Object.entries(
+    /** @type {Record<string, unknown>} */
+    value
+  )) {
+    out[k] = isSensitiveKey(k) ? REDACTED : redactValue(v, { depth: depth + 1 });
+  }
+  return out;
+}
+function redactForDisplay(value) {
+  try {
+    const redacted = redactValue(value);
+    if (typeof redacted === "string") return redacted;
+    return JSON.stringify(redacted, null, 2);
+  } catch {
+    return String(value ?? "");
+  }
+}
+var SENSITIVE_KEY_RE, REDACTED;
+var init_redact = __esm({
+  "src/Browser/components/tools/redact.js"() {
+    SENSITIVE_KEY_RE = /^(?:password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key|private[_-]?key|authorization|auth|credential|cookie|session)$/i;
+    REDACTED = "[REDACTED]";
+  }
+});
+
+// src/Browser/components/tools/ToolActivity.js
+function normalizeToolActivity(props = {}) {
+  const activity = props.activity && typeof props.activity === "object" ? (
+    /** @type {Record<string, unknown>} */
+    props.activity
+  ) : props;
+  let status = asText7(activity.status || props.status) || "executing";
+  if (status === "success") status = "complete";
+  if (!STATUSES.has(status)) status = "executing";
+  const toolCall = activity.toolCall && typeof activity.toolCall === "object" ? (
+    /** @type {Record<string, unknown>} */
+    activity.toolCall
+  ) : null;
+  const fn = toolCall?.function && typeof toolCall.function === "object" ? (
+    /** @type {Record<string, unknown>} */
+    toolCall.function
+  ) : null;
+  const toolName = asText7(activity.toolName) || asText7(props.toolName) || asText7(fn?.name) || asText7(activity.name) || "";
+  const rawArgs = asText7(props.rawArgs) || asText7(activity.rawArgs) || asText7(fn?.arguments) || (typeof activity.arguments === "string" ? activity.arguments : "") || "";
+  let input = activity.input !== void 0 ? activity.input : props.input;
+  if (input === void 0) {
+    input = rawArgs ? partialJSONParse(rawArgs) : {};
+  }
+  const isPartial2 = activity.isPartial === true || props.isPartial === true || status === "streaming" || (rawArgs ? isPartialJsonString(rawArgs) : false);
+  const result = asText7(activity.result) || asText7(props.result) || asText7(activity.content) || "";
+  const errorText = asText7(activity.errorText) || asText7(props.errorText) || asText7(activity.error) || asText7(props.error) || "";
+  const isError = activity.isError === true || status === "error" || Boolean(errorText);
+  return {
+    status: isError && status !== "error" ? "error" : status,
+    id: asText7(activity.id) || asText7(props.id) || asText7(toolCall?.id) || "",
+    toolName,
+    rawArgs,
+    input,
+    result,
+    errorText,
+    statusMessage: asText7(activity.statusMessage) || asText7(props.statusMessage),
+    isError,
+    isPartial: isPartial2
+  };
+}
+function resolveRequestDisplay(activity) {
+  const input = activity.input;
+  if (input && typeof input === "object" && !Array.isArray(input)) {
+    const obj = (
+      /** @type {Record<string, unknown>} */
+      input
+    );
+    if (obj._request != null) return redactForDisplay(obj._request);
+    if (Object.keys(obj).length === 0 && activity.rawArgs.trim()) {
+      return activity.rawArgs;
+    }
+  }
+  if (activity.isPartial && activity.rawArgs.trim()) {
+    const parsed = partialJSONParse(activity.rawArgs);
+    if (parsed && typeof parsed === "object" && Object.keys(
+      /** @type {object} */
+      parsed
+    ).length) {
+      return redactForDisplay(parsed);
+    }
+    return activity.rawArgs;
+  }
+  return redactForDisplay(input);
+}
+var STATUSES, ToolActivity;
+var init_ToolActivity = __esm({
+  "src/Browser/components/tools/ToolActivity.js"() {
+    init_shared5();
+    init_partialJson();
+    init_redact();
+    STATUSES = /* @__PURE__ */ new Set(["streaming", "executing", "complete", "result", "error"]);
+    ToolActivity = lifecycle7({
+      mount(doc) {
+        const el2 = doc.createElement("div");
+        el2.setAttribute("data-canvas-component", "ToolActivity");
+        return el2;
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        const activity = normalizeToolActivity(props);
+        const reduced = prefersReducedMotion3(props, ctx);
+        const running = props.running !== false && ctx.running !== false;
+        const isBusy = (activity.status === "streaming" || activity.status === "executing") && running;
+        let cls = `canvas-tool-activity canvas-tool-activity--${activity.status}`;
+        if (isBusy) cls += " canvas-tool-activity--busy";
+        if (reduced) cls += " canvas-tool-activity--reduced-motion";
+        if (activity.isPartial) cls += " canvas-tool-activity--partial";
+        setClass7(el2, cls);
+        el2.setAttribute("data-status", activity.status);
+        el2.setAttribute("data-partial", activity.isPartial ? "1" : "0");
+        el2.setAttribute("data-tool-name", activity.toolName || "");
+        if (activity.id) el2.setAttribute("data-tool-id", activity.id);
+        else el2.removeAttribute("data-tool-id");
+        clearChildren7(el2);
+        const live = doc.createElement("div");
+        live.setAttribute("class", "canvas-tool-activity__live");
+        live.setAttribute("aria-live", "polite");
+        live.setAttribute("aria-atomic", "true");
+        const label = activity.statusMessage || defaultToolLabel(activity.status, activity.toolName);
+        live.textContent = label;
+        el2.appendChild(live);
+        const header = doc.createElement("div");
+        header.setAttribute("class", "canvas-tool-activity__header");
+        const icon = doc.createElement("span");
+        icon.setAttribute("class", "canvas-tool-activity__icon");
+        icon.setAttribute("aria-hidden", "true");
+        icon.setAttribute("data-spin", isBusy && !reduced ? "1" : "0");
+        icon.textContent = activity.status === "error" ? "!" : activity.status === "complete" || activity.status === "result" ? "\u2713" : "\u25C9";
+        header.appendChild(icon);
+        const title = doc.createElement("span");
+        title.setAttribute("class", "canvas-tool-activity__title");
+        title.textContent = label;
+        header.appendChild(title);
+        el2.appendChild(header);
+        const request = resolveRequestDisplay(activity);
+        if (request) {
+          const req = doc.createElement("pre");
+          req.setAttribute("class", "canvas-tool-activity__request");
+          req.setAttribute("data-role", "args");
+          if (activity.isPartial) req.setAttribute("data-partial", "1");
+          req.textContent = request;
+          el2.appendChild(req);
+        }
+        if (activity.status === "result" || activity.status === "complete" || activity.status === "error") {
+          if (activity.result) {
+            const res = doc.createElement("pre");
+            res.setAttribute("class", "canvas-tool-activity__result");
+            res.setAttribute("data-role", "result");
+            let display = activity.result;
+            try {
+              display = redactForDisplay(JSON.parse(activity.result));
+            } catch {
+              display = redactForDisplay(activity.result);
+            }
+            res.textContent = display;
+            el2.appendChild(res);
+          }
+          if (activity.errorText) {
+            const err = doc.createElement("div");
+            err.setAttribute("class", "canvas-tool-activity__error");
+            err.setAttribute("data-role", "error");
+            err.setAttribute("role", "alert");
+            err.textContent = activity.errorText;
+            el2.appendChild(err);
+          }
+        }
+        el2.setAttribute("data-input-redacted", JSON.stringify(redactValue(activity.input)));
+      }
+    });
+  }
+});
+
+// src/Browser/components/tools/RunStatus.js
+function normalizeRunStatus(props = {}) {
+  let phase = asText7(props.phase) || asText7(props.status) || asText7(props.event) || "start";
+  if (phase === "started" || phase === "run_started" || phase === "RUN_STARTED") phase = "start";
+  if (phase === "finished" || phase === "run_finished" || phase === "RUN_FINISHED" || phase === "complete") {
+    phase = "finish";
+  }
+  if (phase === "run_error" || phase === "RUN_ERROR" || phase === "failed") phase = "error";
+  if (!PHASES.has(phase)) phase = "start";
+  const message = asText7(props.message) || asText7(props.statusMessage) || asText7(props.error) || defaultRunLabel(phase);
+  return {
+    phase,
+    message,
+    runId: asText7(props.runId) || asText7(props.id) || ""
+  };
+}
+var PHASES, RunStatus;
+var init_RunStatus = __esm({
+  "src/Browser/components/tools/RunStatus.js"() {
+    init_shared5();
+    PHASES = /* @__PURE__ */ new Set(["start", "finish", "error"]);
+    RunStatus = lifecycle7({
+      mount(doc) {
+        const el2 = doc.createElement("div");
+        el2.setAttribute("data-canvas-component", "RunStatus");
+        return el2;
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        const run = normalizeRunStatus(props);
+        const reduced = prefersReducedMotion3(props, ctx);
+        let cls = `canvas-run-status canvas-run-status--${run.phase}`;
+        if (reduced) cls += " canvas-run-status--reduced-motion";
+        setClass7(el2, cls);
+        el2.setAttribute("data-phase", run.phase);
+        if (run.runId) el2.setAttribute("data-run-id", run.runId);
+        else el2.removeAttribute("data-run-id");
+        clearChildren7(el2);
+        const live = doc.createElement("div");
+        live.setAttribute("class", "canvas-run-status__live");
+        live.setAttribute("aria-live", "polite");
+        live.setAttribute("aria-atomic", "true");
+        live.textContent = run.message;
+        el2.appendChild(live);
+        const row = doc.createElement("div");
+        row.setAttribute("class", "canvas-run-status__row");
+        const icon = doc.createElement("span");
+        icon.setAttribute("class", "canvas-run-status__icon");
+        icon.setAttribute("aria-hidden", "true");
+        icon.textContent = run.phase === "error" ? "!" : run.phase === "finish" ? "\u2713" : "\u25B6";
+        row.appendChild(icon);
+        const label = doc.createElement("span");
+        label.setAttribute("class", "canvas-run-status__label");
+        label.textContent = run.message;
+        row.appendChild(label);
+        el2.appendChild(row);
+        if (run.phase === "error" && asText7(props.detail)) {
+          const detail = doc.createElement("pre");
+          detail.setAttribute("class", "canvas-run-status__detail");
+          detail.textContent = asText7(props.detail);
+          el2.appendChild(detail);
+        }
+      }
+    });
+  }
+});
+
+// src/Browser/components/tools/registerTools.js
+var registerTools_exports = {};
+__export(registerTools_exports, {
+  RunStatus: () => RunStatus,
+  TOOL_COMPONENTS: () => TOOL_COMPONENTS,
+  ToolActivity: () => ToolActivity,
+  balanceOpenJSON: () => balanceOpenJSON,
+  default: () => registerTools_default,
+  isPartialJsonString: () => isPartialJsonString,
+  isSensitiveKey: () => isSensitiveKey,
+  partialJSONParse: () => partialJSONParse,
+  redactForDisplay: () => redactForDisplay,
+  redactValue: () => redactValue,
+  registerTools: () => registerTools
+});
+function registerTools(registry) {
+  if (!registry || typeof registry.register !== "function") {
+    throw new Error("registerTools: registry with register() required");
+  }
+  for (const [type, entry] of Object.entries(TOOL_COMPONENTS)) {
+    registry.register(type, entry);
+  }
+  return registry;
+}
+var TOOL_COMPONENTS, registerTools_default;
+var init_registerTools = __esm({
+  "src/Browser/components/tools/registerTools.js"() {
+    init_ToolActivity();
+    init_RunStatus();
+    init_partialJson();
+    init_redact();
+    TOOL_COMPONENTS = {
+      ToolActivity,
+      RunStatus,
+      // Aliases matching stream event vocabulary
+      ToolCall: ToolActivity,
+      ToolResult: {
+        create(props = {}, ctx = {}) {
+          return ToolActivity.create({ ...props, status: props.status || "result" }, ctx);
+        },
+        update(el2, props = {}, ctx = {}) {
+          return ToolActivity.update(el2, { ...props, status: props.status || "result" }, ctx);
+        },
+        destroy(el2, ctx = {}) {
+          return ToolActivity.destroy(el2, ctx);
+        },
+        ownsChildren: true
+      }
+    };
+    registerTools_default = registerTools;
+  }
+});
+
+// src/Browser/components/chat/FollowUpItem.js
+var FollowUpItem;
+var init_FollowUpItem = __esm({
+  "src/Browser/components/chat/FollowUpItem.js"() {
+    init_shared();
+    init_continueConversation();
+    FollowUpItem = lifecycle({
+      mount(doc) {
+        const el2 = doc.createElement("button");
+        el2.setAttribute("type", "button");
+        el2.setAttribute("data-canvas-component", "FollowUpItem");
+        return el2;
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        const text2 = asText(props.text);
+        const streaming = ctx.stream?.isStreaming === true;
+        setClass(el2, "canvas-follow-up-item");
+        el2.setAttribute("data-streaming-blocked", streaming ? "true" : "false");
+        setOrRemoveAttr(el2, "disabled", streaming ? "true" : null);
+        setOrRemoveAttr(el2, "aria-disabled", streaming ? "true" : null);
+        clearChildren(el2);
+        if (text2) {
+          const span = doc.createElement("span");
+          span.setAttribute("class", "canvas-follow-up-item__text");
+          span.textContent = text2;
+          el2.appendChild(span);
+        }
+        if (asText(props.icon)) {
+          const icon = doc.createElement("span");
+          icon.setAttribute("class", "canvas-follow-up-item__icon");
+          icon.setAttribute("aria-hidden", "true");
+          icon.textContent = asText(props.icon);
+          el2.appendChild(icon);
+        } else {
+          const chevron = doc.createElement("span");
+          chevron.setAttribute("class", "canvas-follow-up-item__icon");
+          chevron.setAttribute("aria-hidden", "true");
+          chevron.textContent = "\u203A";
+          el2.appendChild(chevron);
+        }
+        el2.onclick = () => {
+          dispatchContinueConversation(
+            ctx,
+            {
+              ...props,
+              action: props.action ?? {
+                type: "continue_conversation",
+                context: text2,
+                message: text2
+              }
+            },
+            { fallbackMessage: text2, userGesture: true }
+          );
+        };
+      }
+    });
+  }
+});
+
+// src/Browser/components/chat/FollowUpBlock.js
+function normalizeFollowUpItems(props = {}) {
+  if (!Array.isArray(props.items)) return [];
+  return props.items.map((item) => {
+    if (typeof item === "string") return { text: item };
+    if (!item || typeof item !== "object") return null;
+    if (item.props && typeof item.props === "object") {
+      return (
+        /** @type {Record<string, unknown>} */
+        item.props
+      );
+    }
+    return (
+      /** @type {Record<string, unknown>} */
+      item
+    );
+  }).filter(Boolean);
+}
+var FollowUpBlock;
+var init_FollowUpBlock = __esm({
+  "src/Browser/components/chat/FollowUpBlock.js"() {
+    init_shared();
+    init_FollowUpItem();
+    FollowUpBlock = lifecycle({
+      mount(doc) {
+        const el2 = doc.createElement("div");
+        el2.setAttribute("data-canvas-component", "FollowUpBlock");
+        return el2;
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        const items = normalizeFollowUpItems(props);
+        setClass(el2, "canvas-follow-up-block");
+        el2.setAttribute("data-item-count", String(items.length));
+        clearChildren(el2);
+        const header = doc.createElement("div");
+        header.setAttribute("class", "canvas-follow-up-block__header");
+        header.textContent = asText(props.heading) || "Related Queries";
+        el2.appendChild(header);
+        if (typeof ctx.renderChildren === "function" && Array.isArray(props.children) && props.children.length) {
+          ctx.renderChildren(el2, props.children);
+          return;
+        }
+        for (const item of items) {
+          el2.appendChild(FollowUpItem.create(item, ctx));
+        }
+      }
+    });
+  }
+});
+
+// src/Browser/components/chat/SourceContext.js
+function getFaviconUrl(url, urlPolicy) {
+  if (!url || typeof url !== "string") return "";
+  const safe = urlPolicy && typeof urlPolicy.safeUrl === "function" ? urlPolicy.safeUrl(url) : url;
+  if (!safe) return "";
+  try {
+    const parsed = new URL(safe, "https://example.invalid");
+    if (!parsed.hostname || parsed.hostname === "example.invalid") return "";
+    const fav = `https://www.google.com/s2/favicons?sz=128&domain=${parsed.hostname}`;
+    return urlPolicy?.safeUrl ? urlPolicy.safeUrl(fav) || "" : fav;
+  } catch {
+    return "";
+  }
+}
+function enrichSources(raw, opts = {}) {
+  if (!Array.isArray(raw)) return [];
+  const urlPolicy = opts.urlPolicy;
+  const out = [];
+  for (let i = 0; i < raw.length; i++) {
+    const src = raw[i];
+    if (!src || typeof src !== "object") continue;
+    const s = (
+      /** @type {CardSource} */
+      src
+    );
+    const url = typeof s.url === "string" && urlPolicy?.safeUrl ? urlPolicy.safeUrl(s.url) : typeof s.url === "string" ? s.url : void 0;
+    out.push({
+      title: typeof s.title === "string" ? s.title : void 0,
+      sourceName: typeof s.sourceName === "string" ? s.sourceName : void 0,
+      url: url || void 0,
+      faviconUrl: getFaviconUrl(url, urlPolicy),
+      key: s.key != null ? String(s.key) : `src-${i}`
+    });
+  }
+  return out;
+}
+function createSourceContext(sources, opts = {}) {
+  const enriched = enrichSources(sources, opts);
+  return {
+    sources: enriched,
+    /**
+     * 1-based citation index → source (or undefined).
+     * @param {number} oneBased
+     */
+    getByIndex(oneBased) {
+      const n = Number(oneBased);
+      if (!Number.isFinite(n) || n < 1) return void 0;
+      return enriched[n - 1];
+    },
+    /**
+     * @param {Array<number|string>} indices 1-based
+     * @returns {SourceWithFavicon[]}
+     */
+    lookupCitations(indices) {
+      if (!Array.isArray(indices)) return [];
+      return indices.map((idx) => this.getByIndex(Number(idx))).filter(
+        (s) => s && asText(s.sourceName).trim() !== "" && asText(s.title).trim() !== ""
+      );
+    }
+  };
+}
+function getSourceContext(ctx = {}) {
+  if (ctx.sourceContext && typeof ctx.sourceContext.getByIndex === "function") {
+    return ctx.sourceContext;
+  }
+  if (Array.isArray(ctx.sources)) {
+    return createSourceContext(ctx.sources, { urlPolicy: ctx.urlPolicy });
+  }
+  return createSourceContext([], { urlPolicy: ctx.urlPolicy });
+}
+function parseIndices(props) {
+  if (Array.isArray(props.indices)) {
+    return props.indices.map(Number).filter((n) => Number.isFinite(n) && n >= 1);
+  }
+  if (typeof props.indices === "string") {
+    return props.indices.split(",").map((s) => Number(s.trim())).filter((n) => Number.isFinite(n) && n >= 1);
+  }
+  const raw = props.index ?? props.citation ?? props["data-citation"];
+  if (typeof raw === "number" && raw >= 1) return [raw];
+  if (typeof raw === "string" && /^\d+$/.test(raw.trim())) return [Number(raw)];
+  if (typeof raw === "string" && raw.includes(",")) {
+    return raw.split(",").map((s) => Number(s.trim())).filter((n) => Number.isFinite(n) && n >= 1);
+  }
+  return [];
+}
+var CitationRef;
+var init_SourceContext = __esm({
+  "src/Browser/components/chat/SourceContext.js"() {
+    init_shared();
+    CitationRef = lifecycle({
+      mount(doc) {
+        const el2 = doc.createElement("cite");
+        el2.setAttribute("data-canvas-component", "CitationRef");
+        return el2;
+      },
+      patch(el2, props = {}, ctx = {}) {
+        const doc = ctx.document ?? el2.ownerDocument;
+        const indices = parseIndices(props);
+        setClass(el2, "canvas-citation-ref");
+        el2.setAttribute("data-citation", indices.join(",") || "");
+        clearChildren(el2);
+        const sourceCtx = getSourceContext(ctx);
+        const found = sourceCtx.lookupCitations(indices);
+        if (!indices.length) {
+          el2.setAttribute("data-status", "empty");
+          el2.textContent = asText(props.label) || "";
+          return;
+        }
+        if (!found.length) {
+          el2.setAttribute("data-status", "unresolved");
+          el2.textContent = indices.join(",");
+          return;
+        }
+        el2.setAttribute("data-status", "ready");
+        el2.setAttribute("data-source-count", String(found.length));
+        for (let i = 0; i < found.length; i++) {
+          const src = found[i];
+          const chip = doc.createElement("button");
+          chip.setAttribute("type", "button");
+          chip.setAttribute("class", "canvas-citation-ref__chip");
+          chip.setAttribute("data-citation-index", String(indices[i] ?? i + 1));
+          const label = asText(src.title) || asText(src.sourceName) || String(indices[i]);
+          chip.textContent = String(indices[i] ?? i + 1);
+          chip.setAttribute("aria-label", `Source ${indices[i]}: ${label}`);
+          const safeUrl2 = src.url && ctx.urlPolicy?.safeUrl ? ctx.urlPolicy.safeUrl(src.url) : src.url;
+          if (safeUrl2) {
+            chip.setAttribute("data-source-url", safeUrl2);
+            chip.onclick = (ev) => {
+              ev?.preventDefault?.();
+              let opened = null;
+              if (ctx.urlPolicy && typeof ctx.urlPolicy.safeOpenUrl === "function") {
+                opened = ctx.urlPolicy.safeOpenUrl(safeUrl2);
+              }
+              if (!opened && typeof ctx.openUrl === "function") {
+                ctx.openUrl(safeUrl2);
+              }
+            };
+          } else {
+            chip.setAttribute("disabled", "true");
+          }
+          el2.appendChild(chip);
+        }
+      }
+    });
+  }
+});
+
+// src/Browser/components/chat/registerChatContent.js
+var registerChatContent_exports = {};
+__export(registerChatContent_exports, {
+  CHAT_CONTENT_COMPONENTS: () => CHAT_CONTENT_COMPONENTS,
+  CitationRef: () => CitationRef,
+  CodeBlock: () => CodeBlock,
+  FollowUpBlock: () => FollowUpBlock,
+  FollowUpItem: () => FollowUpItem,
+  Image: () => Image,
+  ImageBlock: () => ImageBlock,
+  ListBlock: () => ListBlock,
+  ListItem: () => ListItem,
+  default: () => registerChatContent_default,
+  registerChatContent: () => registerChatContent
+});
+function registerChatContent(registry) {
+  if (!registry || typeof registry.register !== "function") {
+    throw new Error("registerChatContent: registry with register() required");
+  }
+  for (const [type, entry] of Object.entries(CHAT_CONTENT_COMPONENTS)) {
+    registry.register(type, entry);
+  }
+  return registry;
+}
+var CHAT_CONTENT_COMPONENTS, registerChatContent_default;
+var init_registerChatContent = __esm({
+  "src/Browser/components/chat/registerChatContent.js"() {
+    init_ListBlock();
+    init_ListItem();
+    init_CodeBlock();
+    init_Image();
+    init_ImageBlock();
+    init_FollowUpBlock();
+    init_FollowUpItem();
+    init_SourceContext();
+    CHAT_CONTENT_COMPONENTS = {
+      ListBlock,
+      ListItem,
+      CodeBlock,
+      Image,
+      ImageBlock,
+      FollowUpBlock,
+      FollowUpItem,
+      CitationRef,
+      // Alias for markdown / cite wiring
+      Citation: CitationRef
+    };
+    registerChatContent_default = registerChatContent;
+  }
+});
 
 // src/Browser/renderer/partialGate.js
 var PARTIAL_ATTR = "data-openui-partial";
@@ -536,120 +7389,8 @@ function registerFoundation(registry) {
   return registry;
 }
 
-// src/Browser/security/urlPolicy.js
-var urlPolicy_exports = {};
-__export(urlPolicy_exports, {
-  isHostAllowed: () => isHostAllowed,
-  mergeNoopenerFeatures: () => mergeNoopenerFeatures,
-  relForTarget: () => relForTarget,
-  safeOpenUrl: () => safeOpenUrl,
-  safeUrl: () => safeUrl,
-  sanitizeUrl: () => sanitizeUrl,
-  toCssUrl: () => toCssUrl
-});
-var DANGEROUS_URI_RE = /^\s*(?:javascript|data|vbscript|file)\s*:/i;
-var SCHEME_OBFUSCATION_RE = /[\u0000-\u001F\u007F]/g;
-var ABSOLUTE_SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i;
-var ALLOWED_ABSOLUTE_SCHEME_RE = /^(?:https?|mailto):/i;
-function stripControlCharsForSchemeCheck(url) {
-  return url.replace(SCHEME_OBFUSCATION_RE, "");
-}
-function hasAbsoluteScheme(normalized) {
-  return ABSOLUTE_SCHEME_RE.test(normalized);
-}
-function isAllowedRelative(trimmed) {
-  if (trimmed.startsWith("//")) return false;
-  if (trimmed.startsWith("/")) return true;
-  if (trimmed.startsWith("./") || trimmed.startsWith("../")) return true;
-  if (trimmed.startsWith("#")) return true;
-  const normalized = stripControlCharsForSchemeCheck(trimmed);
-  return !hasAbsoluteScheme(normalized);
-}
-function isHostAllowed(hostname, allowedHosts) {
-  if (!Array.isArray(allowedHosts) || allowedHosts.length === 0) return true;
-  const host = String(hostname || "").toLowerCase();
-  if (!host) return false;
-  for (const entry of allowedHosts) {
-    if (typeof entry !== "string" || !entry) continue;
-    let pattern = entry.toLowerCase().trim();
-    if (pattern.startsWith("*.")) pattern = pattern.slice(1);
-    if (pattern.startsWith(".")) {
-      const apex = pattern.slice(1);
-      if (host === apex || host.endsWith(pattern)) return true;
-    } else if (host === pattern) {
-      return true;
-    }
-  }
-  return false;
-}
-function passesHostAllowlist(trimmed, opts = {}) {
-  const allowedHosts = opts.allowedHosts;
-  if (!Array.isArray(allowedHosts) || allowedHosts.length === 0) return true;
-  const normalized = stripControlCharsForSchemeCheck(trimmed);
-  if (!hasAbsoluteScheme(normalized)) {
-    return isAllowedRelative(trimmed);
-  }
-  if (/^mailto:/i.test(normalized)) return true;
-  try {
-    const parsed = new URL(normalized);
-    return isHostAllowed(parsed.hostname, allowedHosts);
-  } catch {
-    return false;
-  }
-}
-function safeUrl(url, opts = {}) {
-  if (typeof url !== "string") return void 0;
-  const trimmed = url.trim();
-  if (!trimmed) return void 0;
-  const normalized = stripControlCharsForSchemeCheck(trimmed);
-  if (DANGEROUS_URI_RE.test(normalized)) return void 0;
-  if (hasAbsoluteScheme(normalized)) {
-    if (!ALLOWED_ABSOLUTE_SCHEME_RE.test(normalized)) return void 0;
-  } else if (!isAllowedRelative(trimmed)) {
-    return void 0;
-  }
-  if (!passesHostAllowlist(trimmed, opts)) return void 0;
-  return trimmed;
-}
-var sanitizeUrl = safeUrl;
-function mergeNoopenerFeatures(features = "") {
-  const parts = new Set(
-    String(features).split(/[,;\s]+/).map((s) => s.trim().toLowerCase()).filter(Boolean)
-  );
-  parts.add("noopener");
-  parts.add("noreferrer");
-  return [...parts].join(",");
-}
-function relForTarget(target = "_self") {
-  if (target === "_blank") return "noopener noreferrer";
-  return "";
-}
-function safeOpenUrl(url, target = "_blank", features = "noopener,noreferrer", opts = {}) {
-  if (typeof globalThis.window === "undefined") return null;
-  const safe = safeUrl(url, opts);
-  if (!safe) return null;
-  const merged = mergeNoopenerFeatures(features);
-  return globalThis.window.open(safe, target, merged);
-}
-function toCssUrl(url, opts = {}) {
-  const safe = safeUrl(url, opts);
-  if (!safe) return void 0;
-  const resolved = resolveAgainstDocument(safe, opts);
-  const escaped = resolved.replace(/[\\"\n\r]/g, (c) => `\\${c.charCodeAt(0).toString(16)} `);
-  return `url("${escaped}")`;
-}
-function resolveAgainstDocument(url, opts = {}) {
-  if (hasAbsoluteScheme(url)) return url;
-  const base = typeof opts.baseUrl === "string" && opts.baseUrl ? opts.baseUrl : globalThis.document?.baseURI ?? globalThis.location?.href;
-  if (!base) return url;
-  try {
-    return new URL(url, base).href;
-  } catch {
-    return url;
-  }
-}
-
 // src/Browser/security/markdown.js
+init_urlPolicy();
 var CITE_ATTR = "data-citation";
 function createFallbackDocument() {
   class N {
@@ -933,124 +7674,8 @@ function markdownToSafeDom(markdown, document2) {
   return root;
 }
 
-// src/Browser/components/content/shared.js
-var SURFACE_STATUS = Object.freeze({
-  READY: "ready",
-  LOADING: "loading",
-  EMPTY: "empty",
-  ERROR: "error"
-});
-var STATUS_LABELS = Object.freeze({
-  ready: "",
-  loading: "Loading",
-  empty: "No content",
-  error: "Error"
-});
-function requireDocument(ctx = {}) {
-  const doc = ctx.document ?? globalThis.document;
-  if (!doc?.createElement) {
-    throw new Error("content component: ctx.document required");
-  }
-  return doc;
-}
-function setClass(el2, className) {
-  el2.setAttribute("class", String(className).trim());
-}
-function setOrRemoveAttr(el2, name, value) {
-  if (value == null || value === false || value === "") {
-    el2.removeAttribute(name);
-  } else {
-    el2.setAttribute(name, value === true ? "true" : String(value));
-  }
-}
-function clearChildren(el2) {
-  while (el2.firstChild) {
-    el2.removeChild(el2.firstChild);
-  }
-}
-function asText(value) {
-  if (value == null) return "";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  return "";
-}
-function resolveStatus(props = {}) {
-  const raw = props.status ?? props.state;
-  if (raw === "loading" || raw === "empty" || raw === "error" || raw === "ready") {
-    return raw;
-  }
-  if (props.loading === true) return "loading";
-  if (props.error != null && props.error !== false) return "error";
-  if (props.empty === true) return "empty";
-  return "ready";
-}
-var statusTextByHost = /* @__PURE__ */ new WeakMap();
-function findStatusTextChild(el2) {
-  const cached = statusTextByHost.get(el2);
-  if (cached && cached.parentNode === el2) return cached;
-  for (const child of el2.childNodes ?? []) {
-    if (child.nodeType === 1 && child.getAttribute?.("data-canvas-status-text") != null) {
-      statusTextByHost.set(el2, child);
-      return child;
-    }
-  }
-  return null;
-}
-function applySurfaceStatus(el2, doc, props = {}, opts = {}) {
-  const status = resolveStatus(props);
-  el2.setAttribute("data-status", status);
-  setOrRemoveAttr(el2, "aria-busy", status === "loading" ? "true" : null);
-  let statusEl = findStatusTextChild(el2);
-  const show = opts.showStatusText !== false && (status === "loading" || status === "empty" || status === "error");
-  if (show) {
-    if (!statusEl) {
-      statusEl = doc.createElement("span");
-      statusEl.setAttribute("data-canvas-status-text", "");
-      statusEl.setAttribute("class", "canvas-status-text");
-      el2.appendChild(statusEl);
-      statusTextByHost.set(el2, statusEl);
-    }
-    const msg = status === "loading" ? asText(props.loadingMessage) || opts.loadingMessage || STATUS_LABELS.loading : status === "empty" ? asText(props.emptyMessage) || opts.emptyMessage || STATUS_LABELS.empty : asText(props.errorMessage ?? props.error) || opts.errorMessage || STATUS_LABELS.error;
-    statusEl.textContent = msg;
-    statusEl.setAttribute("role", "status");
-    setOrRemoveAttr(statusEl, "aria-live", status === "error" ? "assertive" : "polite");
-  } else if (statusEl && statusEl.parentNode) {
-    statusEl.parentNode.removeChild(statusEl);
-    statusTextByHost.delete(el2);
-    statusEl = null;
-  }
-  return { status, statusEl };
-}
-function applyVariantCue(el2, variant, labelMap = {}) {
-  const v = String(variant || "neutral");
-  el2.setAttribute("data-variant", v);
-  const label = labelMap[v] || v;
-  const existing = el2.getAttribute("aria-label");
-  if (!existing) {
-    el2.setAttribute("aria-label", label);
-  }
-  return v;
-}
-function lifecycle(impl) {
-  return {
-    create(props = {}, ctx = {}) {
-      const doc = requireDocument(ctx);
-      const el2 = impl.mount(doc, props, ctx);
-      impl.patch(el2, props, ctx);
-      return el2;
-    },
-    update(el2, props = {}, ctx = {}) {
-      impl.patch(el2, props, ctx);
-    },
-    destroy(el2, ctx = {}) {
-      impl.unmount?.(el2, ctx);
-    },
-    // Content primitives render from props; keyed reconciler must not wipe chrome.
-    ownsChildren: impl.ownsChildren !== false
-  };
-}
-
 // src/Browser/components/content/TextContent.js
+init_shared();
 var VARIANTS2 = /* @__PURE__ */ new Set(["clear", "card", "sunk"]);
 var WEIGHTS = /* @__PURE__ */ new Set(["normal", "medium", "bold"]);
 function resolveVariant(props) {
@@ -1124,6 +7749,7 @@ function resolveStatusFromProps(props) {
 }
 
 // src/Browser/components/content/TextCallout.js
+init_shared();
 var VARIANTS3 = /* @__PURE__ */ new Set(["neutral", "info", "warning", "success", "danger"]);
 var VARIANT_LABELS = {
   neutral: "Neutral callout",
@@ -1177,53 +7803,9 @@ var TextCallout = lifecycle({
   }
 });
 
-// src/Browser/renderer/inlineStyle.js
-function setInlineStyle(el2, declarations) {
-  if (!el2 || !declarations) return;
-  const style = (
-    /** @type {any} */
-    el2.style
-  );
-  if (style && typeof style.setProperty === "function") {
-    for (const [prop, value] of Object.entries(declarations)) {
-      if (value == null || value === "") style.removeProperty(prop);
-      else style.setProperty(prop, String(value));
-    }
-    return;
-  }
-  const existing = parseStyleAttr(el2.getAttribute?.("style") || "");
-  for (const [prop, value] of Object.entries(declarations)) {
-    if (value == null || value === "") delete existing[prop];
-    else existing[prop] = String(value);
-  }
-  const text2 = Object.entries(existing).map(([k, v]) => `${k}: ${v}`).join("; ");
-  if (text2) el2.setAttribute("style", text2);
-  else el2.removeAttribute("style");
-}
-function clearInlineStyle(el2) {
-  if (!el2) return;
-  const style = (
-    /** @type {any} */
-    el2.style
-  );
-  if (style && typeof style.setProperty === "function" && typeof style.cssText === "string") {
-    style.cssText = "";
-  }
-  if (typeof el2.removeAttribute === "function") el2.removeAttribute("style");
-}
-function parseStyleAttr(text2) {
-  const out = {};
-  for (const part of text2.split(";")) {
-    const i = part.indexOf(":");
-    if (i <= 0) continue;
-    const k = part.slice(0, i).trim();
-    const v = part.slice(i + 1).trim();
-    if (k) out[k] = v;
-  }
-  return out;
-}
-
 // src/Browser/components/content/Callout.js
+init_shared();
+init_inlineStyle();
 var VARIANTS4 = /* @__PURE__ */ new Set(["neutral", "info", "warning", "success", "danger"]);
 var VARIANT_LABELS2 = {
   neutral: "Neutral notice",
@@ -1309,6 +7891,7 @@ var Callout = lifecycle({
 });
 
 // src/Browser/components/content/Separator.js
+init_shared();
 var Separator = lifecycle({
   mount(doc) {
     const el2 = doc.createElement("div");
@@ -1334,6 +7917,7 @@ var Separator = lifecycle({
 });
 
 // src/Browser/components/content/Tag.js
+init_shared();
 var SIZES = /* @__PURE__ */ new Set(["sm", "md", "lg"]);
 var VARIANTS5 = /* @__PURE__ */ new Set(["neutral", "info", "success", "warning", "danger"]);
 var VARIANT_LABELS3 = {
@@ -1388,6 +7972,7 @@ var Tag = lifecycle({
 });
 
 // src/Browser/components/content/TagBlock.js
+init_shared();
 function normalizeTags(props) {
   if (Array.isArray(props.tags)) return props.tags;
   if (Array.isArray(props.children)) return props.children;
@@ -1434,6 +8019,7 @@ var TagBlock = lifecycle({
 });
 
 // src/Browser/components/content/EntityList.js
+init_shared();
 var SIZES2 = /* @__PURE__ */ new Set(["small", "default"]);
 function createRow(doc, row, rowType) {
   const rightVariant = asText(row.rightVariant) === "number" ? "number" : "text";
@@ -1501,6 +8087,7 @@ var EntityList = lifecycle({
 });
 
 // src/Browser/components/content/InlineHeader.js
+init_shared();
 var InlineHeader = lifecycle({
   mount(doc) {
     const el2 = doc.createElement("div");
@@ -1539,6 +8126,7 @@ var InlineHeader = lifecycle({
 });
 
 // src/Browser/components/content/CardHeader.js
+init_shared();
 var CardHeader = lifecycle({
   mount(doc) {
     const el2 = doc.createElement("header");
@@ -1606,6 +8194,7 @@ var CardHeader = lifecycle({
 });
 
 // src/Browser/components/content/MetricIndicator.js
+init_shared();
 var VARIANTS6 = /* @__PURE__ */ new Set(["with-strikethrough", "inline"]);
 function resolveVariant5(props) {
   const raw = asText(props.variant);
@@ -1719,780 +8308,15 @@ var MetricIndicatorInline = {
   }
 };
 
-// src/Browser/lang/builtins.js
-function resolveField(obj, path) {
-  if (!path || obj == null) return void 0;
-  if (!path.includes(".")) return obj[path];
-  let cur = obj;
-  for (const p of path.split(".")) {
-    if (cur == null) return void 0;
-    cur = cur[p];
-  }
-  return cur;
-}
-function toNumber(val) {
-  if (typeof val === "number") return val;
-  if (typeof val === "string") {
-    const n = Number(val);
-    return isNaN(n) ? 0 : n;
-  }
-  if (typeof val === "boolean") return val ? 1 : 0;
-  return 0;
-}
-var BUILTINS = {
-  Count: {
-    name: "Count",
-    signature: "Count(array) \u2192 number",
-    description: "Returns array length",
-    fn: (arr) => Array.isArray(arr) ? arr.length : 0
-  },
-  First: {
-    name: "First",
-    signature: "First(array) \u2192 element",
-    description: "Returns first element of array",
-    fn: (arr) => Array.isArray(arr) ? arr[0] ?? null : null
-  },
-  Last: {
-    name: "Last",
-    signature: "Last(array) \u2192 element",
-    description: "Returns last element of array",
-    fn: (arr) => Array.isArray(arr) ? arr[arr.length - 1] ?? null : null
-  },
-  Sum: {
-    name: "Sum",
-    signature: "Sum(numbers[]) \u2192 number",
-    description: "Sum of numeric array",
-    fn: (arr) => Array.isArray(arr) ? arr.reduce((a, b) => a + toNumber(b), 0) : 0
-  },
-  Avg: {
-    name: "Avg",
-    signature: "Avg(numbers[]) \u2192 number",
-    description: "Average of numeric array",
-    fn: (arr) => Array.isArray(arr) && arr.length ? arr.reduce((a, b) => a + toNumber(b), 0) / arr.length : 0
-  },
-  Min: {
-    name: "Min",
-    signature: "Min(numbers[]) \u2192 number",
-    description: "Minimum value in array",
-    fn: (arr) => Array.isArray(arr) && arr.length ? arr.reduce((acc, b) => Math.min(acc, toNumber(b)), toNumber(arr[0])) : 0
-  },
-  Max: {
-    name: "Max",
-    signature: "Max(numbers[]) \u2192 number",
-    description: "Maximum value in array",
-    fn: (arr) => Array.isArray(arr) && arr.length ? arr.reduce((acc, b) => Math.max(acc, toNumber(b)), toNumber(arr[0])) : 0
-  },
-  Sort: {
-    name: "Sort",
-    signature: "Sort(array, field, direction?) \u2192 sorted array",
-    description: 'Sort array by field. Direction: "asc" (default) or "desc"',
-    fn: (arr, field, dir) => {
-      if (!Array.isArray(arr)) return arr;
-      const f = String(field ?? "");
-      const desc = String(dir ?? "asc") === "desc";
-      return [...arr].sort((a, b) => {
-        const av = f ? resolveField(a, f) : a;
-        const bv = f ? resolveField(b, f) : b;
-        const aIsNumeric = typeof av === "number" || typeof av === "string" && !isNaN(Number(av)) && av !== "";
-        const bIsNumeric = typeof bv === "number" || typeof bv === "string" && !isNaN(Number(bv)) && bv !== "";
-        if (aIsNumeric && bIsNumeric) {
-          const diff = toNumber(av) - toNumber(bv);
-          return desc ? -diff : diff;
-        }
-        const cmp = String(av ?? "").localeCompare(String(bv ?? ""));
-        return desc ? -cmp : cmp;
-      });
-    }
-  },
-  Filter: {
-    name: "Filter",
-    signature: 'Filter(array, field, operator: "==" | "!=" | ">" | "<" | ">=" | "<=" | "contains", value) \u2192 filtered array',
-    description: "Filter array by field value",
-    fn: (arr, field, op, value) => {
-      if (!Array.isArray(arr)) return [];
-      const f = String(field ?? "");
-      const o = String(op ?? "==");
-      return arr.filter((item) => {
-        const v = f ? resolveField(item, f) : item;
-        switch (o) {
-          case "==":
-            return v == value;
-          case "!=":
-            return v != value;
-          case ">":
-            return toNumber(v) > toNumber(value);
-          case "<":
-            return toNumber(v) < toNumber(value);
-          case ">=":
-            return toNumber(v) >= toNumber(value);
-          case "<=":
-            return toNumber(v) <= toNumber(value);
-          case "contains":
-            return String(v ?? "").includes(String(value ?? ""));
-          default:
-            return false;
-        }
-      });
-    }
-  },
-  Round: {
-    name: "Round",
-    signature: "Round(number, decimals?) \u2192 number",
-    description: "Round to N decimal places (default 0)",
-    fn: (n, decimals) => {
-      const num2 = toNumber(n);
-      const d = decimals != null ? toNumber(decimals) : 0;
-      const factor = Math.pow(10, d);
-      return Math.round(num2 * factor) / factor;
-    }
-  },
-  Abs: {
-    name: "Abs",
-    signature: "Abs(number) \u2192 number",
-    description: "Absolute value",
-    fn: (n) => Math.abs(toNumber(n))
-  },
-  Floor: {
-    name: "Floor",
-    signature: "Floor(number) \u2192 number",
-    description: "Round down to nearest integer",
-    fn: (n) => Math.floor(toNumber(n))
-  },
-  Ceil: {
-    name: "Ceil",
-    signature: "Ceil(number) \u2192 number",
-    description: "Round up to nearest integer",
-    fn: (n) => Math.ceil(toNumber(n))
-  }
-};
-var LAZY_BUILTINS = /* @__PURE__ */ new Set(["Each"]);
-var ACTION_STEPS = {
-  Run: "run",
-  ToAssistant: "continue_conversation",
-  OpenUrl: "open_url",
-  Set: "set",
-  Reset: "reset"
-};
-var ACTION_NAMES = /* @__PURE__ */ new Set(["Action", ...Object.keys(ACTION_STEPS)]);
-var BUILTIN_NAMES = /* @__PURE__ */ new Set([
-  ...Object.keys(BUILTINS),
-  ...LAZY_BUILTINS,
-  ...ACTION_NAMES
-]);
-function isBuiltin(name) {
-  return BUILTIN_NAMES.has(name);
-}
-var RESERVED_CALLS = { Query: "Query", Mutation: "Mutation" };
-function isReservedCall(name) {
-  return name in RESERVED_CALLS;
-}
+// src/Browser/components/content/registerContent.js
+init_ListBlock();
+init_ListItem();
+init_CodeBlock();
+init_Image();
+init_ImageBlock();
 
-// src/Browser/components/chat/continueConversation.js
-var MAX_CONTINUE_CHARS = 4e3;
-function boundContinueText(value, max = MAX_CONTINUE_CHARS) {
-  const s = value == null ? "" : String(value);
-  if (s.length <= max) return s;
-  return s.slice(0, max);
-}
-function isStreaming(ctx = {}) {
-  return ctx.stream?.isStreaming === true;
-}
-function resolveContinuePayload(props = {}, opts = {}) {
-  const action = props.action;
-  let message = "";
-  let context;
-  if (action && typeof action === "object") {
-    const type = String(action.type || "").toLowerCase();
-    if (type && type !== "continue_conversation" && type !== ACTION_STEPS.ToAssistant && type !== "toassistant") {
-      return null;
-    }
-    if (typeof action.message === "string") message = action.message;
-    else if (typeof action.context === "string" && !action.message) {
-      message = action.context;
-    }
-    if (typeof action.context === "string") context = action.context;
-    if (action.params && typeof action.params === "object") {
-      const p = (
-        /** @type {Record<string, unknown>} */
-        action.params
-      );
-      if (!message && typeof p.context === "string") message = p.context;
-      if (!context && typeof p.context === "string") context = p.context;
-      if (typeof p.message === "string") message = p.message;
-    }
-    if (Array.isArray(action.steps)) {
-      const step = action.steps.find(
-        (s) => s && typeof s === "object" && (s.type === ACTION_STEPS.ToAssistant || s.type === "continue_conversation")
-      );
-      if (step) {
-        if (typeof step.message === "string") message = step.message;
-        if (typeof step.context === "string") context = step.context;
-      }
-    }
-  }
-  if (!message) {
-    message = opts.fallbackMessage || (typeof props.text === "string" ? props.text : "") || (typeof props.title === "string" ? props.title : "") || "";
-  }
-  message = boundContinueText(message);
-  if (context != null) context = boundContinueText(context, MAX_CONTINUE_CHARS);
-  if (!message && !context) return null;
-  if (!message && context) message = context;
-  return { message, context };
-}
-function dispatchContinueConversation(ctx = {}, props = {}, opts = {}) {
-  if (opts.userGesture === false) {
-    return { ok: false, reason: "gesture-required" };
-  }
-  if (isStreaming(ctx)) {
-    return { ok: false, reason: "streaming" };
-  }
-  const payload = resolveContinuePayload(props, opts);
-  if (!payload || !payload.message) {
-    return { ok: false, reason: "empty" };
-  }
-  const actions = ctx.actions;
-  if (actions && typeof actions.run === "function") {
-    const plan = {
-      steps: [
-        {
-          type: ACTION_STEPS.ToAssistant,
-          message: payload.message,
-          context: payload.context
-        }
-      ]
-    };
-    void actions.run(plan, { userGesture: true });
-    return { ok: true };
-  }
-  if (actions && typeof actions.continueConversation === "function") {
-    actions.continueConversation(payload.message, payload.context);
-    return { ok: true };
-  }
-  if (typeof ctx.continueConversation === "function") {
-    ctx.continueConversation(payload.message, payload.context);
-    return { ok: true };
-  }
-  if (ctx.host && typeof ctx.host.continueConversation === "function") {
-    ctx.host.continueConversation(payload.message, payload.context);
-    return { ok: true };
-  }
-  return { ok: false, reason: "no-handler" };
-}
-
-// src/Browser/components/content/ListItem.js
-var VARIANTS7 = /* @__PURE__ */ new Set(["number", "image", "icon"]);
-var SIZES3 = /* @__PURE__ */ new Set(["default", "small"]);
-function hasAction(props) {
-  return props.action != null && props.action !== false;
-}
-function renderIndicator(el2, doc, props, ctx) {
-  const variant = VARIANTS7.has(asText(props.variant)) ? asText(props.variant) : "number";
-  const listHasSubtitle = props.listHasSubtitle === true || !!asText(props.subtitle);
-  const index = typeof props.index === "number" ? props.index : 0;
-  const indicator = doc.createElement("div");
-  let indCls = "canvas-list-item__indicator";
-  if (!listHasSubtitle) indCls += " canvas-list-item__indicator--no-subtitle";
-  if (hasAction(props)) indCls += " canvas-list-item__indicator--clickable";
-  indicator.setAttribute("class", indCls);
-  indicator.setAttribute("data-variant", variant);
-  if (variant === "number") {
-    const num2 = doc.createElement("div");
-    num2.setAttribute("class", "canvas-list-item__indicator-number");
-    num2.textContent = String(index + 1);
-    indicator.appendChild(num2);
-  } else if (variant === "image") {
-    const image = props.image && typeof props.image === "object" ? props.image : null;
-    const srcRaw = image && typeof image.src === "string" ? image.src : "";
-    const alt = image && typeof image.alt === "string" ? image.alt : "";
-    const safe = srcRaw && (ctx.urlPolicy?.safeUrl ? ctx.urlPolicy.safeUrl(srcRaw) : safeUrl(srcRaw));
-    if (safe || alt) {
-      const wrap = doc.createElement("div");
-      wrap.setAttribute("class", "canvas-list-item__indicator-image");
-      if (safe) {
-        const img = doc.createElement("img");
-        img.setAttribute("src", safe);
-        img.setAttribute("alt", alt);
-        img.setAttribute("width", "40");
-        img.setAttribute("height", "40");
-        wrap.appendChild(img);
-      } else {
-        wrap.textContent = alt;
-      }
-      indicator.appendChild(wrap);
-    }
-  } else if (variant === "icon" && asText(props.icon)) {
-    const icon = doc.createElement("span");
-    icon.setAttribute("class", "canvas-list-item__indicator-icon");
-    icon.setAttribute("aria-hidden", "true");
-    icon.textContent = asText(props.icon);
-    indicator.appendChild(icon);
-  }
-  el2.appendChild(indicator);
-}
-var ListItem = lifecycle({
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "ListItem");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const size = SIZES3.has(asText(props.size)) ? asText(props.size) : "default";
-    const actionable = hasAction(props);
-    const streaming = ctx.stream?.isStreaming === true;
-    let wrapCls = "canvas-list-item-wrapper";
-    if (size === "small") wrapCls += " canvas-list-item-wrapper--small";
-    if (actionable) wrapCls += " canvas-list-item-wrapper--with-action";
-    setClass(el2, wrapCls);
-    el2.setAttribute("data-size", size);
-    el2.setAttribute("data-actionable", actionable ? "true" : "false");
-    setOrRemoveAttr(el2, "data-streaming-blocked", streaming && actionable ? "true" : null);
-    clearChildren(el2);
-    const row = doc.createElement("div");
-    let rowCls = "canvas-list-item";
-    if (actionable) rowCls += " canvas-list-item--clickable";
-    if (streaming && actionable) rowCls += " canvas-list-item--disabled";
-    row.setAttribute("class", rowCls);
-    if (actionable) {
-      row.setAttribute("role", "button");
-      row.setAttribute("tabindex", streaming ? "-1" : "0");
-      setOrRemoveAttr(row, "aria-disabled", streaming ? "true" : null);
-      const activate = () => {
-        dispatchContinueConversation(ctx, props, {
-          fallbackMessage: asText(props.title),
-          userGesture: true
-        });
-      };
-      row.onclick = () => activate();
-      row.onkeydown = (ev) => {
-        const key = ev?.key;
-        if (key === "Enter" || key === " ") {
-          ev?.preventDefault?.();
-          activate();
-        }
-      };
-    } else {
-      row.removeAttribute("role");
-      row.removeAttribute("tabindex");
-      row.onclick = null;
-      row.onkeydown = null;
-    }
-    renderIndicator(row, doc, props, ctx);
-    const contentWrap = doc.createElement("div");
-    contentWrap.setAttribute("class", "canvas-list-item__content-wrapper");
-    const content = doc.createElement("div");
-    content.setAttribute("class", "canvas-list-item__content");
-    const title = asText(props.title);
-    if (title) {
-      const t = doc.createElement("div");
-      t.setAttribute("class", "canvas-list-item__title");
-      t.textContent = title;
-      content.appendChild(t);
-    }
-    const subtitle = asText(props.subtitle);
-    if (subtitle) {
-      const s = doc.createElement("div");
-      s.setAttribute("class", "canvas-list-item__subtitle");
-      s.textContent = subtitle;
-      content.appendChild(s);
-    }
-    contentWrap.appendChild(content);
-    if (actionable) {
-      const actionLabel = asText(props.actionLabel);
-      if (actionLabel) {
-        const act = doc.createElement("div");
-        act.setAttribute("class", "canvas-list-item__action");
-        const lab = doc.createElement("div");
-        lab.setAttribute("class", "canvas-list-item__action-label");
-        lab.textContent = actionLabel;
-        act.appendChild(lab);
-        const chevron = doc.createElement("span");
-        chevron.setAttribute("class", "canvas-list-item__action-icon");
-        chevron.setAttribute("aria-hidden", "true");
-        chevron.textContent = "\u203A";
-        act.appendChild(chevron);
-        contentWrap.appendChild(act);
-      }
-    }
-    row.appendChild(contentWrap);
-    el2.appendChild(row);
-  }
-});
-
-// src/Browser/components/content/ListBlock.js
-var VARIANTS8 = /* @__PURE__ */ new Set(["number", "image", "icon"]);
-var SIZES4 = /* @__PURE__ */ new Set(["default", "small"]);
-function normalizeListItems(props = {}) {
-  if (Array.isArray(props.items)) {
-    return props.items.map((item) => {
-      if (!item || typeof item !== "object") return null;
-      if (item.props && typeof item.props === "object") {
-        return (
-          /** @type {Record<string, unknown>} */
-          item.props
-        );
-      }
-      return (
-        /** @type {Record<string, unknown>} */
-        item
-      );
-    }).filter(Boolean);
-  }
-  return [];
-}
-var ListBlock = lifecycle({
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "ListBlock");
-    el2.setAttribute("role", "list");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const variant = VARIANTS8.has(asText(props.variant)) ? asText(props.variant) : "number";
-    const size = SIZES4.has(asText(props.size)) ? asText(props.size) : "default";
-    const items = normalizeListItems(props);
-    const listHasSubtitle = items.some((it) => !!asText(it.subtitle));
-    let cls = "canvas-list-block";
-    if (size === "small") cls += " canvas-list-block--small";
-    setClass(el2, cls);
-    el2.setAttribute("data-variant", variant);
-    el2.setAttribute("data-size", size);
-    el2.setAttribute("data-item-count", String(items.length));
-    clearChildren(el2);
-    if (typeof ctx.renderChildren === "function" && Array.isArray(props.children) && props.children.length) {
-      const enhanced = props.children.map((child, index) => {
-        if (!child || typeof child !== "object") return child;
-        const c = (
-          /** @type {Record<string, unknown>} */
-          child
-        );
-        const childProps = c.props && typeof c.props === "object" ? (
-          /** @type {Record<string, unknown>} */
-          c.props
-        ) : {};
-        return {
-          ...c,
-          props: {
-            ...childProps,
-            variant,
-            size,
-            listHasSubtitle,
-            index: typeof childProps.index === "number" ? childProps.index : index
-          }
-        };
-      });
-      ctx.renderChildren(el2, enhanced);
-      return;
-    }
-    for (let i = 0; i < items.length; i++) {
-      const itemProps = {
-        ...items[i],
-        variant,
-        size,
-        listHasSubtitle,
-        index: i
-      };
-      const child = ListItem.create(itemProps, ctx);
-      child.setAttribute("role", "listitem");
-      el2.appendChild(child);
-    }
-  }
-});
-
-// src/Browser/components/content/CodeBlock.js
-var copiedTimers = /* @__PURE__ */ new WeakMap();
-async function copyTextNoFocusSteal(text2) {
-  const value = String(text2 ?? "");
-  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-    try {
-      await navigator.clipboard.writeText(value);
-      return true;
-    } catch {
-    }
-  }
-  if (typeof document === "undefined") return false;
-  const prev = document.activeElement;
-  const ta = document.createElement("textarea");
-  ta.value = value;
-  ta.setAttribute("readonly", "true");
-  ta.style.position = "fixed";
-  ta.style.left = "-9999px";
-  document.body?.appendChild(ta);
-  if (typeof ta.select === "function") {
-    ta.select();
-  } else if (typeof ta.setSelectionRange === "function") {
-    ta.setSelectionRange(0, value.length);
-  }
-  let ok = false;
-  try {
-    ok = typeof document.execCommand === "function" && document.execCommand("copy") === true;
-  } catch {
-    ok = false;
-  }
-  if (typeof ta.remove === "function") {
-    ta.remove();
-  } else if (ta.parentNode) {
-    ta.parentNode.removeChild(ta);
-  }
-  if (prev && typeof prev.focus === "function") {
-    try {
-      prev.focus();
-    } catch {
-    }
-  }
-  return ok;
-}
-function clearCopiedTimer(el2) {
-  const t = copiedTimers.get(el2);
-  if (t != null) {
-    clearTimeout(t);
-    copiedTimers.delete(el2);
-  }
-}
-var CodeBlock = lifecycle({
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "CodeBlock");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const language = asText(props.language) || "text";
-    const codeString = asText(props.codeString ?? props.code ?? props.children);
-    setClass(el2, "canvas-code-block");
-    el2.setAttribute("data-language", language);
-    clearChildren(el2);
-    clearCopiedTimer(el2);
-    const live = doc.createElement("span");
-    live.setAttribute("class", "canvas-code-block__live");
-    live.setAttribute("aria-live", "polite");
-    live.setAttribute("aria-atomic", "true");
-    live.setAttribute("data-canvas-copy-live", "");
-    setInlineStyle(live, { position: "absolute", width: "1px", height: "1px", overflow: "hidden", clip: "rect(0,0,0,0)" });
-    const btn = doc.createElement("button");
-    btn.setAttribute("type", "button");
-    btn.setAttribute("class", "canvas-code-block__copy");
-    btn.setAttribute("aria-label", "Copy code");
-    btn.setAttribute("data-copied", "false");
-    btn.textContent = "Copy";
-    const setCopied = (copied) => {
-      btn.setAttribute("data-copied", copied ? "true" : "false");
-      btn.setAttribute("aria-label", copied ? "Copied to clipboard" : "Copy code");
-      btn.textContent = copied ? "Copied" : "Copy";
-      setOrRemoveAttr(btn, "class", null);
-      btn.setAttribute(
-        "class",
-        copied ? "canvas-code-block__copy canvas-code-block__copy--copied" : "canvas-code-block__copy"
-      );
-      live.textContent = copied ? "Copied to clipboard" : "";
-    };
-    btn.onclick = async (ev) => {
-      ev?.preventDefault?.();
-      const ok = await copyTextNoFocusSteal(codeString);
-      if (!ok) {
-        live.textContent = "Copy failed";
-        return;
-      }
-      setCopied(true);
-      clearCopiedTimer(el2);
-      const timer = setTimeout(() => {
-        setCopied(false);
-        copiedTimers.delete(el2);
-      }, 1e3);
-      copiedTimers.set(el2, timer);
-    };
-    const pre = doc.createElement("pre");
-    pre.setAttribute("class", "canvas-code-block__pre");
-    const code = doc.createElement("code");
-    code.setAttribute("class", `canvas-code-block__code language-${language}`);
-    code.textContent = codeString;
-    pre.appendChild(code);
-    el2.appendChild(btn);
-    el2.appendChild(pre);
-    el2.appendChild(live);
-  },
-  unmount(el2) {
-    clearCopiedTimer(el2);
-  }
-});
-
-// src/Browser/components/content/Image.js
-var ASPECT = /* @__PURE__ */ new Set(["1:1", "3:2", "3:4", "4:3", "16:9"]);
-var SCALE = /* @__PURE__ */ new Set(["fit", "fill"]);
-var ASPECT_RATIO = {
-  "1:1": "1 / 1",
-  "3:2": "3 / 2",
-  "3:4": "3 / 4",
-  "4:3": "4 / 3",
-  "16:9": "16 / 9"
-};
-function resolveImageAccessibility(props = {}) {
-  const decorative = props.decorative === true || props.decorative === "true" || props.role === "presentation" || props.role === "none";
-  const alt = asText(props.alt);
-  if (decorative) {
-    return { ok: true, alt: "", decorative: true };
-  }
-  if (alt) {
-    return { ok: true, alt, decorative: false };
-  }
-  return { ok: false, reason: "alt-or-decorative-required" };
-}
-function resolveSafeSrc(props, ctx) {
-  const raw = asText(props.src);
-  if (!raw) return void 0;
-  const policy = ctx.urlPolicy && typeof ctx.urlPolicy.safeUrl === "function" ? ctx.urlPolicy.safeUrl : safeUrl;
-  return policy(raw);
-}
-function showFallback(el2, doc, message) {
-  el2.setAttribute("data-status", "error");
-  el2.setAttribute("data-broken", "true");
-  const fb = doc.createElement("div");
-  fb.setAttribute("class", "canvas-image__fallback");
-  fb.setAttribute("role", "img");
-  fb.setAttribute("aria-label", message);
-  fb.textContent = message;
-  el2.appendChild(fb);
-}
-var Image = lifecycle({
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "Image");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const aspect = ASPECT.has(asText(props.aspectRatio)) ? asText(props.aspectRatio) : "3:2";
-    const scale = SCALE.has(asText(props.scale)) ? asText(props.scale) : "fill";
-    setClass(el2, `canvas-image canvas-image--scale-${scale}`);
-    el2.setAttribute("data-aspect", aspect);
-    setInlineStyle(el2, { "aspect-ratio": ASPECT_RATIO[aspect] });
-    clearChildren(el2);
-    const a11y = resolveImageAccessibility(props);
-    if (!a11y.ok) {
-      showFallback(el2, doc, "Image missing alt text");
-      el2.setAttribute("data-a11y", "missing-alt");
-      return;
-    }
-    const safe = resolveSafeSrc(props, ctx);
-    if (!safe) {
-      showFallback(el2, doc, props.src ? "Unsafe image URL blocked" : "Image unavailable");
-      el2.setAttribute("data-a11y", a11y.decorative ? "decorative" : "labelled");
-      return;
-    }
-    el2.setAttribute("data-status", "ready");
-    el2.setAttribute("data-a11y", a11y.decorative ? "decorative" : "labelled");
-    el2.removeAttribute("data-broken");
-    const img = doc.createElement("img");
-    img.setAttribute("class", `canvas-image__img canvas-image__img--${scale}`);
-    img.setAttribute("src", safe);
-    if (a11y.decorative) {
-      img.setAttribute("alt", "");
-      img.setAttribute("role", "presentation");
-    } else {
-      img.setAttribute("alt", a11y.alt);
-    }
-    img.onload = () => {
-      el2.setAttribute("data-status", "ready");
-      el2.removeAttribute("data-broken");
-      setOrRemoveAttr(img, "data-broken", null);
-    };
-    img.onerror = () => {
-      el2.setAttribute("data-broken", "true");
-      el2.setAttribute("data-status", "error");
-      img.setAttribute("data-broken", "true");
-      clearChildren(el2);
-      showFallback(el2, doc, "Image failed to load");
-    };
-    el2.appendChild(img);
-  }
-});
-
-// src/Browser/components/content/ImageBlock.js
-var ImageBlock = lifecycle({
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "ImageBlock");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    setClass(el2, "canvas-image-block");
-    clearChildren(el2);
-    const a11y = resolveImageAccessibility(props);
-    if (!a11y.ok) {
-      el2.setAttribute("data-status", "error");
-      el2.setAttribute("data-a11y", "missing-alt");
-      const fb = doc.createElement("div");
-      fb.setAttribute("class", "canvas-image-block__fallback");
-      fb.setAttribute("role", "img");
-      fb.setAttribute("aria-label", "Image missing alt text");
-      fb.textContent = "Image missing alt text";
-      el2.appendChild(fb);
-      return;
-    }
-    const safe = resolveSafeSrc(props, ctx);
-    if (!safe) {
-      el2.setAttribute("data-status", "error");
-      el2.setAttribute("data-a11y", a11y.decorative ? "decorative" : "labelled");
-      const fb = doc.createElement("div");
-      fb.setAttribute("class", "canvas-image-block__fallback");
-      fb.setAttribute("role", "img");
-      fb.setAttribute(
-        "aria-label",
-        props.src ? "Unsafe image URL blocked" : "Image unavailable"
-      );
-      fb.textContent = props.src ? "Unsafe image URL blocked" : "Image unavailable";
-      el2.appendChild(fb);
-      return;
-    }
-    el2.setAttribute("data-status", "loading");
-    el2.setAttribute("data-a11y", a11y.decorative ? "decorative" : "labelled");
-    el2.removeAttribute("data-broken");
-    const cssUrl = ctx.urlPolicy && typeof ctx.urlPolicy.toCssUrl === "function" ? ctx.urlPolicy.toCssUrl(safe) : toCssUrl(safe);
-    if (cssUrl) {
-      setInlineStyle(el2, { "--canvas-image-block-bg": cssUrl });
-      el2.setAttribute("class", "canvas-image-block canvas-image-block--has-bg");
-    }
-    const img = doc.createElement("img");
-    img.setAttribute("class", "canvas-image-block__image");
-    img.setAttribute("src", safe);
-    if (a11y.decorative) {
-      img.setAttribute("alt", "");
-      img.setAttribute("role", "presentation");
-    } else {
-      img.setAttribute("alt", a11y.alt);
-    }
-    const loader = doc.createElement("div");
-    loader.setAttribute("class", "canvas-image-block__loader");
-    loader.setAttribute("aria-hidden", "true");
-    if (props.imageLoading === false) {
-      loader.setAttribute("hidden", "true");
-      el2.setAttribute("data-status", "ready");
-    }
-    img.onload = () => {
-      el2.setAttribute("data-status", "ready");
-      el2.removeAttribute("data-broken");
-      loader.setAttribute("hidden", "true");
-      img.removeAttribute("data-broken");
-    };
-    img.onerror = () => {
-      el2.setAttribute("data-broken", "true");
-      el2.setAttribute("data-status", "error");
-      el2.removeAttribute("style");
-      setClass(el2, "canvas-image-block canvas-image-block--error");
-      clearChildren(el2);
-      const fb = doc.createElement("div");
-      fb.setAttribute("class", "canvas-image-block__fallback");
-      fb.setAttribute("role", "img");
-      fb.setAttribute("aria-label", "Image failed to load");
-      fb.textContent = "Image failed to load";
-      el2.appendChild(fb);
-    };
-    el2.appendChild(img);
-    el2.appendChild(loader);
-  }
-});
+// src/Browser/components/content/Icon.js
+init_shared();
 
 // src/Browser/components/content/iconAllowlist.js
 var ICON_GLYPHS = {
@@ -2941,6 +8765,7 @@ var Icon = lifecycle({
 });
 
 // src/Browser/components/content/MarkDownRenderer.js
+init_shared();
 var VARIANTS9 = /* @__PURE__ */ new Set(["clear", "card", "sunk"]);
 var MarkDownRenderer = lifecycle({
   mount(doc) {
@@ -2993,264 +8818,8 @@ function registerContent(registry) {
   return registry;
 }
 
-// src/Browser/components/containers/shared.js
-function requireDocument2(ctx = {}) {
-  const doc = ctx.document ?? globalThis.document;
-  if (!doc?.createElement) {
-    throw new Error("container component: ctx.document required");
-  }
-  return doc;
-}
-function setClass2(el2, className) {
-  el2.setAttribute("class", String(className).trim());
-}
-function clearChildren2(el2) {
-  while (el2.firstChild) {
-    el2.removeChild(el2.firstChild);
-  }
-}
-function resolveIsStreaming(props = {}, ctx = {}) {
-  if (props.isStreaming === true || props.streaming === true) return true;
-  if (props.isStreaming === false || props.streaming === false) return false;
-  const stream = ctx.stream;
-  if (stream && typeof stream === "object" && stream.isStreaming === true) {
-    return true;
-  }
-  return false;
-}
-function normalizeSectionEntry(raw, index) {
-  if (raw == null) {
-    return { value: String(index), trigger: "", content: null };
-  }
-  if (typeof raw === "string") {
-    return { value: String(index), trigger: raw, content: null };
-  }
-  let obj = (
-    /** @type {Record<string, unknown>} */
-    raw
-  );
-  if (obj.props && typeof obj.props === "object") {
-    obj = /** @type {Record<string, unknown>} */
-    obj.props;
-  }
-  const value = asText2(obj.value) || String(index);
-  const trigger = asText2(obj.trigger ?? obj.title ?? obj.label);
-  const content = obj.content !== void 0 ? obj.content : obj.children !== void 0 ? obj.children : null;
-  return { value, trigger, content };
-}
-function normalizeSections(sections) {
-  if (!Array.isArray(sections)) return [];
-  return sections.map((s, i) => normalizeSectionEntry(s, i));
-}
-function normalizeStepEntry(raw, index) {
-  if (raw == null) {
-    return { title: "", details: null, number: index + 1 };
-  }
-  let obj = (
-    /** @type {Record<string, unknown>} */
-    raw
-  );
-  if (obj.props && typeof obj.props === "object") {
-    obj = /** @type {Record<string, unknown>} */
-    obj.props;
-  }
-  const num2 = Number.isInteger(obj.number) && /** @type {number} */
-  obj.number > 0 ? (
-    /** @type {number} */
-    obj.number
-  ) : index + 1;
-  return {
-    title: asText2(obj.title),
-    details: obj.details !== void 0 ? obj.details : obj.content ?? null,
-    number: num2
-  };
-}
-function normalizeSteps(items) {
-  if (!Array.isArray(items)) return [];
-  return items.map((s, i) => normalizeStepEntry(s, i));
-}
-function renderPanelContent(panel, content, ctx) {
-  clearChildren2(panel);
-  const doc = requireDocument2(ctx);
-  if (content == null) return;
-  if (typeof content === "string" || typeof content === "number") {
-    panel.appendChild(doc.createTextNode(String(content)));
-    return;
-  }
-  if (Array.isArray(content)) {
-    if (typeof ctx.renderChildren === "function") {
-      ctx.renderChildren(panel, content);
-    } else {
-      for (const part of content) {
-        if (typeof part === "string" || typeof part === "number") {
-          panel.appendChild(doc.createTextNode(String(part)));
-        }
-      }
-    }
-    return;
-  }
-  if (typeof content === "object" && content !== null && "type" in /** @type {object} */
-  content) {
-    if (typeof ctx.renderChildren === "function") {
-      ctx.renderChildren(panel, [content]);
-    }
-  }
-}
-function setOrRemoveAttr2(el2, name, value) {
-  if (value == null || value === false || value === "") {
-    el2.removeAttribute(name);
-  } else {
-    el2.setAttribute(name, value === true ? "true" : String(value));
-  }
-}
-function asText2(value) {
-  if (value == null) return "";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  return "";
-}
-function normalizeItem(raw) {
-  if (raw == null) return null;
-  if (typeof raw !== "object") return null;
-  const obj = (
-    /** @type {Record<string, unknown>} */
-    raw
-  );
-  const props = obj.props && typeof obj.props === "object" ? (
-    /** @type {Record<string, unknown>} */
-    obj.props
-  ) : obj;
-  const value = asText2(props.value);
-  if (!value) return null;
-  const trigger = asText2(props.trigger ?? props.label ?? props.title);
-  let content = props.content;
-  if (content == null && Array.isArray(obj.children)) {
-    content = obj.children;
-  }
-  if (content == null && Array.isArray(props.children)) {
-    content = props.children;
-  }
-  if (!Array.isArray(content)) {
-    content = content == null ? [] : [content];
-  }
-  const out = { value, trigger, content };
-  if (obj.id != null) out.id = /** @type {string|number} */
-  obj.id;
-  else if (props.id != null) out.id = /** @type {string|number} */
-  props.id;
-  if (obj.key != null) out.key = /** @type {string|number} */
-  obj.key;
-  else if (props.key != null) out.key = /** @type {string|number} */
-  props.key;
-  return out;
-}
-function normalizeItems(props = {}, itemType) {
-  const rawList = Array.isArray(props.items) ? props.items : Array.isArray(props.children) ? props.children : [];
-  const out = [];
-  for (const raw of rawList) {
-    if (itemType && raw && typeof raw === "object" && /** @type {Record<string, unknown>} */
-    raw.type != null && /** @type {Record<string, unknown>} */
-    raw.type !== itemType) {
-      continue;
-    }
-    const item = normalizeItem(raw);
-    if (item) out.push(item);
-  }
-  return out;
-}
-function itemKey(item, index) {
-  if (item.key != null) return String(item.key);
-  if (item.id != null) return String(item.id);
-  return item.value || String(index);
-}
-function contentSize(content) {
-  try {
-    return JSON.stringify(content ?? null).length;
-  } catch {
-    return Array.isArray(content) ? content.length : content == null ? 0 : 1;
-  }
-}
-function findDirectByAttr(parent, attr, value) {
-  const out = [];
-  for (const child of parent.childNodes ?? []) {
-    if (child.nodeType !== 1) continue;
-    const el2 = (
-      /** @type {Element} */
-      child
-    );
-    if (value == null) {
-      if (el2.getAttribute?.(attr) != null) out.push(el2);
-    } else if (el2.getAttribute?.(attr) === value) {
-      out.push(el2);
-    }
-  }
-  return out;
-}
-function renderItemContent(host, content, ctx) {
-  if (typeof ctx.renderChildren === "function") {
-    ctx.renderChildren(host, content ?? []);
-    return;
-  }
-  while (host.firstChild) host.removeChild(host.firstChild);
-  const doc = ctx.document ?? host.ownerDocument ?? globalThis.document;
-  for (const child of content ?? []) {
-    if (child == null) continue;
-    if (typeof child === "string" || typeof child === "number") {
-      host.appendChild(doc.createTextNode(String(child)));
-    } else if (typeof child === "object" && /** @type {Record<string, unknown>} */
-    child.nodeType === 1) {
-      host.appendChild(
-        /** @type {Node} */
-        child
-      );
-    } else if (typeof child === "object" && typeof /** @type {Record<string, unknown>} */
-    child.type === "string") {
-      const span = doc.createElement("span");
-      span.setAttribute("data-canvas-stub", String(
-        /** @type {Record<string, unknown>} */
-        child.type
-      ));
-      const text2 = (
-        /** @type {Record<string, unknown>} */
-        child.props && typeof /** @type {Record<string, unknown>} */
-        child.props === "object" ? asText2(
-          /** @type {Record<string, unknown>} */
-          /** @type {Record<string, unknown>} */
-          child.props.text ?? /** @type {Record<string, unknown>} */
-          /** @type {Record<string, unknown>} */
-          child.props.content
-        ) : ""
-      );
-      if (text2) span.textContent = text2;
-      host.appendChild(span);
-    }
-  }
-}
-var _uid = 0;
-function nextUid() {
-  _uid += 1;
-  return `c${_uid}`;
-}
-function lifecycle2(impl) {
-  return {
-    create(props = {}, ctx = {}) {
-      const doc = requireDocument2(ctx);
-      const el2 = impl.mount(doc, props, ctx);
-      impl.patch(el2, props, ctx);
-      return el2;
-    },
-    update(el2, props = {}, ctx = {}) {
-      impl.patch(el2, props, ctx);
-    },
-    destroy(el2, ctx = {}) {
-      impl.unmount?.(el2, ctx);
-    },
-    // When true, keyed reconciler will not wipe this element's children.
-    ownsChildren: impl.ownsChildren === true
-  };
-}
-
 // src/Browser/components/containers/Tabs.js
+init_shared2();
 var STATE = /* @__PURE__ */ new WeakMap();
 function getState(el2) {
   let s = STATE.get(el2);
@@ -3539,6 +9108,7 @@ var TabItem = lifecycle2({
 });
 
 // src/Browser/components/containers/Accordion.js
+init_shared2();
 var STATE2 = /* @__PURE__ */ new WeakMap();
 function getState2(el2) {
   let s = STATE2.get(el2);
@@ -3847,68 +9417,8 @@ function registerContainers(registry) {
   return registry;
 }
 
-// src/Browser/runtime/formValidation.js
-var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-var URL_RE = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
-var SAFE_PATTERN_RE = /^[\^]?[\[\]a-zA-Z0-9\s\\\.\+\*\?\-\|_(){,}]+[$]?$/;
-function compileSafePattern(pattern) {
-  if (typeof pattern !== "string" || pattern.length === 0 || pattern.length > 200) {
-    return null;
-  }
-  if (!SAFE_PATTERN_RE.test(pattern)) return null;
-  if (/\(\?/.test(pattern) || /\*\*/.test(pattern)) return null;
-  if (/\([^)]*[+*][^)]*\)[+*]/.test(pattern)) return null;
-  try {
-    return new RegExp(`^(?:${pattern})$`);
-  } catch {
-    return null;
-  }
-}
-function validateField(value, rules = {}) {
-  const str = value == null ? "" : String(value);
-  if (rules.required && (value == null || str.trim() === "")) {
-    return { ok: false, code: "required", message: "required" };
-  }
-  if (!rules.required && (value == null || str === "")) {
-    return { ok: true };
-  }
-  if (rules.email && !EMAIL_RE.test(str)) {
-    return { ok: false, code: "email", message: "invalid email" };
-  }
-  if (rules.url && !URL_RE.test(str)) {
-    return { ok: false, code: "url", message: "invalid url" };
-  }
-  if (rules.number || rules.numeric) {
-    if (Number.isNaN(Number(str)) || str.trim() === "") {
-      return { ok: false, code: "number", message: "not a number" };
-    }
-  }
-  const num2 = Number(str);
-  if (rules.min != null && num2 < rules.min) {
-    return { ok: false, code: "min", message: `min ${rules.min}` };
-  }
-  if (rules.max != null && num2 > rules.max) {
-    return { ok: false, code: "max", message: `max ${rules.max}` };
-  }
-  if (rules.minLength != null && str.length < rules.minLength) {
-    return { ok: false, code: "minLength", message: `minLength ${rules.minLength}` };
-  }
-  if (rules.maxLength != null && str.length > rules.maxLength) {
-    return { ok: false, code: "maxLength", message: `maxLength ${rules.maxLength}` };
-  }
-  if (rules.pattern) {
-    const re = compileSafePattern(rules.pattern);
-    if (!re) {
-      return { ok: false, code: "unsafe-pattern", message: "pattern rejected" };
-    }
-    if (!re.test(str)) {
-      return { ok: false, code: "pattern", message: "pattern mismatch" };
-    }
-  }
-  return { ok: true };
-}
-
 // src/Browser/components/forms/formValidationController.js
+init_formValidation();
 function createFormValidationController() {
   const errors = /* @__PURE__ */ Object.create(null);
   const fields = /* @__PURE__ */ Object.create(null);
@@ -3963,6 +9473,7 @@ function createFormValidationController() {
 }
 
 // src/Browser/components/forms/shared.js
+init_formValidation();
 function requireDocument3(ctx = {}) {
   const doc = ctx.document ?? globalThis.document;
   if (!doc?.createElement) {
@@ -5864,6 +11375,8 @@ var Buttons = lifecycle3({
 });
 
 // src/Browser/components/actions/actionDispatch.js
+init_builtins();
+init_urlPolicy();
 var FIRE = /* @__PURE__ */ new WeakMap();
 function beginFire(el2) {
   let s = FIRE.get(el2);
@@ -6155,6 +11668,7 @@ function registerActions(registry) {
 }
 
 // src/Browser/components/cards/shared.js
+init_urlPolicy();
 function requireDocument4(ctx = {}) {
   const doc = ctx.document ?? globalThis.document;
   if (!doc?.createElement) {
@@ -6534,6 +12048,7 @@ var IconText = lifecycle4({
 });
 
 // src/Browser/components/cards/ImageText.js
+init_inlineStyle();
 var LAYOUTS2 = /* @__PURE__ */ new Set(["horizontal", "vertical"]);
 function createImageText(name, opts = {}) {
   return lifecycle4({
@@ -6601,6 +12116,7 @@ var ImageText = createImageText("ImageText", { defaultLayout: "horizontal" });
 var ImageTextLarge = createImageText("ImageTextLarge", { large: true });
 
 // src/Browser/components/cards/CardBlockLayout.js
+init_inlineStyle();
 function normalizeLayoutProps(props = {}, maxPerRow = 3) {
   const layout = asText4(props.layout) === "carousel" ? "carousel" : "grid";
   const responsive = props.responsive !== false;
@@ -6969,6 +12485,7 @@ var OverviewCardItem = {
 };
 
 // src/Browser/components/cards/ContextCardBlock.js
+init_inlineStyle();
 var BG_COLORS = /* @__PURE__ */ new Set(["gray", "info", "success", "warning", "danger"]);
 function normalizeContextItems(props = {}) {
   if (Array.isArray(props.items)) return props.items;
@@ -7176,6 +12693,7 @@ var CompositeCardItem = {
 };
 
 // src/Browser/components/cards/VisualCardBlock.js
+init_inlineStyle();
 function normalizeVisualItems(props = {}) {
   if (Array.isArray(props.items)) return props.items;
   if (Array.isArray(props.children)) return props.children;
@@ -7531,5014 +13049,13 @@ function registerShellComponents(registry) {
   return registry;
 }
 
-// src/Browser/components/containers/sectionOpenState.js
-function createSectionOpenState() {
-  return {
-    openItems: [],
-    userSelected: false,
-    prevLength: 0,
-    prevIsStreaming: false
-  };
-}
-function ensureIncludes(open, value) {
-  if (!value) return open.slice();
-  return open.includes(value) ? open.slice() : [...open, value];
-}
-function applySectionStreamTick(state, input) {
-  const values = Array.isArray(input.sectionValues) ? input.sectionValues : [];
-  const isStreaming2 = input.isStreaming === true;
-  const first = values[0];
-  const len = values.length;
-  if (state.prevIsStreaming && !isStreaming2 && !state.userSelected && len > 0) {
-    state.openItems = first ? [first] : [];
-  } else if (isStreaming2 && len > state.prevLength && !state.userSelected) {
-    const last = values[len - 1];
-    if (last) {
-      state.openItems = ensureIncludes(state.openItems, last);
-    }
-  } else if (!state.userSelected) {
-    if (state.openItems.length === 0 && first) {
-      state.openItems = [first];
-    }
-  }
-  if (values.length > 0) {
-    const allowed = new Set(values);
-    state.openItems = state.openItems.filter((v) => allowed.has(v));
-    if (!state.userSelected && state.openItems.length === 0 && first) {
-      state.openItems = [first];
-    }
-  } else if (!state.userSelected) {
-    state.openItems = [];
-  }
-  state.prevLength = len;
-  state.prevIsStreaming = isStreaming2;
-  return state.openItems.slice();
-}
-function applySectionUserChange(state, next) {
-  state.userSelected = true;
-  if (Array.isArray(next)) {
-    state.openItems = next.map(String);
-  } else if (next == null || next === "") {
-    state.openItems = [];
-  } else {
-    state.openItems = [String(next)];
-  }
-  return state.openItems.slice();
-}
-function toggleSectionValue(state, value) {
-  const v = String(value);
-  const cur = state.openItems.slice();
-  const idx = cur.indexOf(v);
-  if (idx >= 0) cur.splice(idx, 1);
-  else cur.push(v);
-  return applySectionUserChange(state, cur);
-}
-function createStepsProgressState() {
-  return {
-    currentIndex: -1,
-    userSelected: false,
-    prevLength: 0,
-    prevIsStreaming: false
-  };
-}
-function applyStepsStreamTick(state, input) {
-  const count = Math.max(0, Number(input.itemCount) || 0);
-  const isStreaming2 = input.isStreaming === true;
-  if (count === 0) {
-    if (!state.userSelected) state.currentIndex = -1;
-    state.prevLength = 0;
-    state.prevIsStreaming = isStreaming2;
-    return state.currentIndex;
-  }
-  if (!state.userSelected) {
-    if (isStreaming2 && count > state.prevLength) {
-      state.currentIndex = count - 1;
-    } else if (state.currentIndex < 0 || state.currentIndex >= count) {
-      state.currentIndex = 0;
-    }
-  } else if (state.currentIndex >= count) {
-    state.currentIndex = count - 1;
-  }
-  state.prevLength = count;
-  state.prevIsStreaming = isStreaming2;
-  return state.currentIndex;
-}
-function applyStepsUserSelect(state, index) {
-  state.userSelected = true;
-  state.currentIndex = Math.max(0, Number(index) || 0);
-  return state.currentIndex;
-}
-
-// src/Browser/components/containers/SectionBlock.js
-var openStateByHost = /* @__PURE__ */ new WeakMap();
-var itemElsByHost = /* @__PURE__ */ new WeakMap();
-function getOpenState(host) {
-  let s = openStateByHost.get(host);
-  if (!s) {
-    s = createSectionOpenState();
-    openStateByHost.set(host, s);
-  }
-  return s;
-}
-function getItemMap(host) {
-  let m = itemElsByHost.get(host);
-  if (!m) {
-    m = /* @__PURE__ */ new Map();
-    itemElsByHost.set(host, m);
-  }
-  return m;
-}
-function syncOpenDom(host, openItems) {
-  const open = new Set(openItems);
-  host.setAttribute("data-open-values", openItems.join(","));
-  const map = getItemMap(host);
-  for (const [value, itemEl] of map) {
-    const isOpen = open.has(value);
-    itemEl.setAttribute("data-state", isOpen ? "open" : "closed");
-    const trigger = itemEl._canvasTrigger;
-    const panel = itemEl._canvasPanel;
-    if (trigger) {
-      trigger.setAttribute("aria-expanded", isOpen ? "true" : "false");
-      trigger.setAttribute("data-state", isOpen ? "open" : "closed");
-    }
-    if (panel) {
-      panel.setAttribute("data-state", isOpen ? "open" : "closed");
-      if (isOpen) panel.removeAttribute("hidden");
-      else panel.setAttribute("hidden", "true");
-    }
-  }
-}
-function buildItem(doc, section, host, ctx, foldable) {
-  const item = doc.createElement("div");
-  item.setAttribute("data-canvas-component", "SectionItem");
-  item.setAttribute("data-section-value", section.value);
-  setClass2(
-    item,
-    foldable ? "canvas-section-block__item" : "canvas-section-v2"
-  );
-  if (foldable) {
-    const header = doc.createElement("h3");
-    setClass2(header, "canvas-section-block__header");
-    const trigger = doc.createElement("button");
-    trigger.setAttribute("type", "button");
-    setClass2(trigger, "canvas-section-block__trigger");
-    trigger.setAttribute("aria-expanded", "false");
-    trigger.setAttribute("data-state", "closed");
-    trigger.setAttribute("id", `canvas-section-trigger-${section.value}`);
-    const icon = doc.createElement("span");
-    setClass2(icon, "canvas-section-block__icon");
-    icon.setAttribute("aria-hidden", "true");
-    icon.textContent = "\u203A";
-    const label = doc.createElement("span");
-    setClass2(label, "canvas-section-block__trigger-text");
-    label.textContent = section.trigger;
-    trigger.appendChild(icon);
-    trigger.appendChild(label);
-    const panel = doc.createElement("div");
-    setClass2(panel, "canvas-section-block__content");
-    panel.setAttribute("role", "region");
-    panel.setAttribute("data-state", "closed");
-    panel.setAttribute("hidden", "true");
-    panel.setAttribute(
-      "aria-labelledby",
-      `canvas-section-trigger-${section.value}`
-    );
-    trigger.setAttribute(
-      "aria-controls",
-      `canvas-section-panel-${section.value}`
-    );
-    panel.setAttribute("id", `canvas-section-panel-${section.value}`);
-    trigger.onclick = () => {
-      const state = getOpenState(host);
-      const next = toggleSectionValue(state, section.value);
-      syncOpenDom(host, next);
-    };
-    header.appendChild(trigger);
-    item.appendChild(header);
-    item.appendChild(panel);
-    item._canvasTrigger = trigger;
-    item._canvasPanel = panel;
-    renderPanelContent(panel, section.content, ctx);
-  } else {
-    const head = doc.createElement("div");
-    setClass2(head, "canvas-section-v2__header");
-    const t = doc.createElement("div");
-    setClass2(t, "canvas-section-v2__trigger");
-    t.textContent = section.trigger;
-    head.appendChild(t);
-    const panel = doc.createElement("div");
-    setClass2(panel, "canvas-section-v2__content");
-    item.appendChild(head);
-    item.appendChild(panel);
-    item._canvasPanel = panel;
-    item.setAttribute("data-state", "open");
-    renderPanelContent(panel, section.content, ctx);
-  }
-  return item;
-}
-var SectionBlock = lifecycle2({
-  ownsChildren: true,
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "SectionBlock");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = requireDocument2(ctx);
-    const foldable = props.isFoldable !== false;
-    const sections = normalizeSections(
-      props.sections ?? props.items ?? props.children
-    );
-    const isStreaming2 = resolveIsStreaming(props, ctx);
-    setClass2(
-      el2,
-      foldable ? "canvas-section-block" : "canvas-section-block canvas-section-block--static"
-    );
-    el2.setAttribute("data-foldable", foldable ? "true" : "false");
-    el2.setAttribute("data-streaming", isStreaming2 ? "true" : "false");
-    el2.setAttribute("data-section-count", String(sections.length));
-    if (foldable) {
-      el2.setAttribute("role", "region");
-      el2.setAttribute("aria-label", asText2(props["aria-label"]) || "Sections");
-    } else {
-      el2.removeAttribute("role");
-    }
-    const state = getOpenState(el2);
-    const values = sections.map((s) => s.value);
-    if (foldable) {
-      applySectionStreamTick(state, {
-        sectionValues: values,
-        isStreaming: isStreaming2
-      });
-    } else {
-      state.openItems = values.slice();
-      state.prevLength = values.length;
-      state.prevIsStreaming = isStreaming2;
-    }
-    clearChildren2(el2);
-    const map = /* @__PURE__ */ new Map();
-    itemElsByHost.set(el2, map);
-    for (const section of sections) {
-      const item = buildItem(doc, section, el2, ctx, foldable);
-      el2.appendChild(item);
-      map.set(section.value, item);
-    }
-    if (foldable) {
-      syncOpenDom(el2, state.openItems);
-      el2.setAttribute(
-        "data-user-intervened",
-        state.userSelected ? "true" : "false"
-      );
-    } else {
-      el2.setAttribute("data-open-values", values.join(","));
-      el2.setAttribute("data-user-intervened", "false");
-    }
-  },
-  unmount(el2) {
-    openStateByHost.delete(el2);
-    itemElsByHost.delete(el2);
-  }
-});
-
-// src/Browser/components/containers/SectionItem.js
-var SectionItem = lifecycle2({
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "SectionItem");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = requireDocument2(ctx);
-    const section = normalizeSectionEntry(props, 0);
-    setClass2(el2, "canvas-section-item canvas-section-v2");
-    el2.setAttribute("data-section-value", section.value);
-    el2.setAttribute("data-state", "open");
-    clearChildren2(el2);
-    const head = doc.createElement("div");
-    setClass2(head, "canvas-section-v2__header");
-    const trigger = doc.createElement("div");
-    setClass2(trigger, "canvas-section-v2__trigger");
-    trigger.textContent = section.trigger || asText2(props.trigger);
-    head.appendChild(trigger);
-    const panel = doc.createElement("div");
-    setClass2(panel, "canvas-section-v2__content");
-    renderPanelContent(panel, section.content, ctx);
-    el2.appendChild(head);
-    el2.appendChild(panel);
-  }
-});
-
-// src/Browser/components/containers/Steps.js
-var progressByHost = /* @__PURE__ */ new WeakMap();
-function getProgress(host) {
-  let s = progressByHost.get(host);
-  if (!s) {
-    s = createStepsProgressState();
-    progressByHost.set(host, s);
-  }
-  return s;
-}
-function syncProgressDom(host, currentIndex, count) {
-  const now = currentIndex < 0 ? 0 : currentIndex + 1;
-  const max = Math.max(count, 0);
-  host.setAttribute("data-current-index", String(currentIndex));
-  host.setAttribute("aria-valuenow", String(now));
-  host.setAttribute("aria-valuemin", "0");
-  host.setAttribute("aria-valuemax", String(max));
-  const label = max === 0 ? "No steps" : `Step ${now} of ${max}`;
-  host.setAttribute("aria-valuetext", label);
-  const status = host._canvasProgressStatus;
-  if (status) {
-    status.textContent = label;
-  }
-  const list = host._canvasList;
-  if (!list) return;
-  for (const child of list.childNodes ?? []) {
-    if (child.nodeType !== 1) continue;
-    const idx = Number(child.getAttribute("data-step-index"));
-    const isCurrent = idx === currentIndex;
-    child.setAttribute("data-current", isCurrent ? "true" : "false");
-    if (isCurrent) child.setAttribute("aria-current", "step");
-    else child.removeAttribute("aria-current");
-  }
-}
-function stepsUserSelect(host, index) {
-  const state = getProgress(host);
-  const next = applyStepsUserSelect(state, index);
-  const count = Number(host.getAttribute("data-step-count") || 0);
-  syncProgressDom(host, next, count);
-  host.setAttribute("data-user-intervened", "true");
-  return next;
-}
-var Steps = lifecycle2({
-  ownsChildren: true,
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "Steps");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = requireDocument2(ctx);
-    const items = normalizeSteps(props.items ?? props.steps ?? props.children);
-    const isStreaming2 = resolveIsStreaming(props, ctx);
-    const state = getProgress(el2);
-    setClass2(el2, "canvas-steps");
-    el2.setAttribute("role", "group");
-    el2.setAttribute("aria-label", asText2(props["aria-label"]) || "Steps");
-    el2.setAttribute("aria-roledescription", "progress");
-    el2.setAttribute("data-streaming", isStreaming2 ? "true" : "false");
-    el2.setAttribute("data-step-count", String(items.length));
-    applyStepsStreamTick(state, {
-      itemCount: items.length,
-      isStreaming: isStreaming2
-    });
-    clearChildren2(el2);
-    const status = doc.createElement("span");
-    setClass2(status, "canvas-steps__progress-status");
-    status.setAttribute("role", "status");
-    status.setAttribute("aria-live", "polite");
-    status.setAttribute("data-canvas-steps-status", "");
-    el2._canvasProgressStatus = status;
-    el2.appendChild(status);
-    const list = doc.createElement("ol");
-    setClass2(list, "canvas-steps__list");
-    list.setAttribute("role", "list");
-    el2._canvasList = list;
-    items.forEach((step, index) => {
-      const li = doc.createElement("li");
-      setClass2(li, "canvas-steps__item");
-      li.setAttribute("data-canvas-component", "StepsItem");
-      li.setAttribute("data-step-index", String(index));
-      li.setAttribute("data-step-number", String(step.number));
-      li.setAttribute("role", "listitem");
-      const connector = doc.createElement("div");
-      setClass2(connector, "canvas-steps__connector");
-      const num2 = doc.createElement("div");
-      setClass2(num2, "canvas-steps__number");
-      const numInner = doc.createElement("span");
-      setClass2(numInner, "canvas-steps__number-inner");
-      numInner.textContent = String(step.number);
-      num2.appendChild(numInner);
-      const line = doc.createElement("div");
-      setClass2(line, "canvas-steps__line");
-      line.setAttribute("aria-hidden", "true");
-      connector.appendChild(num2);
-      connector.appendChild(line);
-      const body = doc.createElement("div");
-      setClass2(body, "canvas-steps__content");
-      const titleBtn = doc.createElement("button");
-      titleBtn.setAttribute("type", "button");
-      setClass2(titleBtn, "canvas-steps__title");
-      titleBtn.textContent = step.title;
-      titleBtn.onclick = () => {
-        stepsUserSelect(el2, index);
-      };
-      const details = doc.createElement("div");
-      setClass2(details, "canvas-steps__details");
-      renderPanelContent(details, step.details, ctx);
-      body.appendChild(titleBtn);
-      body.appendChild(details);
-      li.appendChild(connector);
-      li.appendChild(body);
-      list.appendChild(li);
-    });
-    el2.appendChild(list);
-    syncProgressDom(el2, state.currentIndex, items.length);
-    el2.setAttribute(
-      "data-user-intervened",
-      state.userSelected ? "true" : "false"
-    );
-  },
-  unmount(el2) {
-    progressByHost.delete(el2);
-    el2._canvasList = null;
-    el2._canvasProgressStatus = null;
-  }
-});
-
-// src/Browser/components/containers/StepsItem.js
-var StepsItem = lifecycle2({
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "StepsItem");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = requireDocument2(ctx);
-    const step = normalizeStepEntry(props, Number(props.index) || 0);
-    setClass2(el2, "canvas-steps__item canvas-steps-item--standalone");
-    el2.setAttribute("data-step-number", String(step.number));
-    clearChildren2(el2);
-    const num2 = doc.createElement("span");
-    setClass2(num2, "canvas-steps__number-inner");
-    num2.textContent = String(step.number);
-    const title = doc.createElement("span");
-    setClass2(title, "canvas-steps__title");
-    title.textContent = step.title || asText2(props.title);
-    const details = doc.createElement("div");
-    setClass2(details, "canvas-steps__details");
-    renderPanelContent(details, step.details, ctx);
-    el2.appendChild(num2);
-    el2.appendChild(title);
-    el2.appendChild(details);
-  }
-});
-
-// src/Browser/components/containers/registerSectionSteps.js
-var SECTION_STEPS_COMPONENTS = {
-  SectionBlock,
-  SectionItem,
-  Steps,
-  StepsItem
-};
-function registerSectionSteps(registry) {
-  if (!registry || typeof registry.register !== "function") {
-    throw new Error("registerSectionSteps: registry with register() required");
-  }
-  for (const [type, entry] of Object.entries(SECTION_STEPS_COMPONENTS)) {
-    registry.register(type, entry);
-  }
-  return registry;
-}
-
-// src/Browser/components/containers/Carousel.js
-var VARIANTS12 = /* @__PURE__ */ new Set(["card", "sunk"]);
-var STATE18 = /* @__PURE__ */ new WeakMap();
-function slideStructureSignature(slide) {
-  if (!Array.isArray(slide)) return "";
-  return slide.map((n) => {
-    if (n == null || n === false) return "";
-    if (typeof n === "string" || typeof n === "number") return "#text";
-    if (typeof n === "object" && n !== null && "type" in n) {
-      return String(
-        /** @type {{ type: unknown }} */
-        n.type
-      );
-    }
-    return "?";
-  }).join("|");
-}
-function enforceSlideStructure(slides) {
-  if (!Array.isArray(slides) || slides.length === 0) {
-    return { ok: true, slides: [], signature: "", dropped: 0 };
-  }
-  let signature = "";
-  for (const slide of slides) {
-    const sig = slideStructureSignature(Array.isArray(slide) ? slide : [slide]);
-    if (sig) {
-      signature = sig;
-      break;
-    }
-  }
-  if (!signature) {
-    return { ok: true, slides: (
-      /** @type {unknown[][]} */
-      slides
-    ), signature: "", dropped: 0 };
-  }
-  const kept = [];
-  let dropped = 0;
-  for (const raw of slides) {
-    const slide = Array.isArray(raw) ? raw : [raw];
-    if (slideStructureSignature(slide) === signature) kept.push(slide);
-    else dropped += 1;
-  }
-  return { ok: dropped === 0, slides: kept, signature, dropped };
-}
-function normalizeSlides(props = {}) {
-  const kids = props.children;
-  if (!Array.isArray(kids)) return [];
-  if (kids.length === 0) return [];
-  if (Array.isArray(kids[0])) {
-    return (
-      /** @type {unknown[][]} */
-      kids.map((s) => Array.isArray(s) ? s : [s])
-    );
-  }
-  return kids.map((k) => Array.isArray(k) ? k : [k]);
-}
-function normalizeVariant2(props = {}) {
-  const v = asText2(props.variant) || "card";
-  return VARIANTS12.has(v) ? v : "card";
-}
-function prefersReducedMotion(doc) {
-  try {
-    const view = (
-      /** @type {{ matchMedia?: (q: string) => { matches: boolean } }} */
-      doc.defaultView ?? globalThis
-    );
-    if (typeof view.matchMedia === "function") {
-      return !!view.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    }
-  } catch {
-  }
-  return false;
-}
-function slideEls(track) {
-  return [...track.childNodes ?? []].filter(
-    (n) => n.nodeType === 1 && /** @type {Element} */
-    n.getAttribute?.("data-canvas-carousel-slide") != null
-  );
-}
-function indexFromScroll(track) {
-  const slides = slideEls(track);
-  if (slides.length === 0) return 0;
-  const left = Number(track.scrollLeft) || 0;
-  let best = 0;
-  let bestDist = Infinity;
-  for (let i = 0; i < slides.length; i++) {
-    const el2 = (
-      /** @type {Element & { offsetLeft?: number }} */
-      slides[i]
-    );
-    const offset = typeof el2.offsetLeft === "number" ? el2.offsetLeft : i * 280;
-    const dist = Math.abs(offset - left);
-    if (dist < bestDist) {
-      bestDist = dist;
-      best = i;
-    }
-  }
-  return best;
-}
-function goTo(state, index, opts = {}) {
-  const slides = slideEls(state.track);
-  if (slides.length === 0) return;
-  const i = Math.max(0, Math.min(slides.length - 1, index));
-  state.index = i;
-  const target = (
-    /** @type {Element & { offsetLeft?: number }} */
-    slides[i]
-  );
-  const left = typeof target.offsetLeft === "number" ? target.offsetLeft : i * 280;
-  const behavior = opts.instant || state.reducedMotion ? "auto" : "smooth";
-  if (typeof /** @type {{ scrollTo?: Function }} */
-  state.track.scrollTo === "function") {
-    state.track.scrollTo({ left, behavior });
-  } else {
-    state.track.scrollLeft = left;
-  }
-  state.scrollLeft = left;
-  syncChrome(state);
-}
-function syncChrome(state) {
-  const slides = slideEls(state.track);
-  const n = slides.length;
-  const i = n === 0 ? 0 : Math.min(state.index, n - 1);
-  state.index = i;
-  const label = n === 0 ? "No slides" : `Slide ${i + 1} of ${n}`;
-  state.status.textContent = label;
-  state.track.setAttribute("aria-label", label);
-  if (i <= 0) state.prevBtn.setAttribute("disabled", "");
-  else state.prevBtn.removeAttribute("disabled");
-  if (i >= n - 1 || n === 0) state.nextBtn.setAttribute("disabled", "");
-  else state.nextBtn.removeAttribute("disabled");
-  for (let s = 0; s < slides.length; s++) {
-    const el2 = slides[s];
-    el2.setAttribute("aria-hidden", s === i ? "false" : "true");
-    el2.setAttribute("data-active", s === i ? "true" : "false");
-  }
-}
-function renderSlides(root, slides, ctx, state) {
-  const track = state.track;
-  const prevLeft = Number(track.scrollLeft) || state.scrollLeft || 0;
-  const prevIndex = state.index;
-  clearChildren2(track);
-  const doc = requireDocument2(ctx);
-  slides.forEach((slide, i) => {
-    const wrap = doc.createElement("div");
-    wrap.setAttribute("class", "canvas-carousel__slide");
-    wrap.setAttribute("data-canvas-carousel-slide", String(i));
-    wrap.setAttribute("role", "group");
-    wrap.setAttribute("aria-roledescription", "slide");
-    wrap.setAttribute("aria-label", `Slide ${i + 1} of ${slides.length}`);
-    try {
-      const desc = Object.getOwnPropertyDescriptor(wrap, "offsetLeft");
-      const proto = Object.getPrototypeOf(wrap);
-      const protoDesc = proto ? Object.getOwnPropertyDescriptor(proto, "offsetLeft") : void 0;
-      const hasLayoutGetter = !!(protoDesc && protoDesc.get && !protoDesc.set);
-      if (!hasLayoutGetter && (!desc || desc.writable)) {
-        wrap.offsetLeft = i * 280;
-      }
-    } catch {
-    }
-    if (typeof ctx.renderChildren === "function") {
-      ctx.renderChildren(wrap, slide);
-    } else {
-      for (const part of slide) {
-        if (typeof part === "string" || typeof part === "number") {
-          wrap.appendChild(doc.createTextNode(String(part)));
-        }
-      }
-    }
-    track.appendChild(wrap);
-  });
-  if (slides.length === 0) {
-    state.index = 0;
-    state.scrollLeft = 0;
-  } else if (prevIndex < slides.length) {
-    goTo(state, prevIndex, { instant: true });
-  } else {
-    track.scrollLeft = Math.min(prevLeft, (slides.length - 1) * 280);
-    state.scrollLeft = track.scrollLeft;
-    state.index = indexFromScroll(track);
-    syncChrome(state);
-  }
-}
-var Carousel = lifecycle2({
-  ownsChildren: true,
-  mount(doc) {
-    const root = doc.createElement("div");
-    root.setAttribute("data-canvas-component", "Carousel");
-    root.setAttribute("role", "region");
-    root.setAttribute("aria-roledescription", "carousel");
-    const track = doc.createElement("div");
-    track.setAttribute("class", "canvas-carousel__track");
-    track.setAttribute("data-canvas-carousel-track", "");
-    track.setAttribute("tabindex", "0");
-    track.setAttribute("role", "group");
-    const prevBtn = doc.createElement("button");
-    prevBtn.setAttribute("type", "button");
-    prevBtn.setAttribute("class", "canvas-carousel__btn canvas-carousel__btn--prev");
-    prevBtn.setAttribute("aria-label", "Previous slide");
-    prevBtn.textContent = "\u2039";
-    const nextBtn = doc.createElement("button");
-    nextBtn.setAttribute("type", "button");
-    nextBtn.setAttribute("class", "canvas-carousel__btn canvas-carousel__btn--next");
-    nextBtn.setAttribute("aria-label", "Next slide");
-    nextBtn.textContent = "\u203A";
-    const status = doc.createElement("div");
-    status.setAttribute("class", "canvas-carousel__status");
-    status.setAttribute("role", "status");
-    status.setAttribute("aria-live", "polite");
-    status.setAttribute("aria-atomic", "true");
-    root.appendChild(prevBtn);
-    root.appendChild(track);
-    root.appendChild(nextBtn);
-    root.appendChild(status);
-    const state = {
-      index: 0,
-      scrollLeft: 0,
-      track,
-      status,
-      prevBtn,
-      nextBtn,
-      reducedMotion: prefersReducedMotion(doc),
-      signature: "",
-      onKey: () => {
-      },
-      onScroll: () => {
-      },
-      onPrev: () => {
-      },
-      onNext: () => {
-      }
-    };
-    state.onPrev = () => goTo(state, state.index - 1);
-    state.onNext = () => goTo(state, state.index + 1);
-    state.onScroll = () => {
-      state.scrollLeft = Number(track.scrollLeft) || 0;
-      state.index = indexFromScroll(track);
-      syncChrome(state);
-    };
-    state.onKey = (e) => {
-      const key = e?.key;
-      if (key === "ArrowLeft" || key === "Left") {
-        e.preventDefault?.();
-        state.onPrev();
-      } else if (key === "ArrowRight" || key === "Right") {
-        e.preventDefault?.();
-        state.onNext();
-      } else if (key === "Home") {
-        e.preventDefault?.();
-        goTo(state, 0);
-      } else if (key === "End") {
-        e.preventDefault?.();
-        goTo(state, slideEls(track).length - 1);
-      }
-    };
-    if (typeof prevBtn.addEventListener === "function") {
-      prevBtn.addEventListener("click", state.onPrev);
-      nextBtn.addEventListener("click", state.onNext);
-      track.addEventListener("keydown", state.onKey);
-      track.addEventListener("scroll", state.onScroll, { passive: true });
-    }
-    STATE18.set(root, state);
-    return root;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const state = STATE18.get(el2);
-    if (!state) return;
-    const doc = requireDocument2(ctx);
-    const variant = normalizeVariant2(props);
-    state.reducedMotion = prefersReducedMotion(doc);
-    setClass2(
-      el2,
-      `canvas-carousel canvas-carousel--${variant}${state.reducedMotion ? " canvas-carousel--reduced-motion" : ""}`
-    );
-    el2.setAttribute("data-variant", variant);
-    el2.setAttribute("data-reduced-motion", state.reducedMotion ? "true" : "false");
-    const raw = normalizeSlides(props);
-    const enforced = enforceSlideStructure(raw);
-    state.signature = enforced.signature;
-    if (!enforced.ok) {
-      el2.setAttribute("data-structure-error", "true");
-      el2.setAttribute(
-        "data-structure-dropped",
-        String(enforced.dropped)
-      );
-    } else {
-      el2.removeAttribute("data-structure-error");
-      el2.removeAttribute("data-structure-dropped");
-    }
-    if (enforced.signature) {
-      el2.setAttribute("data-slide-signature", enforced.signature);
-    } else {
-      el2.removeAttribute("data-slide-signature");
-    }
-    renderSlides(el2, enforced.slides, ctx, state);
-  },
-  unmount(el2) {
-    const state = STATE18.get(el2);
-    if (!state) return;
-    if (typeof state.prevBtn.removeEventListener === "function") {
-      state.prevBtn.removeEventListener("click", state.onPrev);
-      state.nextBtn.removeEventListener("click", state.onNext);
-      state.track.removeEventListener("keydown", state.onKey);
-      state.track.removeEventListener("scroll", state.onScroll);
-    }
-    STATE18.delete(el2);
-  }
-});
-
-// src/Browser/components/containers/Modal.js
-var SIZES6 = /* @__PURE__ */ new Set(["sm", "md", "lg"]);
-var STATE19 = /* @__PURE__ */ new WeakMap();
-var SCROLL_LOCK = /* @__PURE__ */ new WeakMap();
-function normalizeSize(props = {}) {
-  const s = asText2(props.size) || "md";
-  return SIZES6.has(s) ? s : "md";
-}
-function resolveOpen(props = {}) {
-  const o = props.open;
-  if (o === true || o === false) return o;
-  if (o && typeof o === "object") {
-    if (typeof /** @type {{ get?: unknown }} */
-    o.get === "function") {
-      return !!/** @type {{ get: () => unknown }} */
-      o.get();
-    }
-    if ("value" in /** @type {object} */
-    o) {
-      return !!/** @type {{ value: unknown }} */
-      o.value;
-    }
-  }
-  return false;
-}
-function writeOpen(props, value, ctx = {}) {
-  const o = props.open;
-  if (o && typeof o === "object" && typeof /** @type {{ set?: unknown }} */
-  o.set === "function") {
-    o.set(value);
-  }
-  if (typeof props.onOpenChange === "function") {
-    props.onOpenChange(value);
-  }
-  if (typeof ctx.onOpenChange === "function") {
-    ctx.onOpenChange(value);
-  }
-}
-function focusableElements(root) {
-  const out = [];
-  const walk = (n) => {
-    if (!n || n.nodeType !== 1) return;
-    const el2 = (
-      /** @type {Element} */
-      n
-    );
-    if (el2.getAttribute?.("disabled") != null) {
-    } else {
-      const tag = (el2.tagName || "").toLowerCase();
-      const tabindex = el2.getAttribute?.("tabindex");
-      const focusableTag = tag === "button" || tag === "a" || tag === "input" || tag === "select" || tag === "textarea" || tag === "summary";
-      const tabIdx = tabindex == null ? null : Number(tabindex);
-      if (focusableTag || tabIdx != null && !Number.isNaN(tabIdx) && tabIdx >= 0) {
-        if (el2.getAttribute?.("hidden") == null) out.push(el2);
-      }
-    }
-    for (const c of el2.childNodes ?? []) walk(c);
-  };
-  walk(root);
-  return out;
-}
-function setScrollLock(doc, lock) {
-  const body = doc.body;
-  if (!body) return;
-  let count = SCROLL_LOCK.get(doc) ?? 0;
-  if (lock) {
-    count += 1;
-    SCROLL_LOCK.set(doc, count);
-    if (count === 1) {
-      body.setAttribute("data-canvas-scroll-lock", "1");
-      if (body.style) body.style.overflow = "hidden";
-      else body.setAttribute("style", "overflow: hidden");
-    }
-  } else {
-    count = Math.max(0, count - 1);
-    SCROLL_LOCK.set(doc, count);
-    if (count === 0) {
-      body.removeAttribute("data-canvas-scroll-lock");
-      if (body.style) body.style.overflow = "";
-      else body.removeAttribute("style");
-    }
-  }
-}
-function applyOpen2(dialog, state, open, props, ctx) {
-  const doc = requireDocument2(ctx);
-  const wasOpen = state.open;
-  if (open && !wasOpen) {
-    state.restoreFocus = (props.trigger && typeof props.trigger.focus === "function" ? (
-      /** @type {Element} */
-      props.trigger
-    ) : null) || (doc.activeElement && doc.activeElement !== dialog ? (
-      /** @type {Element} */
-      doc.activeElement
-    ) : state.restoreFocus);
-    state.propsRef = props;
-    state.ctxRef = ctx;
-    const finishOpen = () => {
-      setScrollLock(doc, true);
-      state.open = true;
-      dialog.setAttribute("data-open", "true");
-      queueMicrotaskOrNow(() => {
-        if (!state.open) return;
-        const focusables = focusableElements(dialog);
-        const preferred = focusables.find((el2) => el2 !== state.closeBtn) || state.closeBtn || dialog;
-        preferred.focus?.();
-      });
-    };
-    let shown = false;
-    try {
-      if (typeof /** @type {{ showModal?: Function }} */
-      dialog.showModal === "function") {
-        dialog.showModal();
-        shown = true;
-      } else {
-        dialog.setAttribute("open", "");
-        dialog.open = true;
-        shown = true;
-      }
-    } catch {
-      shown = false;
-    }
-    if (!shown) {
-      queueMicrotaskOrNow(() => {
-        if (!resolveOpen(state.propsRef) || state.open) return;
-        try {
-          if (typeof /** @type {{ showModal?: Function }} */
-          dialog.showModal === "function") {
-            dialog.showModal();
-          } else {
-            dialog.setAttribute("open", "");
-            dialog.open = true;
-          }
-          finishOpen();
-        } catch {
-        }
-      });
-      return;
-    }
-    finishOpen();
-  } else if (!open && wasOpen) {
-    if (typeof /** @type {{ close?: Function }} */
-    dialog.close === "function") {
-      dialog.close();
-    } else {
-      dialog.removeAttribute("open");
-      dialog.open = false;
-    }
-    setScrollLock(doc, false);
-    state.open = false;
-    dialog.setAttribute("data-open", "false");
-    const restore = state.restoreFocus;
-    state.restoreFocus = null;
-    queueMicrotaskOrNow(() => {
-      restore?.focus?.();
-    });
-  }
-}
-function queueMicrotaskOrNow(fn) {
-  if (typeof queueMicrotask === "function") queueMicrotask(fn);
-  else fn();
-}
-function requestClose(dialog, state) {
-  writeOpen(state.propsRef, false, state.ctxRef);
-  applyOpen2(dialog, state, false, state.propsRef, state.ctxRef);
-}
-var Modal = lifecycle2({
-  ownsChildren: true,
-  mount(doc) {
-    const dialog = doc.createElement("dialog");
-    dialog.setAttribute("data-canvas-component", "Modal");
-    dialog.setAttribute("class", "canvas-modal");
-    dialog.setAttribute("aria-modal", "true");
-    dialog.setAttribute("role", "dialog");
-    const header = doc.createElement("div");
-    header.setAttribute("class", "canvas-modal__header");
-    const titleEl = doc.createElement("h2");
-    titleEl.setAttribute("class", "canvas-modal__title");
-    const titleId = `canvas-modal-title-${Math.random().toString(36).slice(2, 9)}`;
-    titleEl.setAttribute("id", titleId);
-    dialog.setAttribute("aria-labelledby", titleId);
-    const closeBtn = doc.createElement("button");
-    closeBtn.setAttribute("type", "button");
-    closeBtn.setAttribute("class", "canvas-modal__close");
-    closeBtn.setAttribute("aria-label", "Close");
-    closeBtn.textContent = "\xD7";
-    header.appendChild(titleEl);
-    header.appendChild(closeBtn);
-    const bodyEl = doc.createElement("div");
-    bodyEl.setAttribute("class", "canvas-modal__body");
-    bodyEl.setAttribute("data-canvas-modal-body", "");
-    dialog.appendChild(header);
-    dialog.appendChild(bodyEl);
-    const state = {
-      open: false,
-      titleEl,
-      bodyEl,
-      closeBtn,
-      restoreFocus: null,
-      propsRef: {},
-      ctxRef: {},
-      onKeyDown: () => {
-      },
-      onCancel: () => {
-      },
-      onClick: () => {
-      },
-      onCloseClick: () => {
-      }
-    };
-    state.onCloseClick = () => requestClose(dialog, state);
-    state.onCancel = (e) => {
-      e?.preventDefault?.();
-      requestClose(dialog, state);
-    };
-    state.onClick = (e) => {
-      if (e?.target === dialog) {
-        requestClose(dialog, state);
-      }
-    };
-    state.onKeyDown = (e) => {
-      if (!state.open) return;
-      if (e?.key === "Escape") {
-        e.preventDefault?.();
-        requestClose(dialog, state);
-        return;
-      }
-      if (e?.key !== "Tab") return;
-      const focusables = focusableElements(dialog);
-      if (focusables.length === 0) {
-        e.preventDefault?.();
-        dialog.focus?.();
-        return;
-      }
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-      const active = dialog.ownerDocument?.activeElement;
-      if (e.shiftKey) {
-        if (active === first || active === dialog) {
-          e.preventDefault?.();
-          last.focus?.();
-        }
-      } else if (active === last) {
-        e.preventDefault?.();
-        first.focus?.();
-      }
-    };
-    if (typeof dialog.addEventListener === "function") {
-      dialog.addEventListener("cancel", state.onCancel);
-      dialog.addEventListener("click", state.onClick);
-      dialog.addEventListener("keydown", state.onKeyDown);
-      closeBtn.addEventListener("click", state.onCloseClick);
-    }
-    dialog.setAttribute("tabindex", "-1");
-    STATE19.set(dialog, state);
-    dialog.setAttribute("data-open", "false");
-    return dialog;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const state = STATE19.get(el2);
-    if (!state) return;
-    state.propsRef = props;
-    state.ctxRef = ctx;
-    const size = normalizeSize(props);
-    setClass2(el2, `canvas-modal canvas-modal--${size}`);
-    el2.setAttribute("data-size", size);
-    const title = asText2(props.title) || "Dialog";
-    state.titleEl.textContent = title;
-    const kids = Array.isArray(props.children) ? props.children : null;
-    if (kids && typeof ctx.renderChildren === "function") {
-      ctx.renderChildren(state.bodyEl, kids);
-    } else if (kids) {
-      clearChildren2(state.bodyEl);
-      const doc = requireDocument2(ctx);
-      for (const part of kids) {
-        if (typeof part === "string" || typeof part === "number") {
-          state.bodyEl.appendChild(doc.createTextNode(String(part)));
-        }
-      }
-    }
-    const wantOpen = resolveOpen(props);
-    applyOpen2(el2, state, wantOpen, props, ctx);
-  },
-  unmount(el2, ctx = {}) {
-    const state = STATE19.get(el2);
-    if (!state) return;
-    if (state.open) {
-      const doc = requireDocument2(ctx);
-      setScrollLock(doc, false);
-      state.open = false;
-    }
-    if (typeof el2.removeEventListener === "function") {
-      el2.removeEventListener("cancel", state.onCancel);
-      el2.removeEventListener("click", state.onClick);
-      el2.removeEventListener("keydown", state.onKeyDown);
-      state.closeBtn.removeEventListener("click", state.onCloseClick);
-    }
-    STATE19.delete(el2);
-  }
-});
-
-// src/Browser/components/containers/registerCarouselModal.js
-var CAROUSEL_MODAL_COMPONENTS = Object.freeze({
-  Carousel,
-  Modal
-});
-function registerCarouselModal(registry) {
-  if (!registry || typeof registry.register !== "function") {
-    throw new Error("registerCarouselModal: registry with register() required");
-  }
-  registry.register("Carousel", Carousel);
-  registry.register("Modal", Modal);
-  return registry;
-}
-
-// src/Browser/components/table/shared.js
-var DEFAULT_PAGE_SIZE = 10;
-var SURFACE_STATUS2 = Object.freeze({
-  READY: "ready",
-  LOADING: "loading",
-  EMPTY: "empty",
-  ERROR: "error",
-  REFETCHING: "refetching"
-});
-var STATUS_LABELS2 = Object.freeze({
-  ready: "",
-  loading: "Loading",
-  empty: "No rows",
-  error: "Error",
-  refetching: "Refreshing"
-});
-function requireDocument5(ctx = {}) {
-  const doc = ctx.document ?? globalThis.document;
-  if (!doc?.createElement) {
-    throw new Error("table component: ctx.document required");
-  }
-  return doc;
-}
-function setClass5(el2, className) {
-  el2.setAttribute("class", String(className).trim());
-}
-function setOrRemoveAttr5(el2, name, value) {
-  if (value == null || value === false || value === "") {
-    el2.removeAttribute(name);
-  } else {
-    el2.setAttribute(name, value === true ? "true" : String(value));
-  }
-}
-function clearChildren5(el2) {
-  while (el2.firstChild) {
-    el2.removeChild(el2.firstChild);
-  }
-}
-function asText5(value) {
-  if (value == null) return "";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  return "";
-}
-function asArray(value) {
-  if (value == null) return [];
-  if (Array.isArray(value)) return value;
-  return [value];
-}
-function normalizeCol(raw, index) {
-  if (raw == null) {
-    return { label: "", data: [], type: "string", key: String(index) };
-  }
-  let obj = (
-    /** @type {Record<string, unknown>} */
-    raw
-  );
-  if (obj.props && typeof obj.props === "object" && (obj.type === "Col" || obj.label == null)) {
-    obj = /** @type {Record<string, unknown>} */
-    obj.props;
-  }
-  const label = asText5(obj.label ?? obj.header);
-  const type = asText5(obj.type) || "string";
-  const key = asText5(obj.key) || String(index);
-  const align = asText5(obj.align);
-  return {
-    label,
-    data: asArray(obj.data),
-    type,
-    key,
-    sortable: obj.sortable === true,
-    align: align === "center" || align === "right" ? align : "left"
-  };
-}
-function normalizeColumns(columns) {
-  if (!Array.isArray(columns)) return [];
-  return columns.filter((c) => c != null).map((c, i) => normalizeCol(c, i));
-}
-function columnsToRows(cols) {
-  const labels = cols.map((c) => c.label);
-  const rowCount = cols.length ? Math.max(...cols.map((c) => c.data.length), 0) : 0;
-  const rows = [];
-  for (let r = 0; r < rowCount; r++) {
-    rows.push(cols.map((c) => r < c.data.length ? c.data[r] : ""));
-  }
-  return { labels, rows, rowCount };
-}
-function formatCellDisplay(value, type = "string") {
-  if (value == null) return "";
-  if (typeof value === "object") {
-    if (value && typeof value === "object" && "label" in /** @type {object} */
-    value) {
-      return asText5(
-        /** @type {{ label?: unknown }} */
-        value.label
-      );
-    }
-    return "";
-  }
-  if (type === "number" || type === "action") {
-    if (typeof value === "number" && Number.isFinite(value)) {
-      try {
-        return value.toLocaleString();
-      } catch {
-        return String(value);
-      }
-    }
-  }
-  return asText5(value);
-}
-function sortRowIndices(rows, colIndex, dir = "asc", type = "string") {
-  const indices = rows.map((_, i) => i);
-  const mult = dir === "desc" ? -1 : 1;
-  indices.sort((a, b) => {
-    const va = rows[a]?.[colIndex];
-    const vb = rows[b]?.[colIndex];
-    if (type === "number") {
-      const na = Number(va);
-      const nb = Number(vb);
-      const aOk = Number.isFinite(na);
-      const bOk = Number.isFinite(nb);
-      if (aOk && bOk) return (na - nb) * mult;
-      if (aOk) return -1 * mult;
-      if (bOk) return 1 * mult;
-      return 0;
-    }
-    const sa = asText5(va).toLowerCase();
-    const sb = asText5(vb).toLowerCase();
-    if (sa < sb) return -1 * mult;
-    if (sa > sb) return 1 * mult;
-    return 0;
-  });
-  return indices;
-}
-function resolveTableStatus(props = {}, ctx = {}) {
-  const raw = props.status ?? props.state;
-  if (raw === "loading" || raw === "empty" || raw === "error" || raw === "ready" || raw === "refetching") {
-    return raw;
-  }
-  if (props.loading === true) return "loading";
-  if (props.refetching === true || props.isRefetching === true) return "refetching";
-  if (props.error != null && props.error !== false) return "error";
-  if (props.empty === true) return "empty";
-  const query = ctx.query;
-  if (query && typeof query === "object") {
-    const loading = (
-      /** @type {{ __openui_loading?: unknown[] }} */
-      query.__openui_loading
-    );
-    const refetching = (
-      /** @type {{ __openui_refetching?: unknown[] }} */
-      query.__openui_refetching
-    );
-    const errors = (
-      /** @type {{ __openui_errors?: unknown[] }} */
-      query.__openui_errors
-    );
-    if (Array.isArray(errors) && errors.length > 0) return "error";
-    if (Array.isArray(loading) && loading.length > 0) return "loading";
-    if (Array.isArray(refetching) && refetching.length > 0) return "refetching";
-  }
-  return "ready";
-}
-var statusTextByHost2 = /* @__PURE__ */ new WeakMap();
-function findStatusTextChild2(el2) {
-  const cached = statusTextByHost2.get(el2);
-  if (cached && cached.parentNode === el2) return cached;
-  for (const child of el2.childNodes ?? []) {
-    if (child.nodeType === 1 && child.getAttribute?.("data-canvas-status-text") != null) {
-      statusTextByHost2.set(el2, child);
-      return child;
-    }
-  }
-  return null;
-}
-function applyTableStatus(el2, doc, props = {}, ctx = {}, opts = {}) {
-  const status = resolveTableStatus(props, ctx);
-  el2.setAttribute("data-status", status);
-  setOrRemoveAttr5(
-    el2,
-    "aria-busy",
-    status === "loading" || status === "refetching" ? "true" : null
-  );
-  let statusEl = findStatusTextChild2(el2);
-  const show = opts.showStatusText !== false && (status === "loading" || status === "empty" || status === "error" || status === "refetching");
-  if (show) {
-    if (!statusEl) {
-      statusEl = doc.createElement("span");
-      statusEl.setAttribute("data-canvas-status-text", "");
-      statusEl.setAttribute("class", "canvas-status-text");
-      el2.appendChild(statusEl);
-      statusTextByHost2.set(el2, statusEl);
-    }
-    const msg = status === "loading" ? asText5(props.loadingMessage) || opts.loadingMessage || STATUS_LABELS2.loading : status === "refetching" ? asText5(props.refetchingMessage) || opts.refetchingMessage || STATUS_LABELS2.refetching : status === "empty" ? asText5(props.emptyMessage) || opts.emptyMessage || STATUS_LABELS2.empty : asText5(props.errorMessage ?? props.error) || opts.errorMessage || STATUS_LABELS2.error;
-    statusEl.textContent = msg;
-    statusEl.setAttribute("role", "status");
-    setOrRemoveAttr5(statusEl, "aria-live", status === "error" ? "assertive" : "polite");
-  } else if (statusEl && statusEl.parentNode) {
-    statusEl.parentNode.removeChild(statusEl);
-    statusTextByHost2.delete(el2);
-    statusEl = null;
-  }
-  return { status, statusEl };
-}
-function lifecycle5(impl) {
-  return {
-    create(props = {}, ctx = {}) {
-      const doc = requireDocument5(ctx);
-      const el2 = impl.mount(doc, props, ctx);
-      impl.patch(el2, props, ctx);
-      return el2;
-    },
-    update(el2, props = {}, ctx = {}) {
-      impl.patch(el2, props, ctx);
-    },
-    destroy(el2, ctx = {}) {
-      impl.unmount?.(el2, ctx);
-    },
-    ownsChildren: impl.ownsChildren !== false
-  };
-}
-function normalizeEditableCellType(type) {
-  const t = asText5(type);
-  if (t === "number" || t === "date-single" || t === "select" || t === "url" || t === "text") {
-    return t;
-  }
-  if (t === "date") return "date-single";
-  return "text";
-}
-function normalizeEditableColumn(raw, index) {
-  let obj = raw && typeof raw === "object" ? (
-    /** @type {Record<string, unknown>} */
-    raw
-  ) : {};
-  if (obj.props && typeof obj.props === "object") {
-    obj = /** @type {Record<string, unknown>} */
-    obj.props;
-  }
-  const optionsRaw = Array.isArray(obj.options) ? obj.options : [];
-  const options = optionsRaw.filter((o) => o && typeof o === "object").map((o) => {
-    const opt = (
-      /** @type {Record<string, unknown>} */
-      o
-    );
-    return {
-      value: asText5(opt.value),
-      label: asText5(opt.label ?? opt.value)
-    };
-  });
-  const width = typeof obj.width === "number" ? obj.width : void 0;
-  return {
-    type: normalizeEditableCellType(asText5(obj.type)),
-    key: asText5(obj.key) || `col-${index}`,
-    header: asText5(obj.header ?? obj.label),
-    width,
-    options
-  };
-}
-function toKeyedRows(data, columnKeys) {
-  if (!Array.isArray(data)) return [];
-  return data.map((row, i) => {
-    let obj = row && typeof row === "object" ? (
-      /** @type {Record<string, unknown>} */
-      row
-    ) : {};
-    if (obj.props && typeof obj.props === "object" && obj.id == null) {
-      obj = /** @type {Record<string, unknown>} */
-      obj.props;
-    }
-    const id = asText5(obj.id) || `row-${i}`;
-    const values = {};
-    if (Array.isArray(obj.values)) {
-      columnKeys.forEach((key, idx) => {
-        const v = obj.values[idx];
-        values[key] = typeof v === "number" ? v : asText5(v);
-      });
-    } else {
-      for (const key of columnKeys) {
-        const v = obj[key];
-        values[key] = typeof v === "number" ? v : asText5(v);
-      }
-    }
-    return { id, values };
-  });
-}
-function fromKeyedRows(rows, columnKeys) {
-  return rows.map((row) => ({
-    id: row.id,
-    values: columnKeys.map((key) => {
-      const v = row.values[key];
-      return typeof v === "number" ? v : asText5(v);
-    })
-  }));
-}
-function countChangedCells(rows, baseline, columnKeys) {
-  if (!baseline) return 0;
-  let count = 0;
-  const current = new Map(rows.map((r) => [r.id, r.values]));
-  for (const [id, baseValues] of baseline) {
-    const cur = current.get(id);
-    if (!cur) continue;
-    for (const key of columnKeys) {
-      if (cur[key] !== baseValues[key]) count++;
-    }
-  }
-  return count;
-}
-
-// src/Browser/components/table/Col.js
-var Col = lifecycle5({
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "Col");
-    el2.setAttribute("hidden", "");
-    return el2;
-  },
-  patch(el2, props = {}) {
-    setClass5(el2, "canvas-table-col");
-    el2.setAttribute("data-label", String(props.label ?? ""));
-    el2.setAttribute("data-col-type", String(props.type ?? "string"));
-  }
-});
-
-// src/Browser/components/table/Table.js
-var STATE20 = /* @__PURE__ */ new WeakMap();
-function resolveTableColumns(props = {}) {
-  if (Array.isArray(props.columns) && props.columns.length) {
-    return normalizeColumns(props.columns);
-  }
-  if (Array.isArray(props.children) && props.children.length) {
-    const cols = props.children.filter(
-      (c) => c && typeof c === "object" && /** @type {{ type?: string }} */
-      (c.type === "Col" || /** @type {{ props?: object }} */
-      c.props && "label" in /** @type {object} */
-      (c.props ?? {}) && "data" in /** @type {object} */
-      (c.props ?? {}))
-    );
-    if (cols.length) return normalizeColumns(cols);
-  }
-  return [];
-}
-function getState4(host) {
-  let s = STATE20.get(host);
-  if (!s) {
-    s = { page: 0, sortCol: null, sortDir: "asc", wired: false };
-    STATE20.set(host, s);
-  }
-  return s;
-}
-function makePageBtn(doc, label) {
-  const btn = doc.createElement("button");
-  btn.type = "button";
-  btn.setAttribute("class", "canvas-table__page-btn");
-  btn.setAttribute("aria-label", label);
-  btn.textContent = label === "Previous page" ? "\u2039" : "\u203A";
-  return (
-    /** @type {HTMLButtonElement} */
-    btn
-  );
-}
-function fillCell(doc, td, value, type, ctx) {
-  clearChildren5(td);
-  if (value && typeof value === "object" && typeof ctx.renderChildren === "function" && ("type" in /** @type {object} */
-  value || Array.isArray(value))) {
-    const kids = Array.isArray(value) ? value : [value];
-    ctx.renderChildren(td, kids);
-    return;
-  }
-  if (type === "action" && value && typeof value === "object") {
-    const obj = (
-      /** @type {Record<string, unknown>} */
-      value
-    );
-    const btn = doc.createElement("button");
-    btn.type = "button";
-    btn.setAttribute("class", "canvas-table__action");
-    btn.textContent = asText5(obj.label) || "Action";
-    if (typeof obj.onClick === "function") {
-      btn.addEventListener(
-        "click",
-        /** @type {EventListener} */
-        obj.onClick
-      );
-    }
-    td.appendChild(btn);
-    return;
-  }
-  td.textContent = formatCellDisplay(value, type);
-}
-function ensureScrollKeyboard(host, scrollEl, state) {
-  if (state.wired) return;
-  state.wired = true;
-  setOrRemoveAttr5(scrollEl, "tabindex", "0");
-  state.onKey = (e) => {
-    const ev = (
-      /** @type {KeyboardEvent} */
-      e
-    );
-    const target = (
-      /** @type {Element & { scrollLeft?: number, clientWidth?: number, scrollWidth?: number, scrollTo?: Function }} */
-      scrollEl
-    );
-    if (ev.key === "ArrowRight") {
-      ev.preventDefault?.();
-      const next = (target.scrollLeft || 0) + Math.max(40, (target.clientWidth || 200) * 0.4);
-      if (typeof target.scrollTo === "function") {
-        target.scrollTo({ left: next });
-      } else {
-        target.scrollLeft = next;
-      }
-    } else if (ev.key === "ArrowLeft") {
-      ev.preventDefault?.();
-      const next = Math.max(
-        0,
-        (target.scrollLeft || 0) - Math.max(40, (target.clientWidth || 200) * 0.4)
-      );
-      if (typeof target.scrollTo === "function") {
-        target.scrollTo({ left: next });
-      } else {
-        target.scrollLeft = next;
-      }
-    } else if (ev.key === "Home") {
-      ev.preventDefault?.();
-      if (typeof target.scrollTo === "function") target.scrollTo({ left: 0 });
-      else target.scrollLeft = 0;
-    } else if (ev.key === "End") {
-      ev.preventDefault?.();
-      const max = Math.max(0, (target.scrollWidth || 0) - (target.clientWidth || 0));
-      if (typeof target.scrollTo === "function") target.scrollTo({ left: max });
-      else target.scrollLeft = max;
-    }
-  };
-  scrollEl.addEventListener("keydown", state.onKey);
-}
-var Table = lifecycle5({
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "Table");
-    el2.setAttribute("class", "canvas-table");
-    const statusSlot = doc.createElement("div");
-    statusSlot.setAttribute("data-canvas-table-status", "");
-    statusSlot.setAttribute("class", "canvas-table__status");
-    el2.appendChild(statusSlot);
-    const scroll = doc.createElement("div");
-    scroll.setAttribute("class", "canvas-table__scroll");
-    scroll.setAttribute("data-canvas-table-scroll", "");
-    el2.appendChild(scroll);
-    const table = doc.createElement("table");
-    table.setAttribute("class", "canvas-table__grid");
-    scroll.appendChild(table);
-    const thead = doc.createElement("thead");
-    thead.setAttribute("class", "canvas-table__head");
-    table.appendChild(thead);
-    const tbody = doc.createElement("tbody");
-    tbody.setAttribute("class", "canvas-table__body");
-    table.appendChild(tbody);
-    const pager = doc.createElement("div");
-    pager.setAttribute("class", "canvas-table__pager");
-    pager.setAttribute("data-canvas-table-pager", "");
-    pager.hidden = true;
-    el2.appendChild(pager);
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const state = getState4(el2);
-    const cols = resolveTableColumns(props);
-    const pageSize = typeof props.pageSize === "number" && props.pageSize > 0 ? Math.floor(props.pageSize) : DEFAULT_PAGE_SIZE;
-    setClass5(el2, "canvas-table");
-    const statusHost = [...el2.childNodes ?? []].find(
-      (n) => n.nodeType === 1 && n.getAttribute?.("data-canvas-table-status") != null
-    ) ?? el2;
-    const { status } = applyTableStatus(
-      /** @type {Element} */
-      statusHost,
-      doc,
-      props,
-      ctx,
-      { emptyMessage: asText5(props.emptyMessage) || "No rows" }
-    );
-    el2.setAttribute("data-status", status);
-    setOrRemoveAttr5(
-      el2,
-      "aria-busy",
-      status === "loading" || status === "refetching" ? "true" : null
-    );
-    const scroll = [...el2.childNodes ?? []].find(
-      (n) => n.nodeType === 1 && n.getAttribute?.("data-canvas-table-scroll") != null
-    );
-    const pager = [...el2.childNodes ?? []].find(
-      (n) => n.nodeType === 1 && n.getAttribute?.("data-canvas-table-pager") != null
-    );
-    const table = scroll?.firstChild;
-    const thead = table?.firstChild;
-    const tbody = table?.childNodes?.[1];
-    if (!scroll || !table || !thead || !tbody) return;
-    ensureScrollKeyboard(
-      el2,
-      /** @type {Element} */
-      scroll,
-      state
-    );
-    if (status === "loading" || status === "error") {
-      clearChildren5(
-        /** @type {Element} */
-        thead
-      );
-      clearChildren5(
-        /** @type {Element} */
-        tbody
-      );
-      if (pager) pager.hidden = true;
-      return;
-    }
-    if (!cols.length) {
-      applyTableStatus(
-        /** @type {Element} */
-        statusHost,
-        doc,
-        { ...props, status: "empty" },
-        ctx,
-        {
-          emptyMessage: asText5(props.emptyMessage) || "No rows"
-        }
-      );
-      el2.setAttribute("data-status", "empty");
-      clearChildren5(
-        /** @type {Element} */
-        thead
-      );
-      clearChildren5(
-        /** @type {Element} */
-        tbody
-      );
-      if (pager) pager.hidden = true;
-      return;
-    }
-    const { rows, rowCount } = columnsToRows(cols);
-    if (rowCount === 0 && status !== "refetching") {
-      applyTableStatus(
-        /** @type {Element} */
-        statusHost,
-        doc,
-        { ...props, status: "empty" },
-        ctx,
-        {
-          emptyMessage: asText5(props.emptyMessage) || "No rows"
-        }
-      );
-      el2.setAttribute("data-status", "empty");
-    } else if (status === "refetching") {
-    } else if (statusHost.getAttribute?.("data-status") === "empty" && rowCount > 0) {
-      applyTableStatus(
-        /** @type {Element} */
-        statusHost,
-        doc,
-        { ...props, status: "ready" },
-        ctx
-      );
-      el2.setAttribute("data-status", "ready");
-    }
-    let sortCol = state.sortCol;
-    let sortDir = state.sortDir;
-    if (props.sortBy != null) {
-      if (typeof props.sortBy === "number") sortCol = props.sortBy;
-      else {
-        const label = asText5(props.sortBy);
-        const idx = cols.findIndex((c) => c.label === label || c.key === label);
-        sortCol = idx >= 0 ? idx : null;
-      }
-    }
-    if (props.sortDir === "asc" || props.sortDir === "desc") {
-      sortDir = props.sortDir;
-    }
-    let order = rows.map((_, i) => i);
-    if (sortCol != null && sortCol >= 0 && sortCol < cols.length) {
-      order = sortRowIndices(rows, sortCol, sortDir, cols[sortCol].type);
-    }
-    const totalPages = Math.max(1, Math.ceil(order.length / pageSize));
-    if (state.page >= totalPages) state.page = Math.max(0, totalPages - 1);
-    if (typeof props.page === "number" && props.page >= 0) {
-      state.page = Math.min(Math.floor(props.page), totalPages - 1);
-    }
-    const start = state.page * pageSize;
-    const end = Math.min(start + pageSize, order.length);
-    const pageOrder = order.slice(start, end);
-    clearChildren5(
-      /** @type {Element} */
-      thead
-    );
-    const hr = doc.createElement("tr");
-    hr.setAttribute("class", "canvas-table__row canvas-table__row--head");
-    cols.forEach((col, ci) => {
-      const th = doc.createElement("th");
-      th.setAttribute("class", `canvas-table__th canvas-table__align-${col.align || "left"}`);
-      th.setAttribute("scope", "col");
-      th.setAttribute("data-col-type", col.type);
-      th.setAttribute("data-col-key", col.key);
-      const labelEl = doc.createElement("span");
-      labelEl.setAttribute("class", "canvas-table__th-label");
-      labelEl.textContent = col.label;
-      th.appendChild(labelEl);
-      if (col.sortable || props.sortable === true) {
-        th.setAttribute("tabindex", "0");
-        th.setAttribute("role", "button");
-        const active = sortCol === ci;
-        setOrRemoveAttr5(th, "aria-sort", active ? sortDir === "asc" ? "ascending" : "descending" : "none");
-        const activate = () => {
-          if (state.sortCol === ci) {
-            state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
-          } else {
-            state.sortCol = ci;
-            state.sortDir = "asc";
-          }
-          Table.update(el2, props, ctx);
-        };
-        th.addEventListener("click", activate);
-        th.addEventListener("keydown", (e) => {
-          const ev = (
-            /** @type {KeyboardEvent} */
-            e
-          );
-          if (ev.key === "Enter" || ev.key === " ") {
-            ev.preventDefault?.();
-            activate();
-          }
-        });
-      }
-      hr.appendChild(th);
-    });
-    thead.appendChild(hr);
-    clearChildren5(
-      /** @type {Element} */
-      tbody
-    );
-    for (const ri of pageOrder) {
-      const tr = doc.createElement("tr");
-      tr.setAttribute("class", "canvas-table__row");
-      tr.setAttribute("data-row-index", String(ri));
-      cols.forEach((col, ci) => {
-        const td = doc.createElement("td");
-        td.setAttribute("class", `canvas-table__td canvas-table__align-${col.align || "left"}`);
-        td.setAttribute("data-col-type", col.type);
-        fillCell(
-          doc,
-          /** @type {HTMLTableCellElement} */
-          td,
-          rows[ri][ci],
-          col.type,
-          ctx
-        );
-        tr.appendChild(td);
-      });
-      tbody.appendChild(tr);
-    }
-    el2.setAttribute("data-row-count", String(rowCount));
-    el2.setAttribute("data-page", String(state.page));
-    el2.setAttribute("data-page-size", String(pageSize));
-    el2.setAttribute("data-visible-rows", String(pageOrder.length));
-    if (pager) {
-      const p = (
-        /** @type {HTMLElement} */
-        pager
-      );
-      if (totalPages > 1) {
-        p.hidden = false;
-        clearChildren5(p);
-        const prev = makePageBtn(doc, "Previous page");
-        prev.disabled = state.page <= 0;
-        prev.addEventListener("click", () => {
-          if (state.page > 0) {
-            state.page -= 1;
-            Table.update(el2, props, ctx);
-          }
-        });
-        const info = doc.createElement("span");
-        info.setAttribute("class", "canvas-table__page-info");
-        info.setAttribute("aria-live", "polite");
-        info.textContent = `${state.page + 1} / ${totalPages}`;
-        const next = makePageBtn(doc, "Next page");
-        next.disabled = state.page >= totalPages - 1;
-        next.addEventListener("click", () => {
-          if (state.page < totalPages - 1) {
-            state.page += 1;
-            Table.update(el2, props, ctx);
-          }
-        });
-        p.appendChild(prev);
-        p.appendChild(info);
-        p.appendChild(next);
-      } else {
-        p.hidden = true;
-        clearChildren5(p);
-      }
-    }
-  },
-  unmount(el2) {
-    const state = STATE20.get(el2);
-    if (state?.onKey) {
-      const scroll = [...el2.childNodes ?? []].find(
-        (n) => n.nodeType === 1 && n.getAttribute?.("data-canvas-table-scroll") != null
-      );
-      scroll?.removeEventListener?.("keydown", state.onKey);
-    }
-    STATE20.delete(el2);
-  }
-});
-
-// src/Browser/components/table/EditableTable.js
-var STATE21 = /* @__PURE__ */ new WeakMap();
-function normalizeEditableColumns(columns) {
-  if (!Array.isArray(columns)) return [];
-  return columns.filter((c) => c != null).map((c, i) => normalizeEditableColumn(c, i));
-}
-function getState5(host) {
-  let s = STATE21.get(host);
-  if (!s) {
-    s = {
-      rows: [],
-      baseline: null,
-      selected: null,
-      editing: null,
-      editBuffer: "",
-      justCancelled: false,
-      columnKeys: [],
-      mutationStatus: "idle",
-      mutationError: "",
-      cellErrors: /* @__PURE__ */ new Map(),
-      wired: false,
-      initializedFrom: ""
-    };
-    STATE21.set(host, s);
-  }
-  return s;
-}
-function rulesForCellType(type) {
-  const t = normalizeEditableCellType(type);
-  if (t === "number") return { number: true };
-  if (t === "url") return { url: true };
-  if (t === "date-single") {
-    return { pattern: "\\d{4}-\\d{2}-\\d{2}" };
-  }
-  return {};
-}
-function validateEditableCell(value, type, options = []) {
-  const t = normalizeEditableCellType(type);
-  if (t === "select") {
-    const str = asText5(value);
-    if (options.length && !options.some((o) => o.value === str)) {
-      return { ok: false, code: "select", message: "invalid option" };
-    }
-    return { ok: true, value: str };
-  }
-  if (t === "number") {
-    const raw = value == null ? "" : String(value);
-    if (raw.trim() === "") return { ok: true, value: 0 };
-    const parsed = parseFloat(raw);
-    if (!Number.isFinite(parsed)) {
-      return { ok: false, code: "number", message: "not a number" };
-    }
-    return { ok: true, value: parsed };
-  }
-  const result = validateField(value, rulesForCellType(t));
-  if (!result.ok) return result;
-  return { ok: true, value: typeof value === "number" ? value : asText5(value) };
-}
-function validateEditableTable(rows, columns) {
-  const errors = [];
-  for (const row of rows) {
-    for (const col of columns) {
-      const v = row.values[col.key];
-      const r = validateEditableCell(v, col.type, col.options);
-      if (!r.ok) {
-        errors.push({ rowId: row.id, key: col.key, message: r.message });
-      }
-    }
-  }
-  if (errors.length) return { ok: false, errors };
-  return {
-    ok: true,
-    data: fromKeyedRows(rows, columns.map((c) => c.key))
-  };
-}
-function navigateCell(row, col, direction, rowCount, columnKeys) {
-  const ci = columnKeys.indexOf(col);
-  let newRow = row;
-  let newCi = ci < 0 ? 0 : ci;
-  switch (direction) {
-    case "up":
-      newRow = Math.max(0, row - 1);
-      break;
-    case "down":
-      newRow = Math.min(Math.max(0, rowCount - 1), row + 1);
-      break;
-    case "left":
-      newCi = Math.max(0, newCi - 1);
-      break;
-    case "right":
-      newCi = Math.min(columnKeys.length - 1, newCi + 1);
-      break;
-    default:
-      break;
-  }
-  return { row: newRow, col: columnKeys[newCi] || col };
-}
-function dataSignature(data, keys) {
-  try {
-    return JSON.stringify({ keys, data });
-  } catch {
-    return String(keys.join(","));
-  }
-}
-function renderChangesBar(doc, host, state, columns, props, ctx) {
-  let bar = [...host.childNodes ?? []].find(
-    (n) => n.nodeType === 1 && n.getAttribute?.("data-canvas-editable-changes") != null
-  );
-  const count = countChangedCells(state.rows, state.baseline, state.columnKeys);
-  if (count <= 0) {
-    if (bar && bar.parentNode) bar.parentNode.removeChild(bar);
-    return;
-  }
-  if (!bar) {
-    bar = doc.createElement("div");
-    bar.setAttribute("data-canvas-editable-changes", "");
-    bar.setAttribute("class", "canvas-editable-table__changes");
-    host.appendChild(bar);
-  }
-  clearChildren5(
-    /** @type {Element} */
-    bar
-  );
-  const countEl = doc.createElement("div");
-  countEl.setAttribute("class", "canvas-editable-table__changes-count");
-  countEl.textContent = `${count} changes made`;
-  bar.appendChild(countEl);
-  const btns = doc.createElement("div");
-  btns.setAttribute("class", "canvas-editable-table__changes-buttons");
-  const reset = doc.createElement("button");
-  reset.type = "button";
-  reset.setAttribute("class", "canvas-editable-table__btn canvas-editable-table__btn--secondary");
-  reset.textContent = asText5(props.resetLabel) || "Reset";
-  reset.addEventListener("click", () => {
-    if (state.baseline) {
-      state.rows = [...state.baseline.entries()].map(([id, values]) => ({
-        id,
-        values: { ...values }
-      }));
-    }
-    state.selected = null;
-    state.editing = null;
-    state.cellErrors.clear();
-    state.mutationStatus = "idle";
-    state.mutationError = "";
-    EditableTable.update(host, props, ctx);
-  });
-  btns.appendChild(reset);
-  const save = doc.createElement("button");
-  save.type = "button";
-  save.setAttribute("class", "canvas-editable-table__btn canvas-editable-table__btn--primary");
-  save.textContent = asText5(props.saveLabel) || "Save Changes";
-  setOrRemoveAttr5(save, "disabled", state.mutationStatus === "loading" ? "true" : null);
-  save.addEventListener("click", () => {
-    void commitMutation(host, state, columns, props, ctx);
-  });
-  btns.appendChild(save);
-  bar.appendChild(btns);
-  if (state.mutationStatus === "error" && state.mutationError) {
-    const err = doc.createElement("div");
-    err.setAttribute("class", "canvas-editable-table__mutation-error");
-    err.setAttribute("role", "alert");
-    err.textContent = state.mutationError;
-    bar.appendChild(err);
-  }
-  if (state.mutationStatus === "loading") {
-    const busy = doc.createElement("div");
-    busy.setAttribute("class", "canvas-editable-table__mutation-busy");
-    busy.setAttribute("role", "status");
-    busy.textContent = "Saving\u2026";
-    bar.appendChild(busy);
-  }
-}
-async function commitMutation(host, state, columns, props, ctx) {
-  const validated = validateEditableTable(state.rows, columns);
-  state.cellErrors.clear();
-  if (!validated.ok) {
-    for (const e of validated.errors) {
-      state.cellErrors.set(`${e.rowId}:${e.key}`, e.message);
-    }
-    state.mutationStatus = "error";
-    state.mutationError = "Validation failed";
-    EditableTable.update(host, props, ctx);
-    return;
-  }
-  const mutationId = asText5(props.mutationId) || asText5(props.name) || "EditableTable";
-  const mutations = ctx.mutations;
-  state.mutationStatus = "loading";
-  state.mutationError = "";
-  EditableTable.update(host, props, ctx);
-  try {
-    if (mutations && typeof mutations.runMutation === "function") {
-      if (typeof mutations.register === "function") {
-        mutations.register({
-          statementId: mutationId,
-          toolName: asText5(props.toolName) || "saveEditableTable",
-          args: {},
-          refreshQueries: Array.isArray(props.refreshQueries) ? props.refreshQueries : []
-        });
-      }
-      const result = await mutations.runMutation(mutationId, {
-        name: asText5(props.name),
-        data: validated.data
-      });
-      if (result?.status === "error") {
-        state.mutationStatus = "error";
-        state.mutationError = asText5(result.error) || "Save failed";
-      } else {
-        state.mutationStatus = "success";
-        state.baseline = new Map(state.rows.map((r) => [r.id, { ...r.values }]));
-      }
-    } else if (typeof props.onSave === "function") {
-      await /** @type {Function} */
-      props.onSave(validated.data);
-      state.mutationStatus = "success";
-      state.baseline = new Map(state.rows.map((r) => [r.id, { ...r.values }]));
-    } else {
-      state.mutationStatus = "success";
-      state.baseline = new Map(state.rows.map((r) => [r.id, { ...r.values }]));
-      if (typeof ctx.reportError === "function" && props.requireMutation === true) {
-        ctx.reportError(new Error("editable-table-missing-mutations"));
-      }
-    }
-  } catch (err) {
-    state.mutationStatus = "error";
-    state.mutationError = err instanceof Error ? err.message : String(err);
-  }
-  EditableTable.update(host, props, ctx);
-}
-function renderDisplayValue(doc, cell, value, col, ctx, invalid) {
-  clearChildren5(cell);
-  const type = col.type;
-  if (type === "url") {
-    const raw = asText5(value);
-    const policy = ctx.urlPolicy && typeof ctx.urlPolicy.safeUrl === "function" ? ctx.urlPolicy.safeUrl : safeUrl;
-    const href = policy(raw);
-    const wrap = doc.createElement("span");
-    wrap.setAttribute("class", "canvas-editable-table__url");
-    if (href) {
-      const a = doc.createElement("a");
-      a.setAttribute("href", href);
-      a.setAttribute("target", "_blank");
-      a.setAttribute("rel", "noopener noreferrer");
-      a.setAttribute("class", "canvas-editable-table__url-link");
-      a.textContent = raw;
-      a.addEventListener("click", (e) => e.stopPropagation?.());
-      wrap.appendChild(a);
-    } else {
-      const span = doc.createElement("span");
-      span.setAttribute("class", "canvas-editable-table__url-text");
-      span.textContent = raw;
-      wrap.appendChild(span);
-    }
-    if (invalid || raw && !href) {
-      const warn = doc.createElement("span");
-      warn.setAttribute("class", "canvas-editable-table__url-warn");
-      warn.setAttribute("title", "This might not be a valid URL");
-      warn.setAttribute("aria-label", "Invalid URL");
-      warn.textContent = "!";
-      wrap.appendChild(warn);
-    }
-    cell.appendChild(wrap);
-    return;
-  }
-  if (type === "select") {
-    const match = col.options.find((o) => o.value === asText5(value));
-    cell.textContent = match ? match.label : asText5(value);
-    return;
-  }
-  cell.textContent = value == null ? "" : String(value);
-}
-function renderCell(doc, host, state, columns, props, ctx, rowIndex, col, td) {
-  const row = state.rows[rowIndex];
-  if (!row) return;
-  const value = row.values[col.key];
-  const isSelected = state.selected?.row === rowIndex && state.selected?.col === col.key;
-  const isEditing = state.editing?.row === rowIndex && state.editing?.col === col.key;
-  const errKey = `${row.id}:${col.key}`;
-  const errMsg = state.cellErrors.get(errKey);
-  setClass5(
-    td,
-    [
-      "canvas-editable-table__td",
-      isSelected ? "canvas-editable-table__td--selected" : "",
-      isEditing ? "canvas-editable-table__td--editing" : "",
-      errMsg ? "canvas-editable-table__td--invalid" : ""
-    ].filter(Boolean).join(" ")
-  );
-  td.setAttribute("data-row-id", row.id);
-  td.setAttribute("data-col-key", col.key);
-  td.setAttribute("data-cell-type", col.type);
-  setOrRemoveAttr5(td, "aria-selected", isSelected ? "true" : null);
-  setOrRemoveAttr5(td, "aria-invalid", errMsg ? "true" : null);
-  const inner = doc.createElement("div");
-  inner.setAttribute("class", "canvas-editable-table__cell");
-  inner.setAttribute("tabindex", "0");
-  setOrRemoveAttr5(inner, "data-selected", isSelected ? "true" : null);
-  setOrRemoveAttr5(inner, "data-editing", isEditing ? "true" : null);
-  const startEdit = (seed) => {
-    state.selected = { row: rowIndex, col: col.key };
-    state.editing = { row: rowIndex, col: col.key };
-    state.editBuffer = seed != null ? String(seed) : value == null ? "" : String(value);
-    EditableTable.update(host, props, ctx);
-  };
-  const finishEdit = (save) => {
-    if (save && state.editing) {
-      const parsed = validateEditableCell(state.editBuffer, col.type, col.options);
-      if (!parsed.ok) {
-        state.cellErrors.set(errKey, parsed.message);
-      } else {
-        state.cellErrors.delete(errKey);
-        row.values[col.key] = /** @type {string|number} */
-        parsed.value;
-      }
-    }
-    state.editing = null;
-    EditableTable.update(host, props, ctx);
-  };
-  const cancelEdit = () => {
-    state.justCancelled = true;
-    state.editBuffer = value == null ? "" : String(value);
-    state.editing = null;
-    EditableTable.update(host, props, ctx);
-  };
-  const move = (dir) => {
-    const next = navigateCell(
-      rowIndex,
-      col.key,
-      dir,
-      state.rows.length,
-      state.columnKeys
-    );
-    state.selected = next;
-    state.editing = null;
-    EditableTable.update(host, props, ctx);
-  };
-  inner.addEventListener("click", (e) => {
-    e.stopPropagation?.();
-    if (!isSelected && !isEditing) {
-      state.selected = { row: rowIndex, col: col.key };
-      state.editing = null;
-      EditableTable.update(host, props, ctx);
-    } else if (!isEditing) {
-      startEdit();
-    }
-  });
-  inner.addEventListener("keydown", (e) => {
-    const ev = (
-      /** @type {KeyboardEvent} */
-      e
-    );
-    if (isEditing) {
-      if (ev.key === "Enter") {
-        ev.preventDefault?.();
-        finishEdit(true);
-        move("down");
-      } else if (ev.key === "Tab") {
-        ev.preventDefault?.();
-        finishEdit(true);
-        move(ev.shiftKey ? "left" : "right");
-      } else if (ev.key === "Escape") {
-        ev.preventDefault?.();
-        cancelEdit();
-      }
-      return;
-    }
-    if (!isSelected) return;
-    if (ev.key === "Enter" || ev.key === "F2") {
-      ev.preventDefault?.();
-      startEdit();
-    } else if (ev.key === "Tab") {
-      ev.preventDefault?.();
-      move(ev.shiftKey ? "left" : "right");
-    } else if (ev.key === "ArrowUp") {
-      ev.preventDefault?.();
-      move("up");
-    } else if (ev.key === "ArrowDown") {
-      ev.preventDefault?.();
-      move("down");
-    } else if (ev.key === "ArrowLeft") {
-      ev.preventDefault?.();
-      move("left");
-    } else if (ev.key === "ArrowRight") {
-      ev.preventDefault?.();
-      move("right");
-    } else if (ev.key && ev.key.length === 1 && !ev.ctrlKey && !ev.metaKey && !ev.altKey) {
-      ev.preventDefault?.();
-      startEdit(ev.key);
-    }
-  });
-  inner.addEventListener("blur", (e) => {
-    if (state.justCancelled) {
-      state.justCancelled = false;
-      return;
-    }
-    if (!state.editing || state.editing.row !== rowIndex || state.editing.col !== col.key) {
-      return;
-    }
-    const related = (
-      /** @type {FocusEvent} */
-      e.relatedTarget
-    );
-    if (related && inner.contains?.(
-      /** @type {Node} */
-      related
-    )) return;
-    finishEdit(true);
-  });
-  if (isEditing) {
-    let input;
-    if (col.type === "select") {
-      input = doc.createElement("select");
-      input.setAttribute("class", "canvas-editable-table__input");
-      for (const opt of col.options) {
-        const o = doc.createElement("option");
-        o.value = opt.value;
-        o.textContent = opt.label;
-        if (opt.value === state.editBuffer) o.selected = true;
-        input.appendChild(o);
-      }
-      input.addEventListener("change", () => {
-        state.editBuffer = /** @type {HTMLSelectElement} */
-        input.value;
-      });
-    } else {
-      input = doc.createElement("input");
-      const inputType = col.type === "number" ? "number" : col.type === "date-single" ? "date" : col.type === "url" ? "url" : "text";
-      input.setAttribute("type", inputType);
-      input.setAttribute("class", "canvas-editable-table__input");
-      input.value = state.editBuffer;
-      input.addEventListener("input", () => {
-        state.editBuffer = /** @type {HTMLInputElement} */
-        input.value;
-      });
-    }
-    input.addEventListener("keydown", (e) => {
-      const ev = (
-        /** @type {KeyboardEvent} */
-        e
-      );
-      if (ev.key === "Enter") {
-        ev.preventDefault?.();
-        finishEdit(true);
-        move("down");
-      } else if (ev.key === "Tab") {
-        ev.preventDefault?.();
-        finishEdit(true);
-        move(ev.shiftKey ? "left" : "right");
-      } else if (ev.key === "Escape") {
-        ev.preventDefault?.();
-        cancelEdit();
-      }
-    });
-    inner.appendChild(input);
-    Promise.resolve().then(() => {
-      if (typeof input.focus === "function") input.focus();
-      if (typeof input.setSelectionRange === "function" && "value" in input) {
-        try {
-          input.setSelectionRange(0, String(input.value ?? "").length);
-        } catch {
-        }
-      }
-    });
-  } else {
-    renderDisplayValue(doc, inner, value, col, ctx, !!errMsg);
-  }
-  if (errMsg) {
-    const tip = doc.createElement("span");
-    tip.setAttribute("class", "canvas-editable-table__cell-error");
-    tip.textContent = errMsg;
-    inner.appendChild(tip);
-  }
-  clearChildren5(td);
-  td.appendChild(inner);
-  if (isSelected && !isEditing) {
-    void Promise.resolve().then(() => {
-      if (typeof inner.focus === "function") inner.focus();
-    });
-  }
-}
-var EditableTable = lifecycle5({
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "EditableTable");
-    el2.setAttribute("class", "canvas-editable-table");
-    el2.setAttribute("tabindex", "0");
-    const statusSlot = doc.createElement("div");
-    statusSlot.setAttribute("data-canvas-table-status", "");
-    statusSlot.setAttribute("class", "canvas-table__status");
-    el2.appendChild(statusSlot);
-    const scroll = doc.createElement("div");
-    scroll.setAttribute("class", "canvas-table__scroll canvas-editable-table__scroll");
-    scroll.setAttribute("data-canvas-table-scroll", "");
-    scroll.setAttribute("tabindex", "0");
-    el2.appendChild(scroll);
-    const table = doc.createElement("table");
-    table.setAttribute("class", "canvas-table__grid canvas-editable-table__grid");
-    scroll.appendChild(table);
-    const thead = doc.createElement("thead");
-    thead.setAttribute("class", "canvas-table__head");
-    table.appendChild(thead);
-    const tbody = doc.createElement("tbody");
-    tbody.setAttribute("class", "canvas-table__body");
-    table.appendChild(tbody);
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const state = getState5(el2);
-    const columns = normalizeEditableColumns(props.columns);
-    const columnKeys = columns.map((c) => c.key);
-    state.columnKeys = columnKeys;
-    const name = asText5(props.name);
-    if (name) el2.setAttribute("data-table-name", name);
-    setClass5(el2, "canvas-editable-table");
-    setOrRemoveAttr5(el2, "data-mutation-status", state.mutationStatus);
-    const statusHost = [...el2.childNodes ?? []].find(
-      (n) => n.nodeType === 1 && n.getAttribute?.("data-canvas-table-status") != null
-    ) ?? el2;
-    const { status } = applyTableStatus(
-      /** @type {Element} */
-      statusHost,
-      doc,
-      props,
-      ctx,
-      { emptyMessage: "No rows" }
-    );
-    el2.setAttribute("data-status", status);
-    const scroll = [...el2.childNodes ?? []].find(
-      (n) => n.nodeType === 1 && n.getAttribute?.("data-canvas-table-scroll") != null
-    );
-    const table = scroll?.firstChild;
-    const thead = table?.firstChild;
-    const tbody = table?.childNodes?.[1];
-    if (!scroll || !table || !thead || !tbody) return;
-    if (status === "loading" || status === "error") {
-      clearChildren5(
-        /** @type {Element} */
-        thead
-      );
-      clearChildren5(
-        /** @type {Element} */
-        tbody
-      );
-      return;
-    }
-    const sig = dataSignature(props.data, columnKeys);
-    const streaming = props.isStreaming === true || ctx.stream && typeof ctx.stream === "object" && ctx.stream.isStreaming === true;
-    if (!state.editing) {
-      if (state.initializedFrom !== sig) {
-        state.rows = toKeyedRows(props.data, columnKeys);
-        state.initializedFrom = sig;
-        if (!streaming) {
-          state.baseline = new Map(state.rows.map((r) => [r.id, { ...r.values }]));
-        }
-      }
-    }
-    if (!streaming && state.baseline == null && state.rows.length) {
-      state.baseline = new Map(state.rows.map((r) => [r.id, { ...r.values }]));
-    }
-    if (!columns.length || !state.rows.length) {
-      if (!state.rows.length) {
-        applyTableStatus(
-          /** @type {Element} */
-          statusHost,
-          doc,
-          { ...props, status: "empty" },
-          ctx
-        );
-        el2.setAttribute("data-status", "empty");
-      }
-      clearChildren5(
-        /** @type {Element} */
-        thead
-      );
-      clearChildren5(
-        /** @type {Element} */
-        tbody
-      );
-      renderChangesBar(doc, el2, state, columns, props, ctx);
-      return;
-    }
-    clearChildren5(
-      /** @type {Element} */
-      thead
-    );
-    const hr = doc.createElement("tr");
-    columns.forEach((col) => {
-      const th = doc.createElement("th");
-      th.setAttribute("class", "canvas-table__th");
-      th.setAttribute("scope", "col");
-      th.setAttribute("data-col-key", col.key);
-      th.setAttribute("data-cell-type", col.type);
-      if (col.width) th.setAttribute("data-min-width", String(col.width));
-      th.textContent = col.header;
-      hr.appendChild(th);
-    });
-    thead.appendChild(hr);
-    clearChildren5(
-      /** @type {Element} */
-      tbody
-    );
-    state.rows.forEach((row, ri) => {
-      const tr = doc.createElement("tr");
-      tr.setAttribute("class", "canvas-table__row");
-      tr.setAttribute("data-row-id", row.id);
-      columns.forEach((col) => {
-        const td = doc.createElement("td");
-        renderCell(
-          doc,
-          el2,
-          state,
-          columns,
-          props,
-          ctx,
-          ri,
-          col,
-          /** @type {HTMLTableCellElement} */
-          td
-        );
-        tr.appendChild(td);
-      });
-      tbody.appendChild(tr);
-    });
-    el2.setAttribute(
-      "data-changed-cells",
-      String(countChangedCells(state.rows, state.baseline, columnKeys))
-    );
-    el2.setAttribute("data-row-count", String(state.rows.length));
-    renderChangesBar(doc, el2, state, columns, props, ctx);
-    if (!state.wired) {
-      state.wired = true;
-      state.onKey = (e) => {
-        const ev = (
-          /** @type {KeyboardEvent} */
-          e
-        );
-        if (!state.editing && ev.key === "Tab" && (ctx.document?.activeElement === el2 || /** @type {Document} */
-        el2.ownerDocument?.activeElement === el2)) {
-          if (!state.selected && state.rows.length && columnKeys.length) {
-            ev.preventDefault?.();
-            state.selected = { row: 0, col: columnKeys[0] };
-            EditableTable.update(el2, props, ctx);
-          }
-        }
-      };
-      el2.addEventListener("keydown", state.onKey);
-    }
-  },
-  unmount(el2) {
-    const state = STATE21.get(el2);
-    if (state?.onKey) el2.removeEventListener("keydown", state.onKey);
-    STATE21.delete(el2);
-  }
-});
-
-// src/Browser/components/table/registerTable.js
-var TABLE_COMPONENTS = Object.freeze({
-  Col,
-  Table,
-  EditableTable
-});
-function registerTable(registry) {
-  if (!registry || typeof registry.register !== "function") {
-    throw new Error("registerTable: registry with register() required");
-  }
-  registry.register("Col", Col);
-  registry.register("Table", Table);
-  registry.register("EditableTable", EditableTable);
-  return registry;
-}
-
-// src/Browser/components/charts/kernel/scales.js
-function linearScale(domainMin, domainMax, range) {
-  const [r0, r1] = range;
-  const d0 = Number(domainMin);
-  const d1 = Number(domainMax);
-  const span = d1 - d0;
-  if (!Number.isFinite(d0) || !Number.isFinite(d1) || span === 0) {
-    const mid = (r0 + r1) / 2;
-    return () => mid;
-  }
-  return (v) => {
-    const n = Number(v);
-    if (!Number.isFinite(n)) return r0;
-    return r0 + (n - d0) / span * (r1 - r0);
-  };
-}
-function bandScale(domain, range, opts = {}) {
-  const labels = Array.isArray(domain) ? domain : [];
-  const [r0, r1] = range;
-  const n = Math.max(labels.length, 1);
-  const padInner = opts.paddingInner ?? opts.padding ?? 0.2;
-  const padOuter = opts.paddingOuter ?? opts.padding ?? 0.1;
-  const span = r1 - r0;
-  const step = span / (n - padInner + 2 * padOuter);
-  const bandwidth = Math.max(0, step * (1 - padInner));
-  const start = r0 + padOuter * step;
-  function scale(i) {
-    const idx = Number(i);
-    if (!Number.isFinite(idx) || idx < 0) return start;
-    return start + idx * step;
-  }
-  scale.bandwidth = bandwidth;
-  scale.step = step;
-  return scale;
-}
-function niceDomain(values, opts = {}) {
-  const nums = (Array.isArray(values) ? values : []).map(Number).filter((n) => Number.isFinite(n));
-  if (!nums.length) return [0, 1];
-  let min = Math.min(...nums);
-  let max = Math.max(...nums);
-  if (opts.includeZero !== false) {
-    if (min > 0) min = 0;
-    if (max < 0) max = 0;
-  }
-  if (min === max) {
-    if (min === 0) return [0, 1];
-    const pad2 = Math.abs(min) * 0.1 || 1;
-    return [min - pad2, max + pad2];
-  }
-  const pad = (opts.pad ?? 0.05) * (max - min);
-  return [min - (opts.includeZero === false ? pad : 0), max + pad];
-}
-function niceTicks(min, max, count = 5) {
-  const d0 = Number(min);
-  const d1 = Number(max);
-  const n = Math.max(2, Math.floor(count) || 5);
-  if (!Number.isFinite(d0) || !Number.isFinite(d1)) return [0, 1];
-  if (d0 === d1) return [d0];
-  const span = d1 - d0;
-  const step0 = span / (n - 1);
-  const mag = Math.pow(10, Math.floor(Math.log10(Math.abs(step0) || 1)));
-  const err = step0 / mag;
-  let niceStep;
-  if (err <= 1.5) niceStep = 1 * mag;
-  else if (err <= 3) niceStep = 2 * mag;
-  else if (err <= 7) niceStep = 5 * mag;
-  else niceStep = 10 * mag;
-  const start = Math.ceil(d0 / niceStep) * niceStep;
-  const ticks = [];
-  for (let v = start; v <= d1 + niceStep * 1e-9; v += niceStep) {
-    const rounded = Math.abs(v) < 1e-12 ? 0 : Number(v.toPrecision(12));
-    ticks.push(rounded);
-    if (ticks.length > 20) break;
-  }
-  if (!ticks.length) ticks.push(d0, d1);
-  return ticks;
-}
-function formatTick(v) {
-  const n = Number(v);
-  if (!Number.isFinite(n)) return "";
-  if (Math.abs(n) >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
-  if (Math.abs(n) >= 1e3) return `${(n / 1e3).toFixed(1)}k`;
-  if (Number.isInteger(n)) return String(n);
-  return String(Number(n.toPrecision(4)));
-}
-
-// src/Browser/components/charts/kernel/geometry.js
-function polarToCartesian(cx, cy, r, angleRad) {
-  return {
-    x: cx + r * Math.cos(angleRad),
-    y: cy + r * Math.sin(angleRad)
-  };
-}
-function donutArcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
-  const large = Math.abs(endAngle - startAngle) > Math.PI ? 1 : 0;
-  const sweep = endAngle >= startAngle ? 1 : 0;
-  const o0 = polarToCartesian(cx, cy, rOuter, startAngle);
-  const o1 = polarToCartesian(cx, cy, rOuter, endAngle);
-  if (rInner <= 0) {
-    return [
-      `M ${cx} ${cy}`,
-      `L ${o0.x} ${o0.y}`,
-      `A ${rOuter} ${rOuter} 0 ${large} ${sweep} ${o1.x} ${o1.y}`,
-      "Z"
-    ].join(" ");
-  }
-  const i0 = polarToCartesian(cx, cy, rInner, endAngle);
-  const i1 = polarToCartesian(cx, cy, rInner, startAngle);
-  return [
-    `M ${o0.x} ${o0.y}`,
-    `A ${rOuter} ${rOuter} 0 ${large} ${sweep} ${o1.x} ${o1.y}`,
-    `L ${i0.x} ${i0.y}`,
-    `A ${rInner} ${rInner} 0 ${large} ${sweep ? 0 : 1} ${i1.x} ${i1.y}`,
-    "Z"
-  ].join(" ");
-}
-function pieSlices(slices, opts) {
-  const items = (Array.isArray(slices) ? slices : []).map((s) => ({
-    label: String(s.label ?? ""),
-    value: Math.max(0, Number(s.value) || 0)
-  }));
-  const total = items.reduce((a, s) => a + s.value, 0);
-  const start0 = opts.startAngle ?? -Math.PI / 2;
-  const end0 = opts.endAngle ?? start0 + Math.PI * 2;
-  const span = end0 - start0;
-  const pad = opts.padAngle ?? 0;
-  const rInner = opts.rInner ?? 0;
-  const out = [];
-  if (!items.length || total <= 0 || !Number.isFinite(span) || span === 0) {
-    return out;
-  }
-  let angle = start0;
-  const usable = span - pad * items.length;
-  for (const item of items) {
-    const portion = item.value / total;
-    const sliceSpan = Math.max(0, usable * portion);
-    const a0 = angle + pad / 2;
-    const a1 = a0 + sliceSpan;
-    out.push({
-      ...item,
-      percent: portion * 100,
-      startAngle: a0,
-      endAngle: a1,
-      midAngle: (a0 + a1) / 2,
-      path: donutArcPath(opts.cx, opts.cy, opts.rOuter, rInner, a0, a1)
-    });
-    angle = a1 + pad / 2;
-  }
-  return out;
-}
-function barRects(data, plot) {
-  const labels = data.labels || [];
-  const series = data.series || [];
-  const variant = data.variant === "stacked" ? "stacked" : "grouped";
-  const xScale = bandScale(labels, [plot.x0, plot.x1]);
-  const yScale = linearScale(plot.yDomain[0], plot.yDomain[1], [plot.y1, plot.y0]);
-  const out = [];
-  if (variant === "stacked") {
-    for (let i = 0; i < labels.length; i++) {
-      let accPos = 0;
-      let accNeg = 0;
-      const bw = xScale.bandwidth;
-      const x = xScale(i);
-      for (let si = 0; si < series.length; si++) {
-        const s = series[si];
-        const v = Number(s.values?.[i]) || 0;
-        const yBase = v >= 0 ? accPos : accNeg;
-        const y1 = yScale(yBase);
-        const y0 = yScale(yBase + v);
-        const top = Math.min(y0, y1);
-        const h = Math.abs(y1 - y0);
-        out.push({
-          series: s.name,
-          label: labels[i],
-          value: v,
-          x,
-          y: top,
-          width: bw,
-          height: h,
-          i,
-          si
-        });
-        if (v >= 0) accPos += v;
-        else accNeg += v;
-      }
-    }
-    return out;
-  }
-  const group = xScale.bandwidth;
-  const n = Math.max(series.length, 1);
-  const gap = group * 0.08;
-  const barW = Math.max(1, (group - gap * (n - 1)) / n);
-  const y0line = yScale(0);
-  for (let i = 0; i < labels.length; i++) {
-    const baseX = xScale(i);
-    for (let si = 0; si < series.length; si++) {
-      const s = series[si];
-      const v = Number(s.values?.[i]) || 0;
-      const yv = yScale(v);
-      const top = Math.min(yv, y0line);
-      const h = Math.abs(yv - y0line);
-      out.push({
-        series: s.name,
-        label: labels[i],
-        value: v,
-        x: baseX + si * (barW + gap),
-        y: top,
-        width: barW,
-        height: h,
-        i,
-        si
-      });
-    }
-  }
-  return out;
-}
-function horizontalBarRects(data, plot) {
-  const labels = data.labels || [];
-  const series = data.series || [];
-  const variant = data.variant === "stacked" ? "stacked" : "grouped";
-  const yScale = bandScale(labels, [plot.y0, plot.y1]);
-  const xScale = linearScale(plot.xDomain[0], plot.xDomain[1], [plot.x0, plot.x1]);
-  const out = [];
-  const x0line = xScale(0);
-  if (variant === "stacked") {
-    for (let i = 0; i < labels.length; i++) {
-      let accPos = 0;
-      let accNeg = 0;
-      const bh = yScale.bandwidth;
-      const y = yScale(i);
-      for (let si = 0; si < series.length; si++) {
-        const s = series[si];
-        const v = Number(s.values?.[i]) || 0;
-        const xBase = v >= 0 ? accPos : accNeg;
-        const x1 = xScale(xBase);
-        const x2 = xScale(xBase + v);
-        out.push({
-          series: s.name,
-          label: labels[i],
-          value: v,
-          x: Math.min(x1, x2),
-          y,
-          width: Math.abs(x2 - x1),
-          height: bh,
-          i,
-          si
-        });
-        if (v >= 0) accPos += v;
-        else accNeg += v;
-      }
-    }
-    return out;
-  }
-  const group = yScale.bandwidth;
-  const n = Math.max(series.length, 1);
-  const gap = group * 0.08;
-  const barH = Math.max(1, (group - gap * (n - 1)) / n);
-  for (let i = 0; i < labels.length; i++) {
-    const baseY = yScale(i);
-    for (let si = 0; si < series.length; si++) {
-      const s = series[si];
-      const v = Number(s.values?.[i]) || 0;
-      const xv = xScale(v);
-      out.push({
-        series: s.name,
-        label: labels[i],
-        value: v,
-        x: Math.min(xv, x0line),
-        y: baseY + si * (barH + gap),
-        width: Math.abs(xv - x0line),
-        height: barH,
-        i,
-        si
-      });
-    }
-  }
-  return out;
-}
-function seriesPath(values, plot) {
-  const labels = plot.labels || [];
-  const n = labels.length;
-  const xScale = bandScale(labels, [plot.x0, plot.x1], { paddingInner: 0.1, paddingOuter: 0.05 });
-  const yScale = linearScale(plot.yDomain[0], plot.yDomain[1], [plot.y1, plot.y0]);
-  const bw = xScale.bandwidth;
-  const points = [];
-  for (let i = 0; i < n; i++) {
-    const v = Number(values?.[i]) || 0;
-    points.push({
-      x: xScale(i) + bw / 2,
-      y: yScale(v),
-      value: v,
-      i
-    });
-  }
-  const variant = plot.variant || "linear";
-  let line = "";
-  if (variant === "step") {
-    line = points.map((p, i) => {
-      if (i === 0) return `M ${p.x} ${p.y}`;
-      const prev = points[i - 1];
-      const mid = (prev.x + p.x) / 2;
-      return `L ${mid} ${prev.y} L ${mid} ${p.y} L ${p.x} ${p.y}`;
-    }).join(" ");
-  } else if (variant === "natural" && points.length >= 2) {
-    line = `M ${points[0].x} ${points[0].y}`;
-    for (let i = 0; i < points.length - 1; i++) {
-      const p0 = points[i - 1] || points[i];
-      const p1 = points[i];
-      const p2 = points[i + 1];
-      const p3 = points[i + 2] || p2;
-      const cp1x = p1.x + (p2.x - p0.x) / 6;
-      const cp1y = p1.y + (p2.y - p0.y) / 6;
-      const cp2x = p2.x - (p3.x - p1.x) / 6;
-      const cp2y = p2.y - (p3.y - p1.y) / 6;
-      line += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
-    }
-  } else {
-    line = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
-  }
-  const yBase = yScale(Math.min(Math.max(0, plot.yDomain[0]), plot.yDomain[1]));
-  let area = "";
-  if (points.length) {
-    area = `${line} L ${points[points.length - 1].x} ${yBase} L ${points[0].x} ${yBase} Z`;
-  }
-  return { line, area, points };
-}
-function radarGeometry(values, opts) {
-  const vals = Array.isArray(values) ? values.map((v) => Number(v) || 0) : [];
-  const n = Math.max(vals.length, 3);
-  const max = opts.max && opts.max > 0 ? opts.max : Math.max(...vals, 1);
-  const start = -Math.PI / 2;
-  const points = [];
-  const axes = [];
-  for (let i = 0; i < n; i++) {
-    const angle = start + i * 2 * Math.PI / n;
-    const tip = polarToCartesian(opts.cx, opts.cy, opts.r, angle);
-    axes.push({ x1: opts.cx, y1: opts.cy, x2: tip.x, y2: tip.y, i });
-    const v = vals[i] ?? 0;
-    const rr = Math.max(0, v) / max * opts.r;
-    const p = polarToCartesian(opts.cx, opts.cy, rr, angle);
-    points.push({ ...p, value: v, i });
-  }
-  const polygon = points.length ? points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z" : "";
-  const levels = opts.levels ?? 4;
-  const rings = [];
-  for (let L = 1; L <= levels; L++) {
-    const rr = opts.r * L / levels;
-    const ringPts = [];
-    for (let i = 0; i < n; i++) {
-      const angle = start + i * 2 * Math.PI / n;
-      const p = polarToCartesian(opts.cx, opts.cy, rr, angle);
-      ringPts.push(`${i === 0 ? "M" : "L"} ${p.x} ${p.y}`);
-    }
-    rings.push(ringPts.join(" ") + " Z");
-  }
-  return { points, polygon, axes, rings };
-}
-function radialBars(items, opts) {
-  const rows = (Array.isArray(items) ? items : []).map((s) => ({
-    label: String(s.label ?? ""),
-    value: Math.max(0, Number(s.value) || 0)
-  }));
-  const max = Math.max(...rows.map((r) => r.value), 1);
-  const start0 = opts.startAngle ?? -Math.PI / 2;
-  const end0 = opts.endAngle ?? start0 + Math.PI * 2;
-  const span = end0 - start0;
-  const n = Math.max(rows.length, 1);
-  const track = (opts.rOuter - opts.rInner) / n;
-  return rows.map((row, i) => {
-    const r1 = opts.rInner + i * track + track * 0.15;
-    const r0 = opts.rInner + (i + 1) * track - track * 0.15;
-    const a1 = start0 + span * (row.value / max);
-    return {
-      ...row,
-      percent: row.value / max * 100,
-      i,
-      rInner: r1,
-      rOuter: r0,
-      startAngle: start0,
-      endAngle: a1,
-      path: donutArcPath(opts.cx, opts.cy, r0, r1, start0, a1)
-    };
-  });
-}
-function scatterPositions(datasets, plot) {
-  const xScale = linearScale(plot.xDomain[0], plot.xDomain[1], [plot.x0, plot.x1]);
-  const yScale = linearScale(plot.yDomain[0], plot.yDomain[1], [plot.y1, plot.y0]);
-  const out = [];
-  (datasets || []).forEach((ds, si) => {
-    (ds.points || []).forEach((pt, i) => {
-      const vx = Number(pt.x);
-      const vy = Number(pt.y);
-      if (!Number.isFinite(vx) || !Number.isFinite(vy)) return;
-      out.push({
-        series: ds.name,
-        x: xScale(vx),
-        y: yScale(vy),
-        vx,
-        vy,
-        z: pt.z != null ? Number(pt.z) : void 0,
-        i,
-        si
-      });
-    });
-  });
-  return out;
-}
-function stackedBarSegments(items, plot) {
-  const rows = (Array.isArray(items) ? items : []).map((s) => ({
-    label: String(s.label ?? ""),
-    value: Math.max(0, Number(s.value) || 0)
-  }));
-  const total = rows.reduce((a, r) => a + r.value, 0) || 1;
-  const width = plot.x1 - plot.x0;
-  let x = plot.x0;
-  return rows.map((row, i) => {
-    const w = row.value / total * width;
-    const seg = {
-      ...row,
-      percent: row.value / total * 100,
-      x,
-      y: plot.y,
-      width: w,
-      height: plot.height,
-      i
-    };
-    x += w;
-    return seg;
-  });
-}
-
-// src/Browser/components/charts/kernel/palette.js
-var CHART_PALETTE_FALLBACKS = Object.freeze([
-  "#0D47A1",
-  "#208B3A",
-  "#B12A90",
-  "#E16462",
-  "#FCA636",
-  "#1976D2",
-  "#7014CC",
-  "#CB253E"
-]);
-var SERIES_MARKS = Object.freeze(["solid", "dashed", "dotted", "dashdot"]);
-function resolvePalette(count, custom) {
-  const n = Math.max(0, Math.floor(count) || 0);
-  if (Array.isArray(custom) && custom.length) {
-    return Array.from({ length: n }, (_, i) => String(custom[i % custom.length]));
-  }
-  return Array.from({ length: n }, (_, i) => {
-    const idx = i % 8 + 1;
-    return `var(--canvas-chart-${idx}, ${CHART_PALETTE_FALLBACKS[i % CHART_PALETTE_FALLBACKS.length]})`;
-  });
-}
-function seriesMark(seriesIndex) {
-  return SERIES_MARKS[seriesIndex % SERIES_MARKS.length];
-}
-function dashForMark(mark) {
-  switch (mark) {
-    case "dashed":
-      return "6 4";
-    case "dotted":
-      return "2 3";
-    case "dashdot":
-      return "8 3 2 3";
-    default:
-      return null;
-  }
-}
-
-// src/Browser/components/charts/kernel/measure.js
-function observeSize(el2, onSize, defaults = {}) {
-  const fallbackW = Number(defaults.width) || 320;
-  const fallbackH = Number(defaults.height) || 240;
-  const read = () => {
-    const w = Number(el2.clientWidth) || Number(
-      /** @type {any} */
-      el2.offsetWidth
-    ) || fallbackW;
-    const h = Number(el2.clientHeight) || Number(
-      /** @type {any} */
-      el2.offsetHeight
-    ) || fallbackH;
-    return {
-      width: Math.max(40, w),
-      height: Math.max(40, h)
-    };
-  };
-  let current = read();
-  onSize(current);
-  let observer = null;
-  const RO = globalThis.ResizeObserver;
-  if (typeof RO === "function") {
-    const ro = new RO(() => {
-      current = read();
-      onSize(current);
-    });
-    try {
-      ro.observe(el2);
-      observer = ro;
-    } catch {
-      observer = null;
-    }
-  }
-  return {
-    disconnect() {
-      observer?.disconnect?.();
-      observer = null;
-    },
-    getSize() {
-      return current;
-    }
-  };
-}
-function resolveChartSize(props, measured) {
-  const height = Number(props.height);
-  const width = Number(props.width);
-  return {
-    width: Number.isFinite(width) && width > 0 ? width : measured.width,
-    height: Number.isFinite(height) && height > 0 ? height : measured.height || 240
-  };
-}
-
-// src/Browser/components/charts/kernel/normalize.js
-function unwrap(node) {
-  if (node == null) return null;
-  if (typeof node !== "object") return null;
-  const o = (
-    /** @type {Record<string, unknown>} */
-    node
-  );
-  if (o.type === "element" && o.props && typeof o.props === "object") {
-    return (
-      /** @type {Record<string, unknown>} */
-      o.props
-    );
-  }
-  return o;
-}
-function asArray2(v) {
-  if (Array.isArray(v)) return v;
-  if (v == null) return [];
-  return [v];
-}
-function normalizeLabels(labels) {
-  return asArray2(labels).map((l) => String(l ?? ""));
-}
-function normalizeSeries(series) {
-  return asArray2(series).map((item) => {
-    const p = unwrap(item) || {};
-    const name = String(p.category ?? p.name ?? "");
-    const values = asArray2(p.values).map((v) => {
-      const n = Number(v);
-      return Number.isFinite(n) ? n : 0;
-    });
-    return { name, values };
-  }).filter((s) => s.name !== "" || s.values.length);
-}
-function normalizeCartesian(props) {
-  const labels = normalizeLabels(props.labels);
-  let series = normalizeSeries(props.series);
-  const rows = asArray2(props.series);
-  if (rows.length && Array.isArray(rows[0])) {
-    const seriesNames = labels.slice(1);
-    const cats = rows.map((row) => String(
-      /** @type {unknown[]} */
-      row[0] ?? ""
-    ));
-    series = seriesNames.map((name, si) => ({
-      name,
-      values: rows.map((row) => {
-        const n = Number(
-          /** @type {unknown[]} */
-          row[si + 1]
-        );
-        return Number.isFinite(n) ? n : 0;
-      })
-    }));
-    return {
-      labels: cats,
-      series,
-      empty: !cats.length || !series.length
-    };
-  }
-  return {
-    labels,
-    series,
-    empty: !labels.length || !series.length
-  };
-}
-function normalizeSlices(props) {
-  const labels = normalizeLabels(props.labels);
-  const values = asArray2(props.values).map((v) => {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : 0;
-  });
-  if (labels.length && values.length) {
-    const n = Math.min(labels.length, values.length);
-    const items2 = Array.from({ length: n }, (_, i) => ({
-      label: labels[i],
-      value: values[i]
-    }));
-    return { items: items2, empty: !items2.length || items2.every((x) => x.value === 0) };
-  }
-  const items = asArray2(props.labels).map((node) => {
-    const p = unwrap(node);
-    if (!p || p.category == null) return null;
-    const value = Number(p.value);
-    return {
-      label: String(p.category),
-      value: Number.isFinite(value) ? value : 0
-    };
-  }).filter(Boolean);
-  return {
-    items: (
-      /** @type {{ label: string, value: number }[]} */
-      items
-    ),
-    empty: !items.length
-  };
-}
-function normalizeScatter(props) {
-  const datasets = asArray2(props.datasets).map((ds) => {
-    const p = unwrap(ds) || {};
-    const name = String(p.name ?? "");
-    const points = asArray2(p.points).map((pt) => {
-      const q = unwrap(pt) || {};
-      const x = Number(q.x);
-      const y = Number(q.y);
-      if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
-      const z = q.z != null ? Number(q.z) : void 0;
-      return Number.isFinite(z) ? { x, y, z } : { x, y };
-    }).filter(Boolean);
-    return {
-      name,
-      points: (
-        /** @type {{ x: number, y: number, z?: number }[]} */
-        points
-      )
-    };
-  }).filter((d) => d.points.length);
-  return { datasets, empty: !datasets.length };
-}
-function collectValues(series, variant = "grouped") {
-  if (variant === "stacked") {
-    const len = Math.max(0, ...series.map((s) => s.values.length));
-    const sums = [];
-    for (let i = 0; i < len; i++) {
-      let pos = 0;
-      let neg = 0;
-      for (const s of series) {
-        const v = Number(s.values[i]) || 0;
-        if (v >= 0) pos += v;
-        else neg += v;
-      }
-      sums.push(pos, neg);
-    }
-    return sums;
-  }
-  return series.flatMap((s) => s.values);
-}
-
-// src/Browser/components/charts/kernel/svg.js
-var SVG_NS2 = "http://www.w3.org/2000/svg";
-function svgEl(doc, tag, attrs = {}) {
-  const el2 = typeof doc.createElementNS === "function" ? doc.createElementNS(SVG_NS2, tag) : doc.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (v == null || v === false) continue;
-    el2.setAttribute(k, String(v));
-  }
-  return el2;
-}
-function setAttr(el2, name, value) {
-  if (value == null || value === false || value === "") el2.removeAttribute(name);
-  else el2.setAttribute(name, String(value));
-}
-
-// src/Browser/components/charts/kernel/axes.js
-function renderAxes(doc, opts) {
-  const g = svgEl(doc, "g", { class: "canvas-chart__axes" });
-  g.appendChild(
-    svgEl(doc, "line", {
-      class: "canvas-chart__axis-line canvas-chart__axis-line--x",
-      x1: opts.x0,
-      y1: opts.y1,
-      x2: opts.x1,
-      y2: opts.y1
-    })
-  );
-  g.appendChild(
-    svgEl(doc, "line", {
-      class: "canvas-chart__axis-line canvas-chart__axis-line--y",
-      x1: opts.x0,
-      y1: opts.y0,
-      x2: opts.x0,
-      y2: opts.y1
-    })
-  );
-  for (const t of opts.yTicks || []) {
-    if (opts.grid !== false) {
-      g.appendChild(
-        svgEl(doc, "line", {
-          class: "canvas-chart__grid-line",
-          x1: opts.x0,
-          y1: t.y,
-          x2: opts.x1,
-          y2: t.y
-        })
-      );
-    }
-    g.appendChild(
-      svgEl(doc, "text", {
-        class: "canvas-chart__tick-label canvas-chart__tick-label--y",
-        x: opts.x0 - 6,
-        y: t.y,
-        "text-anchor": "end",
-        "dominant-baseline": "middle"
-      })
-    ).textContent = t.label;
-  }
-  for (const t of opts.xTicks || []) {
-    g.appendChild(
-      svgEl(doc, "text", {
-        class: "canvas-chart__tick-label canvas-chart__tick-label--x",
-        x: t.x,
-        y: opts.y1 + 14,
-        "text-anchor": "middle",
-        "dominant-baseline": "hanging"
-      })
-    ).textContent = t.label;
-  }
-  if (opts.xLabel) {
-    g.appendChild(
-      svgEl(doc, "text", {
-        class: "canvas-chart__axis-title canvas-chart__axis-title--x",
-        x: (opts.x0 + opts.x1) / 2,
-        y: opts.y1 + 32,
-        "text-anchor": "middle"
-      })
-    ).textContent = opts.xLabel;
-  }
-  if (opts.yLabel) {
-    const ty = svgEl(doc, "text", {
-      class: "canvas-chart__axis-title canvas-chart__axis-title--y",
-      x: 12,
-      y: (opts.y0 + opts.y1) / 2,
-      "text-anchor": "middle",
-      transform: `rotate(-90 12 ${(opts.y0 + opts.y1) / 2})`
-    });
-    ty.textContent = opts.yLabel;
-    g.appendChild(ty);
-  }
-  return (
-    /** @type {SVGGElement} */
-    g
-  );
-}
-function buildYTicks(domain, yScale, count = 5) {
-  return niceTicks(domain[0], domain[1], count).map((v) => ({
-    label: formatTick(v),
-    y: yScale(v),
-    value: v
-  }));
-}
-function buildXCategoryTicks(labels, xScale, maxLabels = 12) {
-  const n = labels.length;
-  const step = n > maxLabels ? Math.ceil(n / maxLabels) : 1;
-  const ticks = [];
-  for (let i = 0; i < n; i += step) {
-    ticks.push({
-      label: labels[i],
-      x: xScale(i) + xScale.bandwidth / 2
-    });
-  }
-  return ticks;
-}
-
-// src/Browser/components/charts/kernel/legend.js
-function renderLegend(doc, items) {
-  const list = doc.createElement("ul");
-  list.setAttribute("class", "canvas-chart__legend");
-  list.setAttribute("role", "list");
-  list.setAttribute("aria-label", "Chart legend");
-  (items || []).forEach((item, i) => {
-    const li = doc.createElement("li");
-    li.setAttribute("class", "canvas-chart__legend-item");
-    li.setAttribute("role", "listitem");
-    const mark = item.mark || seriesMark(i);
-    li.setAttribute("data-mark", mark);
-    const swatch = doc.createElement("span");
-    swatch.setAttribute("class", "canvas-chart__legend-swatch");
-    swatch.setAttribute("data-mark", mark);
-    setInlineStyle(swatch, { background: item.color });
-    swatch.setAttribute("aria-hidden", "true");
-    const label = doc.createElement("span");
-    label.setAttribute("class", "canvas-chart__legend-label");
-    label.textContent = item.name;
-    li.appendChild(swatch);
-    li.appendChild(label);
-    list.appendChild(li);
-  });
-  return list;
-}
-
-// src/Browser/components/charts/kernel/dataTable.js
-function renderDataTable(doc, data) {
-  const wrap = doc.createElement("div");
-  wrap.setAttribute("class", "canvas-chart__data-table");
-  wrap.setAttribute("data-canvas-chart-table", "");
-  const table = doc.createElement("table");
-  table.setAttribute("class", "canvas-chart__table");
-  if (data.caption) {
-    const cap = doc.createElement("caption");
-    cap.setAttribute("class", "canvas-chart__table-caption");
-    cap.textContent = data.caption;
-    table.appendChild(cap);
-  }
-  const thead = doc.createElement("thead");
-  const hr = doc.createElement("tr");
-  for (const col of data.columns || []) {
-    const th = doc.createElement("th");
-    th.setAttribute("scope", "col");
-    th.textContent = String(col);
-    hr.appendChild(th);
-  }
-  thead.appendChild(hr);
-  table.appendChild(thead);
-  const tbody = doc.createElement("tbody");
-  for (const row of data.rows || []) {
-    const tr = doc.createElement("tr");
-    row.forEach((cell, i) => {
-      const td = doc.createElement(i === 0 ? "th" : "td");
-      if (i === 0) td.setAttribute("scope", "row");
-      td.textContent = String(cell);
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  }
-  table.appendChild(tbody);
-  wrap.appendChild(table);
-  return wrap;
-}
-function cartesianTableModel(labels, series, caption) {
-  return {
-    caption: caption || "Chart data",
-    columns: ["Category", ...series.map((s) => s.name)],
-    rows: labels.map((label, i) => [
-      label,
-      ...series.map((s) => Number.isFinite(Number(s.values[i])) ? Number(s.values[i]) : "")
-    ])
-  };
-}
-function slicesTableModel(items, caption) {
-  return {
-    caption: caption || "Chart data",
-    columns: ["Category", "Value"],
-    rows: items.map((it) => [it.label, it.value])
-  };
-}
-function scatterTableModel(datasets, caption) {
-  const rows = [];
-  for (const ds of datasets) {
-    for (const p of ds.points) {
-      rows.push([ds.name, p.x, p.y, p.z != null ? p.z : ""]);
-    }
-  }
-  return {
-    caption: caption || "Scatter data",
-    columns: ["Series", "X", "Y", "Z"],
-    rows
-  };
-}
-
-// src/Browser/components/charts/kernel/datapoints.js
-function markDatapoint(shape, meta) {
-  setAttr(shape, "tabindex", "0");
-  setAttr(shape, "role", "img");
-  setAttr(shape, "aria-label", meta.label);
-  setAttr(shape, "data-canvas-datapoint", meta.id);
-  setAttr(shape, "focusable", "true");
-}
-function attachDatapointKeyboard(host, tooltipEl) {
-  let activeId = null;
-  const setActive = (id, text2) => {
-    activeId = id;
-    if (id == null) {
-      tooltipEl.setAttribute("hidden", "");
-      tooltipEl.textContent = "";
-      tooltipEl.removeAttribute("data-active-id");
-      return;
-    }
-    tooltipEl.removeAttribute("hidden");
-    tooltipEl.setAttribute("data-active-id", id);
-    if (text2 != null) tooltipEl.textContent = text2;
-  };
-  const onFocusIn = (ev) => {
-    const t = (
-      /** @type {Element} */
-      ev.target
-    );
-    const id = t?.getAttribute?.("data-canvas-datapoint");
-    if (!id) return;
-    setActive(id, t.getAttribute("aria-label") || "");
-  };
-  const onFocusOut = (ev) => {
-    const t = (
-      /** @type {Element} */
-      ev.target
-    );
-    const id = t?.getAttribute?.("data-canvas-datapoint");
-    if (id && activeId === id) setActive(null);
-  };
-  const onKeyDown = (ev) => {
-    const t = (
-      /** @type {Element} */
-      ev.target
-    );
-    if (!t?.getAttribute?.("data-canvas-datapoint")) return;
-    const points = collectDatapoints(host);
-    if (!points.length) return;
-    const idx = points.findIndex((p) => p === t);
-    if (idx < 0) return;
-    let next = idx;
-    if (ev.key === "ArrowRight" || ev.key === "ArrowDown") next = (idx + 1) % points.length;
-    else if (ev.key === "ArrowLeft" || ev.key === "ArrowUp")
-      next = (idx - 1 + points.length) % points.length;
-    else if (ev.key === "Home") next = 0;
-    else if (ev.key === "End") next = points.length - 1;
-    else if (ev.key === "Escape") {
-      setActive(null);
-      t.blur?.();
-      return;
-    } else return;
-    ev.preventDefault?.();
-    const el2 = points[next];
-    el2.focus?.();
-    setActive(
-      el2.getAttribute("data-canvas-datapoint"),
-      el2.getAttribute("aria-label") || ""
-    );
-  };
-  host.addEventListener("focusin", onFocusIn);
-  host.addEventListener("focusout", onFocusOut);
-  host.addEventListener("keydown", onKeyDown);
-  return {
-    setActive,
-    destroy() {
-      host.removeEventListener("focusin", onFocusIn);
-      host.removeEventListener("focusout", onFocusOut);
-      host.removeEventListener("keydown", onKeyDown);
-      setActive(null);
-    }
-  };
-}
-function collectDatapoints(host) {
-  const out = [];
-  const walk = (n) => {
-    if (n.nodeType === 1) {
-      if (n.getAttribute?.("data-canvas-datapoint") != null) out.push(n);
-      for (const c of n.childNodes ?? []) walk(c);
-    }
-  };
-  walk(host);
-  return out;
-}
-function createTooltip(doc) {
-  const el2 = doc.createElement("div");
-  el2.setAttribute("class", "canvas-chart__tooltip");
-  el2.setAttribute("role", "status");
-  el2.setAttribute("aria-live", "polite");
-  el2.setAttribute("hidden", "");
-  return el2;
-}
-function focusDot(doc, cx, cy, r = 4) {
-  return svgEl(doc, "circle", {
-    class: "canvas-chart__point",
-    cx,
-    cy,
-    r
-  });
-}
-
-// src/Browser/components/charts/kernel/shared.js
-var SURFACE_STATUS3 = Object.freeze({
-  READY: "ready",
-  LOADING: "loading",
-  EMPTY: "empty",
-  ERROR: "error"
-});
-function requireDocument6(ctx = {}) {
-  const doc = ctx.document ?? globalThis.document;
-  if (!doc?.createElement) {
-    throw new Error("chart component: ctx.document required");
-  }
-  return doc;
-}
-function setClass6(el2, className) {
-  el2.setAttribute("class", String(className).trim());
-}
-function clearChildren6(el2) {
-  while (el2.firstChild) el2.removeChild(el2.firstChild);
-}
-function asText6(value) {
-  if (value == null) return "";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  return "";
-}
-function resolveStatus2(props = {}) {
-  const raw = props.status ?? props.state;
-  if (raw === "loading" || raw === "empty" || raw === "error" || raw === "ready") {
-    return raw;
-  }
-  if (props.loading === true) return "loading";
-  if (props.error != null && props.error !== false) return "error";
-  if (props.empty === true) return "empty";
-  return "ready";
-}
-function applySurfaceStatus2(el2, doc, props = {}, opts = {}) {
-  const status = resolveStatus2(props);
-  el2.setAttribute("data-status", status);
-  if (status === "loading") el2.setAttribute("aria-busy", "true");
-  else el2.removeAttribute("aria-busy");
-  for (const child of [...el2.childNodes ?? []]) {
-    if (child.nodeType === 1 && child.getAttribute?.("data-canvas-status-text") != null) {
-      el2.removeChild(child);
-    }
-  }
-  if (status === "loading" || status === "empty" || status === "error") {
-    const statusEl = doc.createElement("span");
-    statusEl.setAttribute("data-canvas-status-text", "");
-    statusEl.setAttribute("class", "canvas-status-text canvas-chart__status");
-    statusEl.setAttribute("role", "status");
-    statusEl.setAttribute("aria-live", status === "error" ? "assertive" : "polite");
-    statusEl.textContent = status === "loading" ? asText6(props.loadingMessage) || opts.loadingMessage || "Loading" : status === "empty" ? asText6(props.emptyMessage) || opts.emptyMessage || "No data" : asText6(props.errorMessage ?? props.error) || opts.errorMessage || "Error";
-    el2.appendChild(statusEl);
-  }
-  return { status };
-}
-function lifecycle6(impl) {
-  return {
-    create(props = {}, ctx = {}) {
-      const doc = requireDocument6(ctx);
-      const el2 = impl.mount(doc, props, ctx);
-      impl.patch(el2, props, ctx);
-      return el2;
-    },
-    update(el2, props = {}, ctx = {}) {
-      impl.patch(el2, props, ctx);
-    },
-    destroy(el2, ctx = {}) {
-      impl.unmount?.(el2, ctx);
-    },
-    ownsChildren: true
-  };
-}
-var chartRuntime = /* @__PURE__ */ new WeakMap();
-function prefersReducedMotion2(doc) {
-  try {
-    const mq = doc.defaultView?.matchMedia?.("(prefers-reduced-motion: reduce)");
-    return !!mq?.matches;
-  } catch {
-    return false;
-  }
-}
-
-// src/Browser/components/charts/kernel/chartFrame.js
-function mountChartHost(doc, typeName) {
-  const el2 = doc.createElement("div");
-  el2.setAttribute("data-canvas-component", typeName);
-  el2.setAttribute("class", `canvas-chart canvas-chart--${typeName}`);
-  el2.setAttribute("role", "group");
-  el2.setAttribute("aria-label", typeName);
-  return el2;
-}
-function patchChartHost(el2, doc, props, spec) {
-  const prev = chartRuntime.get(el2);
-  prev?.disconnect?.();
-  prev?.destroyKeyboard?.();
-  const statusProps = { ...props };
-  if (spec.empty && resolveReady(props)) {
-    statusProps.status = "empty";
-  }
-  setClass6(
-    el2,
-    `canvas-chart canvas-chart--${el2.getAttribute("data-canvas-component")} ${prefersReducedMotion2(doc) ? "canvas-chart--reduced-motion" : ""}`.trim()
-  );
-  clearChildren6(el2);
-  const { status } = applySurfaceStatus2(el2, doc, statusProps, {
-    emptyMessage: spec.emptyMessage || "No chart data"
-  });
-  if (status !== "ready") {
-    chartRuntime.set(el2, {});
-    return;
-  }
-  const body = doc.createElement("div");
-  body.setAttribute("class", "canvas-chart__body");
-  const plotHost = doc.createElement("div");
-  plotHost.setAttribute("class", "canvas-chart__plot");
-  const tooltip = createTooltip(doc);
-  const svg = svgEl(doc, "svg", {
-    class: "canvas-chart__svg",
-    role: "img",
-    "aria-hidden": "true"
-  });
-  plotHost.appendChild(svg);
-  plotHost.appendChild(tooltip);
-  body.appendChild(plotHost);
-  if (spec.legendItems?.length && props.legend !== false) {
-    body.appendChild(renderLegend(doc, spec.legendItems));
-  }
-  el2.appendChild(body);
-  if (spec.tableModel && props.showDataTable !== false) {
-    el2.appendChild(renderDataTable(doc, spec.tableModel));
-  }
-  const keyboard = attachDatapointKeyboard(el2, tooltip);
-  const paint = (size) => {
-    const resolved = resolveChartSize(props, size);
-    if (!Number(props.height) && size.height <= 40) {
-      resolved.height = 240;
-    }
-    svg.setAttribute("width", String(resolved.width));
-    svg.setAttribute("height", String(resolved.height));
-    svg.setAttribute("viewBox", `0 0 ${resolved.width} ${resolved.height}`);
-    clearChildren6(svg);
-    const margin = {
-      top: 16,
-      right: 16,
-      bottom: props.xLabel ? 48 : 36,
-      left: props.yLabel ? 48 : 40
-    };
-    const plot = {
-      x0: margin.left,
-      x1: Math.max(margin.left + 10, resolved.width - margin.right),
-      y0: margin.top,
-      y1: Math.max(margin.top + 10, resolved.height - margin.bottom),
-      width: resolved.width,
-      height: resolved.height
-    };
-    spec.paint(svg, resolved, plot);
-  };
-  const obs = observeSize(plotHost, paint, {
-    width: Number(props.width) || 320,
-    height: Number(props.height) || 240
-  });
-  chartRuntime.set(el2, {
-    disconnect: () => obs.disconnect(),
-    destroyKeyboard: () => keyboard.destroy()
-  });
-}
-function resolveReady(props) {
-  const raw = props.status ?? props.state;
-  if (raw === "loading" || raw === "error") return false;
-  if (props.loading === true) return false;
-  if (props.error != null && props.error !== false) return false;
-  return true;
-}
-function unmountChartHost(el2) {
-  const rt = chartRuntime.get(el2);
-  rt?.disconnect?.();
-  rt?.destroyKeyboard?.();
-  chartRuntime.delete(el2);
-}
-
-// src/Browser/components/charts/BarChart.js
-function paintBar(doc, svg, plot, props, data, colors) {
-  const variant = props.variant === "stacked" ? "stacked" : "grouped";
-  const values = collectValues(data.series, variant);
-  const yDomain = niceDomain(values);
-  const xScale = bandScale(data.labels, [plot.x0, plot.x1]);
-  const yScale = linearScale(yDomain[0], yDomain[1], [plot.y1, plot.y0]);
-  svg.appendChild(
-    renderAxes(doc, {
-      x0: plot.x0,
-      x1: plot.x1,
-      y0: plot.y0,
-      y1: plot.y1,
-      xTicks: buildXCategoryTicks(data.labels, xScale),
-      yTicks: buildYTicks(yDomain, yScale),
-      xLabel: props.xLabel ? String(props.xLabel) : void 0,
-      yLabel: props.yLabel ? String(props.yLabel) : void 0,
-      grid: props.grid !== false
-    })
-  );
-  const rects = barRects(
-    { labels: data.labels, series: data.series, variant },
-    { x0: plot.x0, x1: plot.x1, y0: plot.y0, y1: plot.y1, yDomain }
-  );
-  const g = svgEl(doc, "g", { class: "canvas-chart__series" });
-  for (const r of rects) {
-    const mark = seriesMark(r.si);
-    const rect = svgEl(doc, "rect", {
-      class: "canvas-chart__bar",
-      x: r.x,
-      y: r.y,
-      width: Math.max(0, r.width),
-      height: Math.max(0, r.height),
-      fill: colors[r.si % colors.length],
-      "data-mark": mark,
-      "stroke-dasharray": dashForMark(mark)
-    });
-    markDatapoint(rect, {
-      id: `bar-${r.si}-${r.i}`,
-      label: `${r.series}, ${r.label}: ${r.value}`
-    });
-    g.appendChild(rect);
-  }
-  svg.appendChild(g);
-}
-var BarChart = lifecycle6({
-  mount(doc) {
-    return mountChartHost(doc, "BarChart");
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const data = normalizeCartesian(props);
-    const colors = resolvePalette(
-      data.series.length,
-      /** @type {string[]} */
-      props.palette
-    );
-    patchChartHost(el2, doc, props, {
-      empty: data.empty,
-      legendItems: data.series.map((s, i) => ({
-        name: s.name,
-        color: colors[i],
-        mark: seriesMark(i)
-      })),
-      tableModel: cartesianTableModel(data.labels, data.series, "Bar chart data"),
-      paint(svg, _size, plot) {
-        paintBar(doc, svg, plot, props, data, colors);
-      }
-    });
-  },
-  unmount(el2) {
-    unmountChartHost(el2);
-  }
-});
-
-// src/Browser/components/charts/LineChart.js
-function paintLine(doc, svg, plot, props, data, colors, filled) {
-  const variant = props.variant === "natural" || props.variant === "step" ? props.variant : "linear";
-  const values = collectValues(data.series, "grouped");
-  const yDomain = niceDomain(values);
-  const xScale = bandScale(data.labels, [plot.x0, plot.x1], {
-    paddingInner: 0.1,
-    paddingOuter: 0.05
-  });
-  const yScale = linearScale(yDomain[0], yDomain[1], [plot.y1, plot.y0]);
-  svg.appendChild(
-    renderAxes(doc, {
-      x0: plot.x0,
-      x1: plot.x1,
-      y0: plot.y0,
-      y1: plot.y1,
-      xTicks: buildXCategoryTicks(data.labels, xScale),
-      yTicks: buildYTicks(yDomain, yScale),
-      xLabel: props.xLabel ? String(props.xLabel) : void 0,
-      yLabel: props.yLabel ? String(props.yLabel) : void 0,
-      grid: props.grid !== false
-    })
-  );
-  data.series.forEach((s, si) => {
-    const mark = seriesMark(si);
-    const pathData = seriesPath(s.values, {
-      x0: plot.x0,
-      x1: plot.x1,
-      y0: plot.y0,
-      y1: plot.y1,
-      yDomain,
-      labels: data.labels,
-      variant
-    });
-    const g = svgEl(doc, "g", { class: "canvas-chart__series", "data-series": s.name });
-    if (filled) {
-      g.appendChild(
-        svgEl(doc, "path", {
-          class: "canvas-chart__area",
-          d: pathData.area,
-          fill: colors[si],
-          opacity: "0.25",
-          "data-mark": mark
-        })
-      );
-    }
-    g.appendChild(
-      svgEl(doc, "path", {
-        class: "canvas-chart__line",
-        d: pathData.line,
-        fill: "none",
-        stroke: colors[si],
-        "stroke-width": "2",
-        "stroke-dasharray": dashForMark(mark),
-        "data-mark": mark
-      })
-    );
-    for (const p of pathData.points) {
-      const dot = focusDot(doc, p.x, p.y, 4);
-      dot.setAttribute("fill", colors[si]);
-      markDatapoint(dot, {
-        id: `line-${si}-${p.i}`,
-        label: `${s.name}, ${data.labels[p.i]}: ${p.value}`
-      });
-      g.appendChild(dot);
-    }
-    svg.appendChild(g);
-  });
-}
-function makeLineLike(typeName, filled) {
-  return lifecycle6({
-    mount(doc) {
-      return mountChartHost(doc, typeName);
-    },
-    patch(el2, props = {}, ctx = {}) {
-      const doc = ctx.document ?? el2.ownerDocument;
-      const data = normalizeCartesian(props);
-      const colors = resolvePalette(
-        data.series.length,
-        /** @type {string[]} */
-        props.palette
-      );
-      patchChartHost(el2, doc, props, {
-        empty: data.empty,
-        legendItems: data.series.map((s, i) => ({
-          name: s.name,
-          color: colors[i],
-          mark: seriesMark(i)
-        })),
-        tableModel: cartesianTableModel(
-          data.labels,
-          data.series,
-          filled ? "Area chart data" : "Line chart data"
-        ),
-        paint(svg, _size, plot) {
-          paintLine(doc, svg, plot, props, data, colors, filled);
-        }
-      });
-    },
-    unmount(el2) {
-      unmountChartHost(el2);
-    }
-  });
-}
-var LineChart = makeLineLike("LineChart", false);
-var AreaChart = makeLineLike("AreaChart", true);
-
-// src/Browser/components/charts/HorizontalBarChart.js
-function paintHBar(doc, svg, plot, props, data, colors) {
-  const variant = props.variant === "stacked" ? "stacked" : "grouped";
-  const values = collectValues(data.series, variant);
-  const xDomain = niceDomain(values);
-  const yScale = bandScale(data.labels, [plot.y0, plot.y1]);
-  const xScale = linearScale(xDomain[0], xDomain[1], [plot.x0, plot.x1]);
-  const xTicks = niceTicks(xDomain[0], xDomain[1], 5).map((v) => ({
-    label: formatTick(v),
-    x: xScale(v)
-  }));
-  const yTicks = data.labels.map((label, i) => ({
-    label,
-    y: yScale(i) + yScale.bandwidth / 2
-  }));
-  svg.appendChild(
-    renderAxes(doc, {
-      x0: plot.x0,
-      x1: plot.x1,
-      y0: plot.y0,
-      y1: plot.y1,
-      xTicks,
-      yTicks: yTicks.map((t) => ({ label: t.label, y: t.y })),
-      xLabel: props.xLabel ? String(props.xLabel) : void 0,
-      yLabel: props.yLabel ? String(props.yLabel) : void 0,
-      grid: props.grid !== false
-    })
-  );
-  const rects = horizontalBarRects(
-    { labels: data.labels, series: data.series, variant },
-    { x0: plot.x0, x1: plot.x1, y0: plot.y0, y1: plot.y1, xDomain }
-  );
-  const g = svgEl(doc, "g", { class: "canvas-chart__series" });
-  for (const r of rects) {
-    const mark = seriesMark(r.si);
-    const rect = svgEl(doc, "rect", {
-      class: "canvas-chart__bar canvas-chart__bar--horizontal",
-      x: r.x,
-      y: r.y,
-      width: Math.max(0, r.width),
-      height: Math.max(0, r.height),
-      fill: colors[r.si % colors.length],
-      "data-mark": mark
-    });
-    markDatapoint(rect, {
-      id: `hbar-${r.si}-${r.i}`,
-      label: `${r.series}, ${r.label}: ${r.value}`
-    });
-    g.appendChild(rect);
-  }
-  svg.appendChild(g);
-}
-var HorizontalBarChart = lifecycle6({
-  mount(doc) {
-    return mountChartHost(doc, "HorizontalBarChart");
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const data = normalizeCartesian(props);
-    const colors = resolvePalette(
-      data.series.length,
-      /** @type {string[]} */
-      props.palette
-    );
-    patchChartHost(el2, doc, props, {
-      empty: data.empty,
-      legendItems: data.series.map((s, i) => ({
-        name: s.name,
-        color: colors[i],
-        mark: seriesMark(i)
-      })),
-      tableModel: cartesianTableModel(data.labels, data.series, "Horizontal bar chart data"),
-      paint(svg, _size, plot) {
-        paintHBar(doc, svg, plot, props, data, colors);
-      }
-    });
-  },
-  unmount(el2) {
-    unmountChartHost(el2);
-  }
-});
-
-// src/Browser/components/charts/PieChart.js
-var PieChart = lifecycle6({
-  mount(doc) {
-    return mountChartHost(doc, "PieChart");
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const { items, empty } = normalizeSlices(props);
-    const colors = resolvePalette(
-      items.length,
-      /** @type {string[]} */
-      props.palette
-    );
-    const variant = props.variant === "donut" ? "donut" : "pie";
-    const appearance = props.appearance === "semiCircular" ? "semiCircular" : "circular";
-    patchChartHost(el2, doc, props, {
-      empty,
-      legendItems: items.map((it, i) => ({
-        name: it.label,
-        color: colors[i],
-        mark: seriesMark(i)
-      })),
-      tableModel: slicesTableModel(items, "Pie chart data"),
-      paint(svg, size, plot) {
-        const cx = (plot.x0 + plot.x1) / 2;
-        const cy = appearance === "semiCircular" ? plot.y0 + (plot.y1 - plot.y0) * 0.75 : (plot.y0 + plot.y1) / 2;
-        const rOuter = Math.max(
-          10,
-          Math.min(plot.x1 - plot.x0, plot.y1 - plot.y0) / 2 - 8
-        );
-        const rInner = variant === "donut" ? rOuter * 0.55 : 0;
-        const startAngle = appearance === "semiCircular" ? Math.PI : -Math.PI / 2;
-        const endAngle = appearance === "semiCircular" ? 2 * Math.PI : startAngle + Math.PI * 2;
-        const slices = pieSlices(items, {
-          cx,
-          cy,
-          rOuter,
-          rInner,
-          startAngle,
-          endAngle,
-          padAngle: 0.02
-        });
-        const g = svgEl(doc, "g", { class: "canvas-chart__series" });
-        slices.forEach((s, i) => {
-          const path = svgEl(doc, "path", {
-            class: "canvas-chart__slice",
-            d: s.path,
-            fill: colors[i],
-            "data-mark": seriesMark(i)
-          });
-          markDatapoint(path, {
-            id: `pie-${i}`,
-            label: `${s.label}: ${s.value} (${s.percent.toFixed(1)}%)`
-          });
-          g.appendChild(path);
-        });
-        svg.appendChild(g);
-      }
-    });
-  },
-  unmount(el2) {
-    unmountChartHost(el2);
-  }
-});
-
-// src/Browser/components/charts/SingleStackedBarChart.js
-var SingleStackedBarChart = lifecycle6({
-  mount(doc) {
-    return mountChartHost(doc, "SingleStackedBarChart");
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const { items, empty } = normalizeSlices(props);
-    const colors = resolvePalette(
-      items.length,
-      /** @type {string[]} */
-      props.palette
-    );
-    patchChartHost(el2, doc, props, {
-      empty,
-      legendItems: items.map((it, i) => ({
-        name: it.label,
-        color: colors[i],
-        mark: seriesMark(i)
-      })),
-      tableModel: slicesTableModel(items, "Stacked bar data"),
-      paint(svg, _size, plot) {
-        const barY = (plot.y0 + plot.y1) / 2 - 14;
-        const segs = stackedBarSegments(items, {
-          x0: plot.x0,
-          x1: plot.x1,
-          y: barY,
-          height: 28
-        });
-        const g = svgEl(doc, "g", { class: "canvas-chart__series" });
-        g.appendChild(
-          svgEl(doc, "rect", {
-            class: "canvas-chart__stack-track",
-            x: plot.x0,
-            y: barY,
-            width: Math.max(0, plot.x1 - plot.x0),
-            height: 28,
-            rx: 4
-          })
-        );
-        for (const s of segs) {
-          const rect = svgEl(doc, "rect", {
-            class: "canvas-chart__stack-seg",
-            x: s.x,
-            y: s.y,
-            width: Math.max(0, s.width),
-            height: s.height,
-            fill: colors[s.i % colors.length],
-            "data-mark": seriesMark(s.i)
-          });
-          markDatapoint(rect, {
-            id: `stack-${s.i}`,
-            label: `${s.label}: ${s.value} (${s.percent.toFixed(1)}%)`
-          });
-          g.appendChild(rect);
-        }
-        svg.appendChild(g);
-      }
-    });
-  },
-  unmount(el2) {
-    unmountChartHost(el2);
-  }
-});
-
-// src/Browser/components/charts/RadarChart.js
-var RadarChart = lifecycle6({
-  mount(doc) {
-    return mountChartHost(doc, "RadarChart");
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const data = normalizeCartesian(props);
-    const colors = resolvePalette(
-      data.series.length,
-      /** @type {string[]} */
-      props.palette
-    );
-    const max = Math.max(...collectValues(data.series), 1);
-    patchChartHost(el2, doc, props, {
-      empty: data.empty || data.labels.length < 3,
-      emptyMessage: data.labels.length < 3 ? "Radar needs at least 3 categories" : "No chart data",
-      legendItems: data.series.map((s, i) => ({
-        name: s.name,
-        color: colors[i],
-        mark: seriesMark(i)
-      })),
-      tableModel: cartesianTableModel(data.labels, data.series, "Radar chart data"),
-      paint(svg, _size, plot) {
-        const cx = (plot.x0 + plot.x1) / 2;
-        const cy = (plot.y0 + plot.y1) / 2;
-        const r = Math.max(12, Math.min(plot.x1 - plot.x0, plot.y1 - plot.y0) / 2 - 20);
-        const axisVals = data.labels.map(() => max);
-        const base = radarGeometry(axisVals, { cx, cy, r, max, levels: 4 });
-        const grid = svgEl(doc, "g", { class: "canvas-chart__radar-grid" });
-        for (const ring of base.rings) {
-          grid.appendChild(
-            svgEl(doc, "path", {
-              class: "canvas-chart__radar-ring",
-              d: ring,
-              fill: "none"
-            })
-          );
-        }
-        for (const ax of base.axes) {
-          grid.appendChild(
-            svgEl(doc, "line", {
-              class: "canvas-chart__radar-axis",
-              x1: ax.x1,
-              y1: ax.y1,
-              x2: ax.x2,
-              y2: ax.y2
-            })
-          );
-          const label = data.labels[ax.i] || "";
-          if (r >= 48 && label) {
-            const lx = ax.x2 + (ax.x2 - cx) * 0.08;
-            const ly = ax.y2 + (ax.y2 - cy) * 0.08;
-            const t = svgEl(doc, "text", {
-              class: "canvas-chart__tick-label",
-              x: lx,
-              y: ly,
-              "text-anchor": "middle",
-              "dominant-baseline": "middle"
-            });
-            t.textContent = label;
-            grid.appendChild(t);
-          }
-        }
-        svg.appendChild(grid);
-        data.series.forEach((s, si) => {
-          const mark = seriesMark(si);
-          const geo = radarGeometry(s.values.slice(0, data.labels.length), {
-            cx,
-            cy,
-            r,
-            max
-          });
-          const g = svgEl(doc, "g", { class: "canvas-chart__series" });
-          g.appendChild(
-            svgEl(doc, "path", {
-              class: "canvas-chart__radar-area",
-              d: geo.polygon,
-              fill: colors[si],
-              opacity: "0.2",
-              stroke: colors[si],
-              "stroke-width": "2",
-              "stroke-dasharray": dashForMark(mark),
-              "data-mark": mark
-            })
-          );
-          for (const p of geo.points) {
-            const c = svgEl(doc, "circle", {
-              class: "canvas-chart__point",
-              cx: p.x,
-              cy: p.y,
-              r: 3.5,
-              fill: colors[si]
-            });
-            markDatapoint(c, {
-              id: `radar-${si}-${p.i}`,
-              label: `${s.name}, ${data.labels[p.i]}: ${p.value}`
-            });
-            g.appendChild(c);
-          }
-          svg.appendChild(g);
-        });
-      }
-    });
-  },
-  unmount(el2) {
-    unmountChartHost(el2);
-  }
-});
-
-// src/Browser/components/charts/RadialChart.js
-var RadialChart = lifecycle6({
-  mount(doc) {
-    return mountChartHost(doc, "RadialChart");
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const { items, empty } = normalizeSlices(props);
-    const colors = resolvePalette(
-      items.length,
-      /** @type {string[]} */
-      props.palette
-    );
-    patchChartHost(el2, doc, props, {
-      empty,
-      legendItems: items.map((it, i) => ({
-        name: it.label,
-        color: colors[i],
-        mark: seriesMark(i)
-      })),
-      tableModel: slicesTableModel(items, "Radial chart data"),
-      paint(svg, _size, plot) {
-        const cx = (plot.x0 + plot.x1) / 2;
-        const cy = (plot.y0 + plot.y1) / 2;
-        const rOuter = Math.max(12, Math.min(plot.x1 - plot.x0, plot.y1 - plot.y0) / 2 - 8);
-        const rInner = rOuter * 0.35;
-        const start = -Math.PI / 2;
-        const end = start + Math.PI * 2;
-        const bars = radialBars(items, { cx, cy, rOuter, rInner, startAngle: start, endAngle: end });
-        const g = svgEl(doc, "g", { class: "canvas-chart__series" });
-        bars.forEach((b, i) => {
-          g.appendChild(
-            svgEl(doc, "path", {
-              class: "canvas-chart__radial-track",
-              d: donutArcPath(cx, cy, b.rOuter, b.rInner, start, end),
-              fill: "var(--canvas-surface-sunk, #eee)"
-            })
-          );
-          const path = svgEl(doc, "path", {
-            class: "canvas-chart__radial-bar",
-            d: b.path,
-            fill: colors[i],
-            "data-mark": seriesMark(i)
-          });
-          markDatapoint(path, {
-            id: `radial-${i}`,
-            label: `${b.label}: ${b.value}`
-          });
-          g.appendChild(path);
-        });
-        svg.appendChild(g);
-      }
-    });
-  },
-  unmount(el2) {
-    unmountChartHost(el2);
-  }
-});
-
-// src/Browser/components/charts/ScatterChart.js
-var ScatterChart = lifecycle6({
-  mount(doc) {
-    return mountChartHost(doc, "ScatterChart");
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const { datasets, empty } = normalizeScatter(props);
-    const colors = resolvePalette(
-      datasets.length,
-      /** @type {string[]} */
-      props.palette
-    );
-    patchChartHost(el2, doc, props, {
-      empty,
-      legendItems: datasets.map((d, i) => ({
-        name: d.name || `Series ${i + 1}`,
-        color: colors[i],
-        mark: seriesMark(i)
-      })),
-      tableModel: scatterTableModel(datasets, "Scatter chart data"),
-      paint(svg, _size, plot) {
-        const xs = datasets.flatMap((d) => d.points.map((p) => p.x));
-        const ys = datasets.flatMap((d) => d.points.map((p) => p.y));
-        const xDomain = niceDomain(xs.length ? xs : [0, 1], { includeZero: false, pad: 0.08 });
-        const yDomain = niceDomain(ys.length ? ys : [0, 1], { includeZero: false, pad: 0.08 });
-        const xScale = linearScale(xDomain[0], xDomain[1], [plot.x0, plot.x1]);
-        const yScale = linearScale(yDomain[0], yDomain[1], [plot.y1, plot.y0]);
-        svg.appendChild(
-          renderAxes(doc, {
-            x0: plot.x0,
-            x1: plot.x1,
-            y0: plot.y0,
-            y1: plot.y1,
-            xTicks: niceTicks(xDomain[0], xDomain[1], 5).map((v) => ({
-              label: formatTick(v),
-              x: xScale(v)
-            })),
-            yTicks: buildYTicks(yDomain, yScale),
-            xLabel: props.xLabel ? String(props.xLabel) : void 0,
-            yLabel: props.yLabel ? String(props.yLabel) : void 0,
-            grid: props.grid !== false
-          })
-        );
-        const pts = scatterPositions(datasets, {
-          x0: plot.x0,
-          x1: plot.x1,
-          y0: plot.y0,
-          y1: plot.y1,
-          xDomain,
-          yDomain
-        });
-        const g = svgEl(doc, "g", { class: "canvas-chart__series" });
-        const shape = props.shape === "square" ? "square" : "circle";
-        for (const p of pts) {
-          let node;
-          if (shape === "square") {
-            const s = 7;
-            node = svgEl(doc, "rect", {
-              class: "canvas-chart__point",
-              x: p.x - s / 2,
-              y: p.y - s / 2,
-              width: s,
-              height: s,
-              fill: colors[p.si % colors.length],
-              "data-mark": seriesMark(p.si)
-            });
-          } else {
-            node = svgEl(doc, "circle", {
-              class: "canvas-chart__point",
-              cx: p.x,
-              cy: p.y,
-              r: 4,
-              fill: colors[p.si % colors.length],
-              "data-mark": seriesMark(p.si)
-            });
-          }
-          markDatapoint(node, {
-            id: `scatter-${p.si}-${p.i}`,
-            label: `${p.series || "Point"}: (${p.vx}, ${p.vy})`
-          });
-          g.appendChild(node);
-        }
-        svg.appendChild(g);
-      }
-    });
-  },
-  unmount(el2) {
-    unmountChartHost(el2);
-  }
-});
-
-// src/Browser/components/charts/dataLeaf.js
-function dataLeaf(typeName) {
-  return lifecycle({
-    mount(doc) {
-      const el2 = doc.createElement("span");
-      el2.setAttribute("data-canvas-component", typeName);
-      el2.setAttribute("hidden", "");
-      return el2;
-    },
-    patch(el2, props = {}) {
-      el2.setAttribute("data-leaf", typeName);
-      const label = props.category ?? props.label ?? props.name ?? "";
-      if (label !== "") el2.setAttribute("data-label", String(label));
-    }
-  });
-}
-var Series = dataLeaf("Series");
-var Slice = dataLeaf("Slice");
-var ScatterSeries = dataLeaf("ScatterSeries");
-var Point = dataLeaf("Point");
-
-// src/Browser/components/charts/registerCharts.js
-var CHART_COMPONENTS = {
-  BarChart,
-  LineChart,
-  AreaChart,
-  HorizontalBarChart,
-  PieChart,
-  SingleStackedBarChart,
-  RadarChart,
-  RadialChart,
-  ScatterChart,
-  Series,
-  Slice,
-  ScatterSeries,
-  Point
-};
-function registerCharts(registry) {
-  if (!registry || typeof registry.register !== "function") {
-    throw new Error("registerCharts: registry with register() required");
-  }
-  for (const [type, entry] of Object.entries(CHART_COMPONENTS)) {
-    registry.register(type, entry);
-  }
-  return registry;
-}
-
-// src/Browser/components/tools/shared.js
-function requireDocument7(ctx = {}) {
-  const doc = ctx.document ?? globalThis.document;
-  if (!doc?.createElement) {
-    throw new Error("tools component: ctx.document required");
-  }
-  return doc;
-}
-function setClass7(el2, className) {
-  el2.setAttribute("class", String(className).trim());
-}
-function clearChildren7(el2) {
-  while (el2.firstChild) {
-    el2.removeChild(el2.firstChild);
-  }
-}
-function asText7(value) {
-  if (value == null) return "";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  return "";
-}
-function prefersReducedMotion3(props = {}, ctx = {}) {
-  if (props.reducedMotion === true || props.reduceMotion === true) return true;
-  if (ctx.reducedMotion === true) return true;
-  try {
-    const mq = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)");
-    if (mq?.matches) return true;
-  } catch {
-  }
-  return false;
-}
-function lifecycle7(impl) {
-  return {
-    create(props = {}, ctx = {}) {
-      const doc = requireDocument7(ctx);
-      const el2 = impl.mount(doc, props, ctx);
-      impl.patch(el2, props, ctx);
-      return el2;
-    },
-    update(el2, props = {}, ctx = {}) {
-      impl.patch(el2, props, ctx);
-    },
-    destroy(el2, ctx = {}) {
-      impl.unmount?.(el2, ctx);
-    },
-    ownsChildren: impl.ownsChildren !== false
-  };
-}
-var TOOL_STATUS_LABELS = {
-  streaming: (n) => `Calling the ${n} tool`,
-  executing: (n) => `Running the ${n} tool`,
-  complete: (n) => `Called the ${n} tool`,
-  result: (n) => `${n} result`,
-  error: (n) => `${n} failed`
-};
-var TOOL_NAMELESS_LABELS = {
-  streaming: "Calling the tool",
-  executing: "Running the tool",
-  complete: "Called the tool",
-  result: "Tool result",
-  error: "Tool failed"
-};
-function defaultToolLabel(status, name) {
-  const key = (
-    /** @type {ToolStatus} */
-    status
-  );
-  if (!TOOL_STATUS_LABELS[key]) return name ? `${name}: ${status}` : String(status);
-  if (!name || !String(name).trim()) return TOOL_NAMELESS_LABELS[key];
-  return TOOL_STATUS_LABELS[key](name);
-}
-function defaultRunLabel(phase) {
-  switch (phase) {
-    case "start":
-      return "Run started";
-    case "finish":
-      return "Run finished";
-    case "error":
-      return "Run failed";
-    default:
-      return `Run ${phase}`;
-  }
-}
-
-// src/Browser/components/tools/partialJson.js
-function balanceOpenJSON(raw) {
-  const closers = [];
-  let inString = false;
-  let escaped = false;
-  for (let i = 0; i < raw.length; i++) {
-    const ch = raw[i];
-    if (inString) {
-      if (escaped) escaped = false;
-      else if (ch === "\\") escaped = true;
-      else if (ch === '"') inString = false;
-      continue;
-    }
-    if (ch === '"') inString = true;
-    else if (ch === "{") closers.push("}");
-    else if (ch === "[") closers.push("]");
-    else if (ch === "}" || ch === "]") closers.pop();
-  }
-  let out = raw;
-  if (inString) {
-    if (escaped) out = out.slice(0, -1);
-    out += '"';
-  }
-  out = out.replace(/(?:,\s*)?"(?:[^"\\]|\\.)*"\s*:\s*$/, "");
-  out = out.replace(/,\s*$/, "");
-  for (let i = closers.length - 1; i >= 0; i--) out += closers[i];
-  return out;
-}
-function partialJSONParse(raw) {
-  if (!raw) return {};
-  try {
-    return JSON.parse(raw);
-  } catch {
-  }
-  try {
-    return JSON.parse(balanceOpenJSON(raw));
-  } catch {
-    return {};
-  }
-}
-function isPartialJsonString(raw) {
-  if (!raw || !String(raw).trim()) return true;
-  try {
-    JSON.parse(raw);
-    return false;
-  } catch {
-    return true;
-  }
-}
-
-// src/Browser/components/tools/redact.js
-var SENSITIVE_KEY_RE = /^(?:password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key|private[_-]?key|authorization|auth|credential|cookie|session)$/i;
-var REDACTED = "[REDACTED]";
-function isSensitiveKey(key) {
-  return SENSITIVE_KEY_RE.test(String(key || ""));
-}
-function redactValue(value, opts = {}) {
-  const depth = opts.depth ?? 0;
-  if (depth > 12) return REDACTED;
-  if (value == null) return value;
-  if (typeof value === "string") {
-    if (/^(?:sk-|Bearer\s+)/i.test(value) || value.length > 40 && /^[A-Za-z0-9_\-.=]+$/.test(value)) {
-      return REDACTED;
-    }
-    return value;
-  }
-  if (typeof value !== "object") return value;
-  if (Array.isArray(value)) {
-    return value.map((v) => redactValue(v, { depth: depth + 1 }));
-  }
-  const out = {};
-  for (const [k, v] of Object.entries(
-    /** @type {Record<string, unknown>} */
-    value
-  )) {
-    out[k] = isSensitiveKey(k) ? REDACTED : redactValue(v, { depth: depth + 1 });
-  }
-  return out;
-}
-function redactForDisplay(value) {
-  try {
-    const redacted = redactValue(value);
-    if (typeof redacted === "string") return redacted;
-    return JSON.stringify(redacted, null, 2);
-  } catch {
-    return String(value ?? "");
-  }
-}
-
-// src/Browser/components/tools/ToolActivity.js
-var STATUSES = /* @__PURE__ */ new Set(["streaming", "executing", "complete", "result", "error"]);
-function normalizeToolActivity(props = {}) {
-  const activity = props.activity && typeof props.activity === "object" ? (
-    /** @type {Record<string, unknown>} */
-    props.activity
-  ) : props;
-  let status = asText7(activity.status || props.status) || "executing";
-  if (status === "success") status = "complete";
-  if (!STATUSES.has(status)) status = "executing";
-  const toolCall = activity.toolCall && typeof activity.toolCall === "object" ? (
-    /** @type {Record<string, unknown>} */
-    activity.toolCall
-  ) : null;
-  const fn = toolCall?.function && typeof toolCall.function === "object" ? (
-    /** @type {Record<string, unknown>} */
-    toolCall.function
-  ) : null;
-  const toolName = asText7(activity.toolName) || asText7(props.toolName) || asText7(fn?.name) || asText7(activity.name) || "";
-  const rawArgs = asText7(props.rawArgs) || asText7(activity.rawArgs) || asText7(fn?.arguments) || (typeof activity.arguments === "string" ? activity.arguments : "") || "";
-  let input = activity.input !== void 0 ? activity.input : props.input;
-  if (input === void 0) {
-    input = rawArgs ? partialJSONParse(rawArgs) : {};
-  }
-  const isPartial2 = activity.isPartial === true || props.isPartial === true || status === "streaming" || (rawArgs ? isPartialJsonString(rawArgs) : false);
-  const result = asText7(activity.result) || asText7(props.result) || asText7(activity.content) || "";
-  const errorText = asText7(activity.errorText) || asText7(props.errorText) || asText7(activity.error) || asText7(props.error) || "";
-  const isError = activity.isError === true || status === "error" || Boolean(errorText);
-  return {
-    status: isError && status !== "error" ? "error" : status,
-    id: asText7(activity.id) || asText7(props.id) || asText7(toolCall?.id) || "",
-    toolName,
-    rawArgs,
-    input,
-    result,
-    errorText,
-    statusMessage: asText7(activity.statusMessage) || asText7(props.statusMessage),
-    isError,
-    isPartial: isPartial2
-  };
-}
-function resolveRequestDisplay(activity) {
-  const input = activity.input;
-  if (input && typeof input === "object" && !Array.isArray(input)) {
-    const obj = (
-      /** @type {Record<string, unknown>} */
-      input
-    );
-    if (obj._request != null) return redactForDisplay(obj._request);
-    if (Object.keys(obj).length === 0 && activity.rawArgs.trim()) {
-      return activity.rawArgs;
-    }
-  }
-  if (activity.isPartial && activity.rawArgs.trim()) {
-    const parsed = partialJSONParse(activity.rawArgs);
-    if (parsed && typeof parsed === "object" && Object.keys(
-      /** @type {object} */
-      parsed
-    ).length) {
-      return redactForDisplay(parsed);
-    }
-    return activity.rawArgs;
-  }
-  return redactForDisplay(input);
-}
-var ToolActivity = lifecycle7({
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "ToolActivity");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const activity = normalizeToolActivity(props);
-    const reduced = prefersReducedMotion3(props, ctx);
-    const running = props.running !== false && ctx.running !== false;
-    const isBusy = (activity.status === "streaming" || activity.status === "executing") && running;
-    let cls = `canvas-tool-activity canvas-tool-activity--${activity.status}`;
-    if (isBusy) cls += " canvas-tool-activity--busy";
-    if (reduced) cls += " canvas-tool-activity--reduced-motion";
-    if (activity.isPartial) cls += " canvas-tool-activity--partial";
-    setClass7(el2, cls);
-    el2.setAttribute("data-status", activity.status);
-    el2.setAttribute("data-partial", activity.isPartial ? "1" : "0");
-    el2.setAttribute("data-tool-name", activity.toolName || "");
-    if (activity.id) el2.setAttribute("data-tool-id", activity.id);
-    else el2.removeAttribute("data-tool-id");
-    clearChildren7(el2);
-    const live = doc.createElement("div");
-    live.setAttribute("class", "canvas-tool-activity__live");
-    live.setAttribute("aria-live", "polite");
-    live.setAttribute("aria-atomic", "true");
-    const label = activity.statusMessage || defaultToolLabel(activity.status, activity.toolName);
-    live.textContent = label;
-    el2.appendChild(live);
-    const header = doc.createElement("div");
-    header.setAttribute("class", "canvas-tool-activity__header");
-    const icon = doc.createElement("span");
-    icon.setAttribute("class", "canvas-tool-activity__icon");
-    icon.setAttribute("aria-hidden", "true");
-    icon.setAttribute("data-spin", isBusy && !reduced ? "1" : "0");
-    icon.textContent = activity.status === "error" ? "!" : activity.status === "complete" || activity.status === "result" ? "\u2713" : "\u25C9";
-    header.appendChild(icon);
-    const title = doc.createElement("span");
-    title.setAttribute("class", "canvas-tool-activity__title");
-    title.textContent = label;
-    header.appendChild(title);
-    el2.appendChild(header);
-    const request = resolveRequestDisplay(activity);
-    if (request) {
-      const req = doc.createElement("pre");
-      req.setAttribute("class", "canvas-tool-activity__request");
-      req.setAttribute("data-role", "args");
-      if (activity.isPartial) req.setAttribute("data-partial", "1");
-      req.textContent = request;
-      el2.appendChild(req);
-    }
-    if (activity.status === "result" || activity.status === "complete" || activity.status === "error") {
-      if (activity.result) {
-        const res = doc.createElement("pre");
-        res.setAttribute("class", "canvas-tool-activity__result");
-        res.setAttribute("data-role", "result");
-        let display = activity.result;
-        try {
-          display = redactForDisplay(JSON.parse(activity.result));
-        } catch {
-          display = redactForDisplay(activity.result);
-        }
-        res.textContent = display;
-        el2.appendChild(res);
-      }
-      if (activity.errorText) {
-        const err = doc.createElement("div");
-        err.setAttribute("class", "canvas-tool-activity__error");
-        err.setAttribute("data-role", "error");
-        err.setAttribute("role", "alert");
-        err.textContent = activity.errorText;
-        el2.appendChild(err);
-      }
-    }
-    el2.setAttribute("data-input-redacted", JSON.stringify(redactValue(activity.input)));
-  }
-});
-
-// src/Browser/components/tools/RunStatus.js
-var PHASES = /* @__PURE__ */ new Set(["start", "finish", "error"]);
-function normalizeRunStatus(props = {}) {
-  let phase = asText7(props.phase) || asText7(props.status) || asText7(props.event) || "start";
-  if (phase === "started" || phase === "run_started" || phase === "RUN_STARTED") phase = "start";
-  if (phase === "finished" || phase === "run_finished" || phase === "RUN_FINISHED" || phase === "complete") {
-    phase = "finish";
-  }
-  if (phase === "run_error" || phase === "RUN_ERROR" || phase === "failed") phase = "error";
-  if (!PHASES.has(phase)) phase = "start";
-  const message = asText7(props.message) || asText7(props.statusMessage) || asText7(props.error) || defaultRunLabel(phase);
-  return {
-    phase,
-    message,
-    runId: asText7(props.runId) || asText7(props.id) || ""
-  };
-}
-var RunStatus = lifecycle7({
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "RunStatus");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const run = normalizeRunStatus(props);
-    const reduced = prefersReducedMotion3(props, ctx);
-    let cls = `canvas-run-status canvas-run-status--${run.phase}`;
-    if (reduced) cls += " canvas-run-status--reduced-motion";
-    setClass7(el2, cls);
-    el2.setAttribute("data-phase", run.phase);
-    if (run.runId) el2.setAttribute("data-run-id", run.runId);
-    else el2.removeAttribute("data-run-id");
-    clearChildren7(el2);
-    const live = doc.createElement("div");
-    live.setAttribute("class", "canvas-run-status__live");
-    live.setAttribute("aria-live", "polite");
-    live.setAttribute("aria-atomic", "true");
-    live.textContent = run.message;
-    el2.appendChild(live);
-    const row = doc.createElement("div");
-    row.setAttribute("class", "canvas-run-status__row");
-    const icon = doc.createElement("span");
-    icon.setAttribute("class", "canvas-run-status__icon");
-    icon.setAttribute("aria-hidden", "true");
-    icon.textContent = run.phase === "error" ? "!" : run.phase === "finish" ? "\u2713" : "\u25B6";
-    row.appendChild(icon);
-    const label = doc.createElement("span");
-    label.setAttribute("class", "canvas-run-status__label");
-    label.textContent = run.message;
-    row.appendChild(label);
-    el2.appendChild(row);
-    if (run.phase === "error" && asText7(props.detail)) {
-      const detail = doc.createElement("pre");
-      detail.setAttribute("class", "canvas-run-status__detail");
-      detail.textContent = asText7(props.detail);
-      el2.appendChild(detail);
-    }
-  }
-});
-
-// src/Browser/components/tools/registerTools.js
-var TOOL_COMPONENTS = {
-  ToolActivity,
-  RunStatus,
-  // Aliases matching stream event vocabulary
-  ToolCall: ToolActivity,
-  ToolResult: {
-    create(props = {}, ctx = {}) {
-      return ToolActivity.create({ ...props, status: props.status || "result" }, ctx);
-    },
-    update(el2, props = {}, ctx = {}) {
-      return ToolActivity.update(el2, { ...props, status: props.status || "result" }, ctx);
-    },
-    destroy(el2, ctx = {}) {
-      return ToolActivity.destroy(el2, ctx);
-    },
-    ownsChildren: true
-  }
-};
-function registerTools(registry) {
-  if (!registry || typeof registry.register !== "function") {
-    throw new Error("registerTools: registry with register() required");
-  }
-  for (const [type, entry] of Object.entries(TOOL_COMPONENTS)) {
-    registry.register(type, entry);
-  }
-  return registry;
-}
-
-// src/Browser/components/chat/FollowUpItem.js
-var FollowUpItem = lifecycle({
-  mount(doc) {
-    const el2 = doc.createElement("button");
-    el2.setAttribute("type", "button");
-    el2.setAttribute("data-canvas-component", "FollowUpItem");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const text2 = asText(props.text);
-    const streaming = ctx.stream?.isStreaming === true;
-    setClass(el2, "canvas-follow-up-item");
-    el2.setAttribute("data-streaming-blocked", streaming ? "true" : "false");
-    setOrRemoveAttr(el2, "disabled", streaming ? "true" : null);
-    setOrRemoveAttr(el2, "aria-disabled", streaming ? "true" : null);
-    clearChildren(el2);
-    if (text2) {
-      const span = doc.createElement("span");
-      span.setAttribute("class", "canvas-follow-up-item__text");
-      span.textContent = text2;
-      el2.appendChild(span);
-    }
-    if (asText(props.icon)) {
-      const icon = doc.createElement("span");
-      icon.setAttribute("class", "canvas-follow-up-item__icon");
-      icon.setAttribute("aria-hidden", "true");
-      icon.textContent = asText(props.icon);
-      el2.appendChild(icon);
-    } else {
-      const chevron = doc.createElement("span");
-      chevron.setAttribute("class", "canvas-follow-up-item__icon");
-      chevron.setAttribute("aria-hidden", "true");
-      chevron.textContent = "\u203A";
-      el2.appendChild(chevron);
-    }
-    el2.onclick = () => {
-      dispatchContinueConversation(
-        ctx,
-        {
-          ...props,
-          action: props.action ?? {
-            type: "continue_conversation",
-            context: text2,
-            message: text2
-          }
-        },
-        { fallbackMessage: text2, userGesture: true }
-      );
-    };
-  }
-});
-
-// src/Browser/components/chat/FollowUpBlock.js
-function normalizeFollowUpItems(props = {}) {
-  if (!Array.isArray(props.items)) return [];
-  return props.items.map((item) => {
-    if (typeof item === "string") return { text: item };
-    if (!item || typeof item !== "object") return null;
-    if (item.props && typeof item.props === "object") {
-      return (
-        /** @type {Record<string, unknown>} */
-        item.props
-      );
-    }
-    return (
-      /** @type {Record<string, unknown>} */
-      item
-    );
-  }).filter(Boolean);
-}
-var FollowUpBlock = lifecycle({
-  mount(doc) {
-    const el2 = doc.createElement("div");
-    el2.setAttribute("data-canvas-component", "FollowUpBlock");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const items = normalizeFollowUpItems(props);
-    setClass(el2, "canvas-follow-up-block");
-    el2.setAttribute("data-item-count", String(items.length));
-    clearChildren(el2);
-    const header = doc.createElement("div");
-    header.setAttribute("class", "canvas-follow-up-block__header");
-    header.textContent = asText(props.heading) || "Related Queries";
-    el2.appendChild(header);
-    if (typeof ctx.renderChildren === "function" && Array.isArray(props.children) && props.children.length) {
-      ctx.renderChildren(el2, props.children);
-      return;
-    }
-    for (const item of items) {
-      el2.appendChild(FollowUpItem.create(item, ctx));
-    }
-  }
-});
-
-// src/Browser/components/chat/SourceContext.js
-function getFaviconUrl(url, urlPolicy) {
-  if (!url || typeof url !== "string") return "";
-  const safe = urlPolicy && typeof urlPolicy.safeUrl === "function" ? urlPolicy.safeUrl(url) : url;
-  if (!safe) return "";
-  try {
-    const parsed = new URL(safe, "https://example.invalid");
-    if (!parsed.hostname || parsed.hostname === "example.invalid") return "";
-    const fav = `https://www.google.com/s2/favicons?sz=128&domain=${parsed.hostname}`;
-    return urlPolicy?.safeUrl ? urlPolicy.safeUrl(fav) || "" : fav;
-  } catch {
-    return "";
-  }
-}
-function enrichSources(raw, opts = {}) {
-  if (!Array.isArray(raw)) return [];
-  const urlPolicy = opts.urlPolicy;
-  const out = [];
-  for (let i = 0; i < raw.length; i++) {
-    const src = raw[i];
-    if (!src || typeof src !== "object") continue;
-    const s = (
-      /** @type {CardSource} */
-      src
-    );
-    const url = typeof s.url === "string" && urlPolicy?.safeUrl ? urlPolicy.safeUrl(s.url) : typeof s.url === "string" ? s.url : void 0;
-    out.push({
-      title: typeof s.title === "string" ? s.title : void 0,
-      sourceName: typeof s.sourceName === "string" ? s.sourceName : void 0,
-      url: url || void 0,
-      faviconUrl: getFaviconUrl(url, urlPolicy),
-      key: s.key != null ? String(s.key) : `src-${i}`
-    });
-  }
-  return out;
-}
-function createSourceContext(sources, opts = {}) {
-  const enriched = enrichSources(sources, opts);
-  return {
-    sources: enriched,
-    /**
-     * 1-based citation index → source (or undefined).
-     * @param {number} oneBased
-     */
-    getByIndex(oneBased) {
-      const n = Number(oneBased);
-      if (!Number.isFinite(n) || n < 1) return void 0;
-      return enriched[n - 1];
-    },
-    /**
-     * @param {Array<number|string>} indices 1-based
-     * @returns {SourceWithFavicon[]}
-     */
-    lookupCitations(indices) {
-      if (!Array.isArray(indices)) return [];
-      return indices.map((idx) => this.getByIndex(Number(idx))).filter(
-        (s) => s && asText(s.sourceName).trim() !== "" && asText(s.title).trim() !== ""
-      );
-    }
-  };
-}
-function getSourceContext(ctx = {}) {
-  if (ctx.sourceContext && typeof ctx.sourceContext.getByIndex === "function") {
-    return ctx.sourceContext;
-  }
-  if (Array.isArray(ctx.sources)) {
-    return createSourceContext(ctx.sources, { urlPolicy: ctx.urlPolicy });
-  }
-  return createSourceContext([], { urlPolicy: ctx.urlPolicy });
-}
-function parseIndices(props) {
-  if (Array.isArray(props.indices)) {
-    return props.indices.map(Number).filter((n) => Number.isFinite(n) && n >= 1);
-  }
-  if (typeof props.indices === "string") {
-    return props.indices.split(",").map((s) => Number(s.trim())).filter((n) => Number.isFinite(n) && n >= 1);
-  }
-  const raw = props.index ?? props.citation ?? props["data-citation"];
-  if (typeof raw === "number" && raw >= 1) return [raw];
-  if (typeof raw === "string" && /^\d+$/.test(raw.trim())) return [Number(raw)];
-  if (typeof raw === "string" && raw.includes(",")) {
-    return raw.split(",").map((s) => Number(s.trim())).filter((n) => Number.isFinite(n) && n >= 1);
-  }
-  return [];
-}
-var CitationRef = lifecycle({
-  mount(doc) {
-    const el2 = doc.createElement("cite");
-    el2.setAttribute("data-canvas-component", "CitationRef");
-    return el2;
-  },
-  patch(el2, props = {}, ctx = {}) {
-    const doc = ctx.document ?? el2.ownerDocument;
-    const indices = parseIndices(props);
-    setClass(el2, "canvas-citation-ref");
-    el2.setAttribute("data-citation", indices.join(",") || "");
-    clearChildren(el2);
-    const sourceCtx = getSourceContext(ctx);
-    const found = sourceCtx.lookupCitations(indices);
-    if (!indices.length) {
-      el2.setAttribute("data-status", "empty");
-      el2.textContent = asText(props.label) || "";
-      return;
-    }
-    if (!found.length) {
-      el2.setAttribute("data-status", "unresolved");
-      el2.textContent = indices.join(",");
-      return;
-    }
-    el2.setAttribute("data-status", "ready");
-    el2.setAttribute("data-source-count", String(found.length));
-    for (let i = 0; i < found.length; i++) {
-      const src = found[i];
-      const chip = doc.createElement("button");
-      chip.setAttribute("type", "button");
-      chip.setAttribute("class", "canvas-citation-ref__chip");
-      chip.setAttribute("data-citation-index", String(indices[i] ?? i + 1));
-      const label = asText(src.title) || asText(src.sourceName) || String(indices[i]);
-      chip.textContent = String(indices[i] ?? i + 1);
-      chip.setAttribute("aria-label", `Source ${indices[i]}: ${label}`);
-      const safeUrl2 = src.url && ctx.urlPolicy?.safeUrl ? ctx.urlPolicy.safeUrl(src.url) : src.url;
-      if (safeUrl2) {
-        chip.setAttribute("data-source-url", safeUrl2);
-        chip.onclick = (ev) => {
-          ev?.preventDefault?.();
-          let opened = null;
-          if (ctx.urlPolicy && typeof ctx.urlPolicy.safeOpenUrl === "function") {
-            opened = ctx.urlPolicy.safeOpenUrl(safeUrl2);
-          }
-          if (!opened && typeof ctx.openUrl === "function") {
-            ctx.openUrl(safeUrl2);
-          }
-        };
-      } else {
-        chip.setAttribute("disabled", "true");
-      }
-      el2.appendChild(chip);
-    }
-  }
-});
-
-// src/Browser/components/chat/registerChatContent.js
-var CHAT_CONTENT_COMPONENTS = {
-  ListBlock,
-  ListItem,
-  CodeBlock,
-  Image,
-  ImageBlock,
-  FollowUpBlock,
-  FollowUpItem,
-  CitationRef,
-  // Alias for markdown / cite wiring
-  Citation: CitationRef
-};
-function registerChatContent(registry) {
-  if (!registry || typeof registry.register !== "function") {
-    throw new Error("registerChatContent: registry with register() required");
-  }
-  for (const [type, entry] of Object.entries(CHAT_CONTENT_COMPONENTS)) {
-    registry.register(type, entry);
-  }
-  return registry;
-}
-
 // src/Browser/host/registerAllComponents.js
+init_registerSectionSteps();
+init_registerCarouselModal();
+init_registerTable();
+init_registerCharts();
+init_registerTools();
+init_registerChatContent();
 function registerAllComponents(registry) {
   registerShellComponents(registry);
   registerChatContent(registry);
@@ -12664,6 +13181,9 @@ function createComponentRegistry(initial = {}) {
     }
   };
 }
+
+// src/Browser/renderer/context.js
+init_urlPolicy();
 
 // src/Browser/renderer/reconciler.js
 var META = /* @__PURE__ */ new WeakMap();
@@ -13387,6 +13907,9 @@ function createBindingManager(store, opts = {}) {
   };
 }
 
+// src/Browser/host/mountCore.js
+init_urlPolicy();
+
 // src/Browser/lang/ast.js
 function isRuntimeExpr(node) {
   switch (node.k) {
@@ -13466,6 +13989,12 @@ function walkAST(node, visit) {
   };
   walk(node);
 }
+
+// src/Browser/lang/parser.js
+init_builtins();
+
+// src/Browser/lang/expressions.js
+init_builtins();
 
 // src/Browser/lang/tokens.js
 var T = Object.freeze({
@@ -14017,6 +14546,9 @@ function tokenize(src) {
   tokens.push({ t: T.EOF });
   return tokens;
 }
+
+// src/Browser/lang/materialize.js
+init_builtins();
 
 // src/Browser/lang/types.js
 function isElementNode(value) {
@@ -16165,6 +16697,151 @@ var TRANSPORT_MODULES = Object.freeze({
   ndjsonAdapter: ndjsonAdapter_exports
 });
 
+// src/Browser/host/lazyPacks.js
+var TYPE_TO_PACK = Object.freeze({
+  // charts
+  BarChart: "charts",
+  LineChart: "charts",
+  AreaChart: "charts",
+  HorizontalBarChart: "charts",
+  PieChart: "charts",
+  SingleStackedBarChart: "charts",
+  RadarChart: "charts",
+  RadialChart: "charts",
+  ScatterChart: "charts",
+  Series: "charts",
+  Slice: "charts",
+  ScatterSeries: "charts",
+  Point: "charts",
+  // table
+  Table: "table",
+  EditableTable: "table",
+  Col: "table",
+  // tools
+  ToolActivity: "tools",
+  RunStatus: "tools",
+  ToolCall: "tools",
+  ToolResult: "tools",
+  // chat-only (FollowUp / Citation — List/Code/Image already on shell via content)
+  FollowUpBlock: "chat",
+  FollowUpItem: "chat",
+  CitationRef: "chat",
+  Citation: "chat",
+  // section / steps
+  SectionBlock: "sectionSteps",
+  SectionItem: "sectionSteps",
+  Steps: "sectionSteps",
+  StepsItem: "sectionSteps",
+  // carousel / modal
+  Carousel: "carouselModal",
+  Modal: "carouselModal"
+});
+var PACK_CSS = Object.freeze({
+  charts: ["../../css/components/charts.css"],
+  table: ["../../css/components/table.css"],
+  tools: ["../../css/components/tool-activity.css"],
+  sectionSteps: [
+    "../../css/components/section-block.css",
+    "../../css/components/steps.css"
+  ],
+  carouselModal: [
+    "../../css/components/carousel.css",
+    "../../css/components/modal.css"
+  ]
+});
+var loaded = /* @__PURE__ */ new Map();
+function collectTypeNames(node, out = /* @__PURE__ */ new Set()) {
+  if (node == null || node === false) return out;
+  if (Array.isArray(node)) {
+    for (const c of node) collectTypeNames(c, out);
+    return out;
+  }
+  if (typeof node !== "object") return out;
+  const obj = (
+    /** @type {Record<string, unknown>} */
+    node
+  );
+  if (typeof obj.typeName === "string") out.add(obj.typeName);
+  if (typeof obj.type === "string" && obj.type !== "element") out.add(obj.type);
+  if (obj.props && typeof obj.props === "object") {
+    const props = (
+      /** @type {Record<string, unknown>} */
+      obj.props
+    );
+    for (const v of Object.values(props)) collectTypeNames(v, out);
+  }
+  if (Array.isArray(obj.children)) collectTypeNames(obj.children, out);
+  return out;
+}
+function injectPackCss(packId, importMetaUrl) {
+  const hrefs = PACK_CSS[packId];
+  if (!hrefs || typeof document === "undefined") return;
+  for (const rel of hrefs) {
+    const href = new URL(rel, importMetaUrl).href;
+    const candidates = [href];
+    try {
+      const u = new URL(importMetaUrl);
+      if (u.pathname.includes("/js/")) {
+        const cssRoot = u.pathname.replace(/\/js\/.*$/, "/css/");
+        const name = rel.split("/").pop();
+        candidates.push(`${u.origin}${cssRoot}components/${name}`);
+      }
+    } catch {
+    }
+    for (const h of candidates) {
+      if (document.querySelector(`link[data-canvas-pack-css="${h}"]`)) continue;
+      if (document.querySelector(`link[href="${h}"]`)) continue;
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = h;
+      link.dataset.canvasPackCss = h;
+      document.head.appendChild(link);
+      break;
+    }
+  }
+}
+async function importPackRegistrar(packId) {
+  switch (packId) {
+    case "charts":
+      return (await Promise.resolve().then(() => (init_registerCharts(), registerCharts_exports))).registerCharts;
+    case "table":
+      return (await Promise.resolve().then(() => (init_registerTable(), registerTable_exports))).registerTable;
+    case "tools":
+      return (await Promise.resolve().then(() => (init_registerTools(), registerTools_exports))).registerTools;
+    case "chat":
+      return (await Promise.resolve().then(() => (init_registerChatContent(), registerChatContent_exports))).registerChatContent;
+    case "sectionSteps":
+      return (await Promise.resolve().then(() => (init_registerSectionSteps(), registerSectionSteps_exports))).registerSectionSteps;
+    case "carouselModal":
+      return (await Promise.resolve().then(() => (init_registerCarouselModal(), registerCarouselModal_exports))).registerCarouselModal;
+    default:
+      throw new Error(`unknown canvas pack: ${packId}`);
+  }
+}
+async function ensureLazyPacks(registry, types, opts = {}) {
+  const importMetaUrl = opts.importMetaUrl || import.meta.url;
+  const needed = /* @__PURE__ */ new Set();
+  for (const t of types) {
+    const pack = TYPE_TO_PACK[t];
+    if (pack) needed.add(pack);
+  }
+  const jobs = [];
+  for (const packId of needed) {
+    if (!loaded.has(packId)) {
+      loaded.set(
+        packId,
+        (async () => {
+          const register = await importPackRegistrar(packId);
+          register(registry);
+          injectPackCss(packId, importMetaUrl);
+        })()
+      );
+    }
+    jobs.push(loaded.get(packId));
+  }
+  await Promise.all(jobs);
+}
+
 // src/Browser/host/mountCore.js
 var CONTRACT = "canvas-host-v1";
 var RUNTIME_ID = "sanctum-canvas";
@@ -16279,19 +16956,7 @@ async function mountWithRegistry(canvasElement, options, registerComponents) {
   mounting.add(canvasElement);
   let abortUnsub = null;
   try {
-    let renderFromSource = function(source, { streaming = false } = {}) {
-      programSource = source || "";
-      ctx.stream = { isStreaming: streaming };
-      streamingParser = createStreamingParser2(schema, rootName);
-      const result = streamingParser.push(programSource);
-      if (result.root) {
-        const vnode = elementToVnode(result.root);
-        if (vnode) safeRender(canvasElement, vnode, ctx);
-      } else if (!streaming && !programSource.trim()) {
-        clearRoot(canvasElement);
-      }
-      return result;
-    }, eventNeedsLangSync = function(event) {
+    let eventNeedsLangSync = function(event) {
       if (!event || typeof event !== "object") return false;
       const t = event.type;
       return t === EventType.TEXT_MESSAGE_CONTENT || t === EventType.TEXT_MESSAGE_CHUNK || t === EventType.TEXT_MESSAGE_END || t === EventType.TEXT_MESSAGE_START || t === EventType.RUN_FINISHED || t === EventType.RUN_ERROR || t === EventType.RUN_CANCELLED;
@@ -16299,7 +16964,7 @@ async function mountWithRegistry(canvasElement, options, registerComponents) {
       const state = reducer.getState();
       const assistant = state.messages.filter((m) => m.role === "assistant" || !m.role).map((m) => m.content || "").join("");
       const streaming = state.isStreaming === true && state.runStatus === "running";
-      renderFromSource(assistant, { streaming });
+      void renderFromSource(assistant, { streaming });
     }, dispatchEvent = function(event) {
       if (disposed) return reducer.getState();
       const next = reducer.dispatch(event);
@@ -16379,8 +17044,34 @@ async function mountWithRegistry(canvasElement, options, registerComponents) {
     ctx.continueConversation = continueConversation;
     ctx.openUrl = openUrl;
     ctx.dispatchAction = dispatchAction;
+    let renderGen = 0;
+    async function renderFromSource(source, { streaming = false } = {}) {
+      const gen = ++renderGen;
+      programSource = source || "";
+      ctx.stream = { isStreaming: streaming };
+      streamingParser = createStreamingParser2(schema, rootName);
+      const result = streamingParser.push(programSource);
+      if (result.root) {
+        const types = collectTypeNames(result.root);
+        if (options.lazyPacks !== false) {
+          try {
+            await ensureLazyPacks(registry, types, {
+              importMetaUrl: import.meta.url
+            });
+          } catch (err) {
+            reportError(err);
+          }
+        }
+        if (gen !== renderGen || disposed) return result;
+        const vnode = elementToVnode(result.root);
+        if (vnode) safeRender(canvasElement, vnode, ctx);
+      } else if (!streaming && !programSource.trim()) {
+        clearRoot(canvasElement);
+      }
+      return result;
+    }
     if (typeof seed.programSource === "string" && seed.programSource) {
-      renderFromSource(seed.programSource, { streaming: false });
+      await renderFromSource(seed.programSource, { streaming: false });
     }
     async function dispose(reason = "dispose") {
       if (disposed) return;
@@ -16418,7 +17109,7 @@ async function mountWithRegistry(canvasElement, options, registerComponents) {
       root: canvasElement,
       dispatchEvent,
       setProgram(source, opts) {
-        renderFromSource(source, opts);
+        return renderFromSource(source, opts);
       },
       getState() {
         return reducer.getState();
@@ -16482,7 +17173,8 @@ function createRendererAdapterWithRegistry(registerComponents, extra = {}) {
 async function mount(canvasElement, options = {}) {
   const profile = options.componentProfile === "shell" ? "shell" : "all";
   const register = profile === "shell" ? registerShellComponents : registerAllComponents;
-  return mountWithRegistry(canvasElement, options, register);
+  const opts = profile === "all" ? { ...options, lazyPacks: false } : options;
+  return mountWithRegistry(canvasElement, opts, register);
 }
 async function sanctumCanvasMount(ctx = {}) {
   const profile = ctx.componentProfile === "shell" ? "shell" : "all";

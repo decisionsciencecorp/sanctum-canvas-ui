@@ -44,7 +44,10 @@ export async function mount(canvasElement, options = {}) {
   const profile = options.componentProfile === "shell" ? "shell" : "all";
   const register =
     profile === "shell" ? registerShellComponents : registerAllComponents;
-  return mountWithRegistry(canvasElement, options, register);
+  // Full profile already registered everything — skip lazy pack imports.
+  const opts =
+    profile === "all" ? { ...options, lazyPacks: false } : options;
+  return mountWithRegistry(canvasElement, opts, register);
 }
 
 /**

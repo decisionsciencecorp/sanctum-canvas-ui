@@ -22,6 +22,7 @@ import {
   createEventReducer,
   summarizeState,
 } from "../transport/index.js";
+import { collectTypeNames, ensureLazyPacks } from "./lazyPacks.js";
 
 export const CONTRACT = "canvas-host-v1";
 export const RUNTIME_ID = "sanctum-canvas";
@@ -296,12 +297,31 @@ export async function mountWithRegistry(canvasElement, options, registerComponen
     ctx.openUrl = openUrl;
     ctx.dispatchAction = dispatchAction;
 
-    function renderFromSource(source, { streaming = false } = {}) {
+    let renderGen = 0;
+
+    /**
+     * Parse + ensure lazy packs for any heavy types, then reconcile.
+     * @param {string} source
+     * @param {{ streaming?: boolean }} [opts]
+     */
+    async function renderFromSource(source, { streaming = false } = {}) {
+      const gen = ++renderGen;
       programSource = source || "";
       ctx.stream = { isStreaming: streaming };
       streamingParser = createStreamingParser(schema, rootName);
       const result = streamingParser.push(programSource);
       if (result.root) {
+        const types = collectTypeNames(result.root);
+        if (options.lazyPacks !== false) {
+          try {
+            await ensureLazyPacks(registry, types, {
+              importMetaUrl: import.meta.url,
+            });
+          } catch (err) {
+            reportError(err);
+          }
+        }
+        if (gen !== renderGen || disposed) return result;
         const vnode = elementToVnode(result.root);
         if (vnode) safeRender(canvasElement, vnode, ctx);
       } else if (!streaming && !programSource.trim()) {
@@ -331,7 +351,7 @@ export async function mountWithRegistry(canvasElement, options, registerComponen
         .map((m) => m.content || "")
         .join("");
       const streaming = state.isStreaming === true && state.runStatus === "running";
-      renderFromSource(assistant, { streaming });
+      void renderFromSource(assistant, { streaming });
     }
 
     /**
@@ -346,7 +366,7 @@ export async function mountWithRegistry(canvasElement, options, registerComponen
     }
 
     if (typeof seed.programSource === "string" && seed.programSource) {
-      renderFromSource(seed.programSource, { streaming: false });
+      await renderFromSource(seed.programSource, { streaming: false });
     }
 
     async function dispose(reason = "dispose") {
@@ -389,7 +409,7 @@ export async function mountWithRegistry(canvasElement, options, registerComponen
       root: canvasElement,
       dispatchEvent,
       setProgram(source, opts) {
-        renderFromSource(source, opts);
+        return renderFromSource(source, opts);
       },
       getState() {
         return reducer.getState();
