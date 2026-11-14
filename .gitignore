@@ -15,6 +15,12 @@
 .idea/
 .vscode/
 
+# Node (host bundle tooling)
+/node_modules/
+
+# Lab-control runtime state (multihost / local PHP)
+/db/canvas/lab-control/
+
 # Optional: keep old/ Node artifacts out of accidental installs
 old/node_modules/
 old/**/node_modules/
