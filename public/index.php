@@ -44,12 +44,12 @@ $tiles = [
     ],
     [
         'href' => '/lab/deep-research.php',
-        'kicker' => 'Product twin',
-        'title' => 'Deep Research — SMCP canvas',
-        'what' => 'Live Sanctum Canvas surface painted only through SMCP (sanctum_canvas_lab). Same runtime Deep Research hosts on the right pane — no Broca, board, or chat shell. Use it to triage rendering bugs while the full app is still tangled.',
-        'expect' => 'Otto paints from Cursor; the page polls and redraws within a second. Keep programs in sync with Deep Research until v1 ships.',
+        'kicker' => 'Isolation test',
+        'title' => 'Canvas isolation — Deep Research shell',
+        'what' => 'Stripped Sanctum Canvas: shell components only, one-click fixtures, no Broca or product chrome. If a fixture looks right here and wrong in Deep Research, the bug is in the product host. If it looks wrong here too, fix canvas in this repo.',
+        'expect' => 'Click Paint scope form or Paint form-schema sample. The canvas paints immediately without SMCP. Otto can still SMCP-paint when useful.',
         'featured' => true,
-        'tag' => 'SMCP',
+        'tag' => 'Shell',
     ],
     [
         'href' => '/stream.php',

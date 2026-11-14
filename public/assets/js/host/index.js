@@ -11,6 +11,7 @@ export {
   clearRoot,
   elementToVnode,
   registerAllComponents,
+  registerShellComponents,
   mount,
   sanctumCanvasMount,
   createRendererAdapter,

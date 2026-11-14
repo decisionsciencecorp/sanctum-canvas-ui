@@ -1,0 +1,14 @@
+header = InlineHeader("Research brief")
+lede = TextContent("Form-schema style paint — same shape Face often sends ({title, sections, controls}). Use this if product canvas looks wrong but you need to know whether OpenUI Form itself is healthy.")
+scope = Form("deep-research-form-schema-v1", Buttons([Button("Continue", Action([@Run("echo_message", { message: "form-schema continue" })]))]), [
+  FormControl("Question", Input("question", "What should we research?")),
+  FormControl("Audience", Select("audience", [
+    SelectItem("internal", "Internal"),
+    SelectItem("client", "Client"),
+    SelectItem("public", "Public")
+  ], "Choose…")),
+  FormControl("Include YouTube", CheckBoxGroup("include_youtube", [
+    CheckBoxItem("Yes — pull a video corpus", "Transcribe and cite YouTube", "yes")
+  ]))
+])
+root = Stack([header, lede, scope])

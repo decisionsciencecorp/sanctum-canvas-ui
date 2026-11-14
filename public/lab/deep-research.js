@@ -1,23 +1,13 @@
 /**
- * Deep Research SMCP twin — polls lab-control and paints #sanctum-canvas-root.
- * Lab-only; Track B must not import this file.
+ * Canvas isolation test — shell profile + local fixtures + optional SMCP.
+ * Lab-only; product hosts import mount.shell.js / mount.shell.bundle.js instead.
  */
 import { createComponentRegistry } from "/assets/js/renderer/registry.js";
 import { createRenderContext } from "/assets/js/renderer/context.js";
 import { safeRender } from "/assets/js/renderer/safeRender.js";
 import { createStore } from "/assets/js/runtime/store.js";
 import { createBindingManager } from "/assets/js/runtime/bindings.js";
-import { registerFoundation } from "/assets/js/components/registerFoundation.js";
-import { registerContent } from "/assets/js/components/content/registerContent.js";
-import { registerContainers } from "/assets/js/components/containers/registerContainers.js";
-import { registerSectionSteps } from "/assets/js/components/containers/registerSectionSteps.js";
-import { registerCarouselModal } from "/assets/js/components/containers/registerCarouselModal.js";
-import { registerForms } from "/assets/js/components/forms/registerForms.js";
-import { registerActions } from "/assets/js/components/actions/registerActions.js";
-import { registerTable } from "/assets/js/components/table/registerTable.js";
-import { registerCharts } from "/assets/js/components/charts/registerCharts.js";
-import { registerCards } from "/assets/js/components/cards/index.js";
-import { registerTools } from "/assets/js/components/tools/registerTools.js";
+import { registerShellComponents } from "/assets/js/host/registerShellComponents.js";
 import * as urlPolicy from "/assets/js/security/urlPolicy.js";
 import {
   createStreamingParser,
@@ -40,20 +30,13 @@ const els = {
   lastSubmit: document.getElementById("dr-last-submit"),
   debugLang: document.getElementById("debug-lang"),
   debugErrors: document.getElementById("debug-errors"),
+  paintScope: document.getElementById("dr-paint-scope"),
+  paintSchema: document.getElementById("dr-paint-schema"),
+  clearLocal: document.getElementById("dr-clear-local"),
 };
 
 const registry = createComponentRegistry();
-registerFoundation(registry);
-registerContent(registry);
-registerContainers(registry);
-registerSectionSteps(registry);
-registerCarouselModal(registry);
-registerForms(registry);
-registerActions(registry);
-registerTable(registry);
-registerCharts(registry);
-registerCards(registry);
-registerTools(registry);
+registerShellComponents(registry);
 
 const store = createStore({});
 const bindings = createBindingManager(store);
@@ -90,6 +73,8 @@ let schema = null;
 let streamingParser = null;
 let lastRev = -1;
 let programSource = "";
+/** When true, ignore SMCP paints until cleared or next local paint ends. */
+let localPaintActive = false;
 
 function sanitize(err) {
   if (err == null) return "unknown";
@@ -161,15 +146,16 @@ function paintDebug() {
   }
 }
 
-function clearCanvas() {
+function clearCanvas(message = "Canvas cleared. Pick a fixture or wait for SMCP.") {
   programSource = "";
   labErrors = [];
+  localPaintActive = false;
   if (els.canvas) {
     while (els.canvas.firstChild) els.canvas.removeChild(els.canvas.firstChild);
     const empty = document.createElement("p");
     empty.className = "a7-lab-empty";
     empty.id = "lab-canvas-empty";
-    empty.textContent = "Canvas cleared. Waiting for next SMCP paint…";
+    empty.textContent = message;
     els.canvas.appendChild(empty);
   }
   paintDebug();
@@ -196,6 +182,23 @@ function renderFromSource(source) {
   paintDebug();
 }
 
+async function paintFixture(name) {
+  setStatus(`Loading fixture ${name}…`);
+  try {
+    const res = await fetch(`/fixtures/lang/${encodeURIComponent(name)}.lang`, {
+      headers: { Accept: "text/plain,*/*" },
+    });
+    if (!res.ok) throw new Error(`fixture HTTP ${res.status}`);
+    const source = await res.text();
+    localPaintActive = true;
+    labErrors = [];
+    renderFromSource(source);
+    setStatus(`Local fixture: ${name}`, { ready: true });
+  } catch (err) {
+    setStatus(`Fixture failed: ${sanitize(err)}`, { error: true });
+  }
+}
+
 function applyState(state) {
   if (els.rev) els.rev.textContent = String(state.rev ?? 0);
   if (els.action) els.action.textContent = String(state.action ?? "idle");
@@ -211,6 +214,13 @@ function applyState(state) {
   if (rev === lastRev) return;
   lastRev = rev;
 
+  if (localPaintActive) {
+    setStatus(`Local fixture active (SMCP rev ${rev} ignored until clear).`, {
+      ready: true,
+    });
+    return;
+  }
+
   if (state.action === "clear" || !state.lang_source) {
     clearCanvas();
     setStatus(`Rev ${rev}: cleared / idle.`, { ready: true });
@@ -218,7 +228,9 @@ function applyState(state) {
   }
 
   renderFromSource(String(state.lang_source));
-  setStatus(`Rev ${rev}: painted${state.title ? ` — ${state.title}` : ""}.`, { ready: true });
+  setStatus(`Rev ${rev}: SMCP painted${state.title ? ` — ${state.title}` : ""}.`, {
+    ready: true,
+  });
 }
 
 async function poll() {
@@ -263,8 +275,22 @@ async function postSubmit(submit) {
   }
 }
 
+function wireFixtureButtons() {
+  els.paintScope?.addEventListener("click", () => {
+    void paintFixture("deep-research-scope-v1");
+  });
+  els.paintSchema?.addEventListener("click", () => {
+    void paintFixture("deep-research-form-schema-v1");
+  });
+  els.clearLocal?.addEventListener("click", () => {
+    clearCanvas();
+    setStatus("Cleared. Ready for fixture or SMCP.", { ready: true });
+  });
+}
+
 async function boot() {
   setStatus("Loading library…");
+  wireFixtureButtons();
   try {
     const libRes = await fetch(LIBRARY_URL, { headers: { Accept: "application/json" } });
     if (!libRes.ok) {
@@ -273,7 +299,7 @@ async function boot() {
     library = loadLibraryJson(await libRes.text());
     schema = libraryToJsonSchema(library);
     streamingParser = createStreamingParser(schema, library.root || "Stack");
-    setStatus("Listening for SMCP paint…", { ready: true });
+    setStatus("Ready — paint a local fixture.", { ready: true });
     await poll();
     setInterval(poll, POLL_MS);
   } catch (err) {

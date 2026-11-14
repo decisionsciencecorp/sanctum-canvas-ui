@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke Deep Research SMCP twin — local php -S or CANVAS_LAB_URL."""
+"""Smoke canvas isolation test (Deep Research shell) — local php -S or CANVAS_LAB_URL."""
 from __future__ import annotations
 
 import os
@@ -40,7 +40,7 @@ def main() -> int:
     named = (os.environ.get("CANVAS_LAB_URL") or "").strip()
     proc = None
     if named:
-        url = named
+        url = named.rstrip("/") + "/lab/deep-research.php" if not named.endswith(".php") else named
     else:
         port = free_port()
         url = f"http://127.0.0.1:{port}/lab/deep-research.php"
@@ -61,7 +61,6 @@ def main() -> int:
                 page.goto(url, wait_until="networkidle", timeout=45000)
                 status = page.locator("#lab-status")
                 status.wait_for(state="visible", timeout=15000)
-                # Wait until boot finishes (ready or error)
                 page.wait_for_function(
                     """() => {
                       const el = document.getElementById('lab-status');
@@ -69,19 +68,33 @@ def main() -> int:
                       const t = el.textContent || '';
                       return el.getAttribute('data-lab-ready') === '1'
                         || el.getAttribute('data-lab-error') === '1'
-                        || t.includes('Boot failed')
-                        || t.includes('Listening');
+                        || t.includes('Boot failed');
                     }""",
                     timeout=20000,
                 )
                 text = status.inner_text()
                 ready = status.get_attribute("data-lab-ready")
                 err = status.get_attribute("data-lab-error")
-                path = OUT / f"deep-research-twin-{name}.png"
-                page.screenshot(path=str(path), full_page=True)
-                print(f"wrote {path} status={text!r} ready={ready} error={err}")
                 assert ready == "1", f"boot not ready: {text}"
                 assert "Boot failed" not in text
+
+                # One-click fixture — isolation without SMCP
+                page.locator("#dr-paint-scope").click()
+                page.wait_for_function(
+                    """() => {
+                      const el = document.getElementById('lab-status');
+                      return el && (el.textContent || '').includes('Local fixture');
+                    }""",
+                    timeout=15000,
+                )
+                root = page.locator("#sanctum-canvas-root")
+                # Scope fixture has RadioGroup / Form controls
+                assert root.locator("form, [role='radiogroup'], input, button").count() > 0, (
+                    "fixture did not paint interactive controls"
+                )
+                path = OUT / f"deep-research-isolation-{name}.png"
+                page.screenshot(path=str(path), full_page=True)
+                print(f"wrote {path} status={status.inner_text()!r} ready={ready} error={err}")
                 page.close()
             browser.close()
     finally:

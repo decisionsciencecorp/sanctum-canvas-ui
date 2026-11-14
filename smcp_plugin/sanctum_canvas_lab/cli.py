@@ -140,9 +140,9 @@ def describe() -> Dict[str, Any]:
         "name": "sanctum_canvas_lab",
         "version": PLUGIN_VERSION,
         "description": (
-            "SMCP control for Sanctum Canvas lab twins. "
-            "Paint/clear the Deep Research troubleshooting canvas at canvas-lab "
-            "without Broca or the full app shell."
+            "SMCP control for the canvas-lab isolation page (Deep Research shell). "
+            "Optional — the page also paints local fixtures without SMCP. "
+            "Use paint/clear when Otto needs to drive the surface remotely."
         ),
         "commands": [
             {

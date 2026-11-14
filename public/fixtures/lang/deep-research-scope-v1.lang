@@ -1,5 +1,5 @@
-header = CardHeader("Deep Research scope", "SMCP twin — same canvas runtime the product hosts")
-lede = TextContent("Pick depth and sources. Submit stays on this lab page so Otto can inspect rendering without Broca.")
+header = CardHeader("Deep Research scope", "Isolation lab — shell canvas only")
+lede = TextContent("Pick depth and sources. Submit stays on this page. If this form renders cleanly here, the canvas runtime is fine.")
 scope = Form("deep-research-scope-v1", Buttons([Button("Lock scope", Action([@Run("echo_message", { message: "scope locked" })]))]), [
   FormControl("Topic", Input("topic", "What should we research?")),
   FormControl("Depth", RadioGroup("depth", [

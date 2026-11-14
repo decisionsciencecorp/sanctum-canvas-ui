@@ -1,7 +1,35 @@
-/* Deep Research SMCP twin — lab chrome only (outside #sanctum-canvas-root). */
+/* Canvas isolation test — lab chrome only (outside #sanctum-canvas-root). */
 
 .dr-lab-body .dr-lab-chrome {
   max-width: 28rem;
+}
+
+.dr-fixture-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+}
+
+.dr-btn {
+  appearance: none;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  color: inherit;
+  border-radius: 0.35rem;
+  padding: 0.45rem 0.75rem;
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.dr-btn:hover {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.dr-btn--ghost {
+  background: transparent;
+  opacity: 0.85;
 }
 
 .dr-meta {

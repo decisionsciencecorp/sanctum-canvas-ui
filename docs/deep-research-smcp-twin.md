@@ -1,36 +1,67 @@
-# Deep Research — SMCP canvas twin
+# Canvas isolation test — Deep Research shell
 
-**2026-11-13 (Mark).** Until Deep Research **v1 ships**, keep an **active SMCP-controlled** Sanctum Canvas on canvas-lab that mirrors what the product hosts on the right pane.
+## What this is
 
-## Why
+A **stripped test app** in the canonical Sanctum Canvas repo that deploys to
+[canvas-lab.sanctumos.org/lab/deep-research.php](https://canvas-lab.sanctumos.org/lab/deep-research.php).
 
-Full-app bugs (Broca + board + chat + canvas) are hard to isolate. Mark opens the lab twin; Otto MCP-paints from the Deep Research session; we fix rendering in the simpler environment, then sync programs back into the product.
+Use it when Deep Research (or another product host) looks wrong and you need to
+know whether the bug is:
 
-## URLs
+| Outcome on this page | Meaning |
+|---|---|
+| Fixture looks right | Bug is in the product host / Broca / Face / vendor wiring |
+| Fixture looks wrong | Bug is in Sanctum Canvas — fix here, then re-vendor into the product |
 
-| Surface | URL |
-|---------|-----|
-| Lab twin | https://canvas-lab.sanctumos.org/lab/deep-research.php |
-| Control API | `GET/POST https://canvas-lab.sanctumos.org/api/lab-control.php` |
-| Home tile | https://canvas-lab.sanctumos.org/ |
+## What loads (and what does not)
 
-## Control
+**Shell profile only** — foundation, content, containers, forms, actions, cards.
 
-SMCP plugin: `smcp_plugin/sanctum_canvas_lab/`
+**Not loaded:** charts, tables, tools, chat, carousel, modal, section/steps packs.
 
-- `sanctum_canvas_lab__paint` / `__paint_fixture` / `__clear` / `__status`
-- Cursor: `tools/run-canvas-lab-smcp-stdio.sh` → MCP server `sanctum-canvas-lab`
+Product hosts that only paint Form / Stack / OptionCards should import
+`mount.shell.js` / `mount.shell.bundle.js`, not the full kitchen sink.
 
-## Sync rule (until v1)
+## Local fixtures (no SMCP)
 
-When Deep Research changes the canvas program vocabulary, host mount options, or default scope forms:
+Buttons on the page fetch Lang from `/fixtures/lang/`:
 
-1. Update the twin Lang fixtures under `public/fixtures/lang/`
-2. Paint them here and verify on the lab URL
-3. Mirror the same Lang / host wiring into `decisionsciencecorp/deep-research`
+| Button | Fixture |
+|---|---|
+| Paint scope form | `deep-research-scope-v1.lang` |
+| Paint form-schema sample | `deep-research-form-schema-v1.lang` |
 
-After v1 ships, this twin can stay as a regression harness or be retired by Mark.
+Same renderer path the product should use. Submits stay on this page (Last submit).
 
-## Not this page
+## Optional SMCP
 
-Stream lab, walkthrough, and catalog remain general Track A labs. This twin is **product-scoped** and **SMCP-only**.
+Otto can still paint via `sanctum_canvas_lab` (`paint` / `paint_fixture` / `clear`).
+Local fixtures take priority until you hit Clear.
+
+| Item | Value |
+|---|---|
+| Page | https://canvas-lab.sanctumos.org/lab/deep-research.php |
+| Surface | `deep-research` |
+| Plugin | `smcp_plugin/sanctum_canvas_lab/` |
+
+## Selective load + backflow
+
+1. **Load only what you need** — `registerShellComponents` / `mount.shell.js`.
+2. **Fix rendering / efficiency in this repo** — `src/Browser/…`, then
+   `node tools/bundle-host-mount.mjs`.
+3. **Re-vendor into Deep Research** — copy `public/assets/js/host/mount.shell.*`
+   (and related shell deps) into `deep-research/public/vendor/sanctum-canvas/`,
+   or rebuild the product’s shell bundle from this tree.
+
+This is not a “keep two apps in sync” chore script. The lab page is the
+isolation surface; the shell mount is the shared runtime slice products should
+consume.
+
+## Bundle
+
+```bash
+cd sanctum-canvas-ui
+node tools/bundle-host-mount.mjs
+# → public/assets/js/host/mount.bundle.js        (full)
+# → public/assets/js/host/mount.shell.bundle.js  (shell)
+```
