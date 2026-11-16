@@ -11,6 +11,8 @@ import { safeRender } from "../renderer/safeRender.js";
 import { unmount as unmountDom } from "../renderer/reconciler.js";
 import { createStore } from "../runtime/store.js";
 import { createBindingManager } from "../runtime/bindings.js";
+import { createActionRunner } from "../runtime/actionRunner.js";
+import { evaluateElementProps } from "../runtime/evaluate-tree.js";
 import * as urlPolicy from "../security/urlPolicy.js";
 import {
   createStreamingParser,
@@ -283,11 +285,22 @@ export async function mountWithRegistry(canvasElement, options, registerComponen
     const onHostEvent =
       typeof options.onEvent === "function" ? options.onEvent : () => {};
 
+    // Wire Action([@ToAssistant(...)]) / OpenUrl — Button dispatch uses ctx.actions.run.
+    // Without this, primary form buttons return {ok:true, reason:"no-action"} and do nothing.
+    const actions = createActionRunner({
+      store,
+      host: {
+        openUrl,
+        continueConversation,
+      },
+    });
+
     const ctx = createRenderContext({
       document: doc,
       registry,
       urlPolicy,
       bindings,
+      actions,
       state: store,
       stream: { isStreaming: false },
       development: options.development === true,
@@ -296,6 +309,7 @@ export async function mountWithRegistry(canvasElement, options, registerComponen
     ctx.continueConversation = continueConversation;
     ctx.openUrl = openUrl;
     ctx.dispatchAction = dispatchAction;
+    ctx.actions = actions;
 
     let renderGen = 0;
 
@@ -322,7 +336,25 @@ export async function mountWithRegistry(canvasElement, options, registerComponen
           }
         }
         if (gen !== renderGen || disposed) return result;
-        const vnode = elementToVnode(result.root);
+        // Evaluate Action/ToAssistant/OpenUrl (and other AST props) before paint.
+        // Without this, Button.action stays a raw Comp AST and runner.run is a no-op.
+        let rootNode = result.root;
+        try {
+          if (rootNode && rootNode.type === "element") {
+            rootNode = evaluateElementProps(rootNode, {
+              ctx: {
+                getState: (n) => store.get(n),
+                resolveRef: () => undefined,
+              },
+              library,
+              store,
+              errors: [],
+            });
+          }
+        } catch (err) {
+          reportError(err);
+        }
+        const vnode = elementToVnode(rootNode);
         if (vnode) safeRender(canvasElement, vnode, ctx);
       } else if (!streaming && !programSource.trim()) {
         clearRoot(canvasElement);

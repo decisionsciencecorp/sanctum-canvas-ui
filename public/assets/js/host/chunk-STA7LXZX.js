@@ -787,8 +787,11 @@ var ImageBlock = lifecycle({
 });
 
 export {
+  toNumber,
+  BUILTINS,
   LAZY_BUILTINS,
   ACTION_STEPS,
+  ACTION_NAMES,
   isBuiltin,
   RESERVED_CALLS,
   isReservedCall,

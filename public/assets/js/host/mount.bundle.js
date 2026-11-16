@@ -11382,7 +11382,504 @@ var Buttons = lifecycle3({
 
 // src/Browser/components/actions/actionDispatch.js
 init_builtins();
+
+// src/Browser/lang/ast.js
+function isRuntimeExpr(node) {
+  switch (node.k) {
+    case "StateRef":
+    case "RuntimeRef":
+    case "BinOp":
+    case "UnaryOp":
+    case "Ternary":
+    case "Member":
+    case "Index":
+    case "Assign":
+      return true;
+    default:
+      return false;
+  }
+}
+var AST_KINDS = /* @__PURE__ */ new Set([
+  "Comp",
+  "Ref",
+  "StateRef",
+  "RuntimeRef",
+  "BinOp",
+  "UnaryOp",
+  "Ternary",
+  "Member",
+  "Index",
+  "Assign",
+  "Str",
+  "Num",
+  "Bool",
+  "Null",
+  "Arr",
+  "Obj",
+  "Ph"
+]);
+function isASTNode(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  return AST_KINDS.has(value.k);
+}
+function walkAST(node, visit) {
+  const walk = (current) => {
+    visit(current);
+    switch (current.k) {
+      case "Comp":
+        current.args.forEach(walk);
+        Object.values(current.mappedProps ?? {}).forEach(walk);
+        break;
+      case "Arr":
+        current.els.forEach(walk);
+        break;
+      case "Obj":
+        current.entries.forEach(([, value]) => walk(value));
+        break;
+      case "BinOp":
+        walk(current.left);
+        walk(current.right);
+        break;
+      case "UnaryOp":
+        walk(current.operand);
+        break;
+      case "Ternary":
+        walk(current.cond);
+        walk(current.then);
+        walk(current.else);
+        break;
+      case "Member":
+        walk(current.obj);
+        break;
+      case "Index":
+        walk(current.obj);
+        walk(current.index);
+        break;
+      case "Assign":
+        walk(current.value);
+        break;
+    }
+  };
+  walk(node);
+}
+
+// src/Browser/runtime/evaluator.js
+init_builtins();
+
+// src/Browser/lang/types.js
+function isElementNode(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const node = value;
+  return node.type === "element" && typeof node.typeName === "string" && typeof node.props === "object" && node.props !== null && typeof node.partial === "boolean";
+}
+
+// src/Browser/lang/reactive.js
+var reactiveSchemas = /* @__PURE__ */ new WeakSet();
+function isReactiveSchema(schema) {
+  return typeof schema === "object" && schema !== null && reactiveSchemas.has(schema);
+}
+
+// src/Browser/runtime/evaluate-prop.js
+function evaluatePropCore(value, context, schemaCtx, reactiveSchema, callbacks) {
+  if (value == null) return value;
+  if (typeof value !== "object") return value;
+  if (isASTNode(value)) {
+    if (value.k === "StateRef" && reactiveSchema && isReactiveSchema(reactiveSchema)) {
+      return {
+        __reactive: "assign",
+        target: value.n,
+        expr: { k: "StateRef", n: "$value" }
+      };
+    }
+    const result = evaluate(value, context, schemaCtx);
+    if (isElementNode(result)) {
+      return callbacks.recurseElement(result);
+    }
+    if (Array.isArray(result)) {
+      return result.map(
+        (item) => isElementNode(item) ? callbacks.recurseElement(item) : item
+      );
+    }
+    if (isReactiveAssign(result) && !(reactiveSchema && isReactiveSchema(reactiveSchema))) {
+      return context.getState(result.target) ?? null;
+    }
+    return result;
+  }
+  if (typeof value === "string" && reactiveSchema && isReactiveSchema(reactiveSchema)) {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((v) => callbacks.recurse(v, reactiveSchema));
+  }
+  if (isElementNode(value)) {
+    return callbacks.recurseElement(value);
+  }
+  const obj = value;
+  if ("steps" in obj && Array.isArray(obj.steps)) return value;
+  if ("type" in obj && "valueAST" in obj) return value;
+  let needsEval = false;
+  for (const val of Object.values(obj)) {
+    if (typeof val === "object" && val !== null) {
+      needsEval = true;
+      break;
+    }
+  }
+  if (needsEval) {
+    const result = {};
+    for (const [k, v] of Object.entries(obj)) {
+      result[k] = callbacks.recurse(v, reactiveSchema);
+    }
+    return result;
+  }
+  return value;
+}
+
+// src/Browser/runtime/evaluator.js
+function isReactiveAssign(value) {
+  return typeof value === "object" && value !== null && value.__reactive === "assign";
+}
+function evaluate(node, context, schemaCtx) {
+  switch (node.k) {
+    case "Str":
+      return node.v;
+    case "Num":
+      return node.v;
+    case "Bool":
+      return node.v;
+    case "Null":
+      return null;
+    case "Ph":
+      return null;
+    case "StateRef":
+      return context.extraScope?.[node.n] ?? context.getState(node.n);
+    case "Ref":
+    case "RuntimeRef":
+      return context.resolveRef(node.n);
+    case "Arr":
+      return node.els.map((el2) => evaluate(el2, context, schemaCtx));
+    case "Obj":
+      return Object.fromEntries(node.entries.map(([k, v]) => [k, evaluate(v, context, schemaCtx)]));
+    case "Comp": {
+      if (LAZY_BUILTINS.has(node.name)) {
+        return evaluateLazyBuiltin(node.name, node.args, context, schemaCtx);
+      }
+      const builtin = BUILTINS[node.name];
+      if (builtin) {
+        const args = node.args.map((a) => evaluate(a, context, schemaCtx));
+        return builtin.fn(...args);
+      }
+      if (ACTION_NAMES.has(node.name)) {
+        return evaluateActionCall(node.name, node.args, context);
+      }
+      if (node.mappedProps) {
+        const def = schemaCtx?.library.components[node.name];
+        const props = {};
+        for (const [key, val] of Object.entries(node.mappedProps)) {
+          const propSchema = def?.props?.shape?.[key];
+          if (val.k === "StateRef" && propSchema && isReactiveSchema(propSchema)) {
+            props[key] = {
+              __reactive: "assign",
+              target: val.n,
+              expr: { k: "StateRef", n: "$value" }
+            };
+          } else if (val.k === "StateRef") {
+            props[key] = schemaCtx ? context.getState(val.n) : val;
+          } else {
+            props[key] = evaluate(val, context, schemaCtx);
+          }
+        }
+        const result = {
+          type: "element",
+          typeName: node.name,
+          props,
+          partial: false,
+          hasDynamicProps: true
+        };
+        if (schemaCtx) {
+          for (const [key, val] of Object.entries(props)) {
+            if (isElementNode(val)) {
+              props[key] = evaluateElementInline(val, context, schemaCtx);
+            } else if (Array.isArray(val)) {
+              props[key] = val.map(
+                (item) => isElementNode(item) ? evaluateElementInline(item, context, schemaCtx) : item
+              );
+            }
+          }
+        }
+        return result;
+      }
+      console.warn(`[openui] Unexpected unmapped Comp node: ${node.name}`);
+      return null;
+    }
+    case "BinOp": {
+      if (node.op === "&&") {
+        const left2 = evaluate(node.left, context, schemaCtx);
+        return left2 ? evaluate(node.right, context, schemaCtx) : left2;
+      }
+      if (node.op === "||") {
+        const left2 = evaluate(node.left, context, schemaCtx);
+        return left2 ? left2 : evaluate(node.right, context, schemaCtx);
+      }
+      const left = evaluate(node.left, context, schemaCtx);
+      const right = evaluate(node.right, context, schemaCtx);
+      switch (node.op) {
+        case "+":
+          if (typeof left === "string" || typeof right === "string") {
+            return String(left ?? "") + String(right ?? "");
+          }
+          return toNumber(left) + toNumber(right);
+        case "-":
+          return toNumber(left) - toNumber(right);
+        case "*":
+          return toNumber(left) * toNumber(right);
+        case "/":
+          return toNumber(right) === 0 ? 0 : toNumber(left) / toNumber(right);
+        case "%":
+          return toNumber(right) === 0 ? 0 : toNumber(left) % toNumber(right);
+        case "==":
+          return left == right;
+        case "!=":
+          return left != right;
+        case ">":
+          return toNumber(left) > toNumber(right);
+        case "<":
+          return toNumber(left) < toNumber(right);
+        case ">=":
+          return toNumber(left) >= toNumber(right);
+        case "<=":
+          return toNumber(left) <= toNumber(right);
+        default:
+          return null;
+      }
+    }
+    case "UnaryOp":
+      if (node.op === "!") {
+        return !evaluate(node.operand, context, schemaCtx);
+      }
+      if (node.op === "-") {
+        return -toNumber(evaluate(node.operand, context, schemaCtx));
+      }
+      return null;
+    case "Ternary": {
+      const cond = evaluate(node.cond, context, schemaCtx);
+      return cond ? evaluate(node.then, context, schemaCtx) : evaluate(node.else, context, schemaCtx);
+    }
+    case "Member": {
+      const obj = evaluate(node.obj, context, schemaCtx);
+      if (obj == null) return null;
+      if (Array.isArray(obj)) {
+        if (node.field === "length") return obj.length;
+        return obj.map((item) => item?.[node.field] ?? null);
+      }
+      return obj[node.field];
+    }
+    case "Index": {
+      const obj = evaluate(node.obj, context, schemaCtx);
+      const idx = evaluate(node.index, context, schemaCtx);
+      if (obj == null || idx == null) return null;
+      if (Array.isArray(obj)) {
+        return obj[toNumber(idx)];
+      }
+      return obj[String(idx)];
+    }
+    case "Assign":
+      return {
+        __reactive: "assign",
+        target: node.target,
+        expr: node.value
+      };
+  }
+}
+function evaluateElementInline(el2, context, schemaCtx) {
+  if (el2.hasDynamicProps === false) return el2;
+  const def = schemaCtx.library.components[el2.typeName];
+  const evaluated = {};
+  for (const [key, value] of Object.entries(el2.props)) {
+    const propSchema = def?.props?.shape?.[key];
+    evaluated[key] = evaluatePropInline(value, context, schemaCtx, propSchema);
+  }
+  return { ...el2, props: evaluated };
+}
+function evaluatePropInline(value, context, schemaCtx, reactiveSchema) {
+  return evaluatePropCore(value, context, schemaCtx, reactiveSchema, {
+    recurseElement: (el2) => evaluateElementInline(el2, context, schemaCtx),
+    recurse: (v, rs) => evaluatePropInline(v, context, schemaCtx, rs)
+  });
+}
+function toLiteralAST(value) {
+  if (value === null || value === void 0) return { k: "Null" };
+  if (typeof value === "string") return { k: "Str", v: value };
+  if (typeof value === "number") return { k: "Num", v: value };
+  if (typeof value === "boolean") return { k: "Bool", v: value };
+  if (Array.isArray(value)) return { k: "Arr", els: value.map(toLiteralAST) };
+  if (typeof value === "object") {
+    return {
+      k: "Obj",
+      entries: Object.entries(value).map(([k, v]) => [k, toLiteralAST(v)])
+    };
+  }
+  return { k: "Null" };
+}
+function evaluateActionCall(name, args, context) {
+  switch (name) {
+    case "Action": {
+      const stepsArg = args.length > 0 ? evaluate(args[0], context) : [];
+      const rawSteps = Array.isArray(stepsArg) ? stepsArg : [];
+      const steps = rawSteps.filter((s) => s != null && typeof s === "object" && "type" in s);
+      return { steps };
+    }
+    case "Run": {
+      if (args.length === 0) return null;
+      const refNode = args[0];
+      if (refNode.k === "RuntimeRef") {
+        return { type: ACTION_STEPS.Run, statementId: refNode.n, refType: refNode.refType };
+      }
+      return null;
+    }
+    case "ToAssistant": {
+      const message = args.length > 0 ? String(evaluate(args[0], context) ?? "") : "";
+      const ctx = args.length > 1 ? String(evaluate(args[1], context) ?? "") : void 0;
+      return { type: ACTION_STEPS.ToAssistant, message, context: ctx };
+    }
+    case "OpenUrl": {
+      const url = args.length > 0 ? String(evaluate(args[0], context) ?? "") : "";
+      return { type: ACTION_STEPS.OpenUrl, url };
+    }
+    case "Set": {
+      if (args.length < 2) return null;
+      const targetNode = args[0];
+      if (targetNode.k !== "StateRef") return null;
+      return { type: ACTION_STEPS.Set, target: targetNode.n, valueAST: args[1] };
+    }
+    case "Reset": {
+      const targets = args.filter((a) => a.k === "StateRef").map((a) => a.n);
+      if (targets.length === 0) return null;
+      return { type: ACTION_STEPS.Reset, targets };
+    }
+    default:
+      return null;
+  }
+}
+function substituteRef(node, varName, value) {
+  switch (node.k) {
+    case "Ref":
+      return node.n === varName ? toLiteralAST(value) : node;
+    case "Member": {
+      if (isASTNode(node.obj)) {
+        const subObj = substituteRef(node.obj, varName, value);
+        if (subObj.k === "Obj") {
+          const entry = subObj.entries.find(([k]) => k === node.field);
+          if (entry) return entry[1];
+        }
+        return { ...node, obj: subObj };
+      }
+      return node;
+    }
+    case "Index":
+      return {
+        ...node,
+        obj: isASTNode(node.obj) ? substituteRef(node.obj, varName, value) : node.obj,
+        index: isASTNode(node.index) ? substituteRef(node.index, varName, value) : node.index
+      };
+    case "BinOp":
+      return {
+        ...node,
+        left: substituteRef(node.left, varName, value),
+        right: substituteRef(node.right, varName, value)
+      };
+    case "UnaryOp":
+      return { ...node, operand: substituteRef(node.operand, varName, value) };
+    case "Ternary":
+      return {
+        ...node,
+        cond: substituteRef(node.cond, varName, value),
+        then: substituteRef(node.then, varName, value),
+        else: substituteRef(node.else, varName, value)
+      };
+    case "Arr":
+      return { ...node, els: node.els.map((e) => substituteRef(e, varName, value)) };
+    case "Obj":
+      return {
+        ...node,
+        entries: node.entries.map(([k, v]) => [k, substituteRef(v, varName, value)])
+      };
+    case "Comp": {
+      const result = {
+        ...node,
+        args: (node.args ?? []).map((a) => substituteRef(a, varName, value))
+      };
+      if (node.mappedProps) {
+        const subProps = {};
+        for (const [k, v] of Object.entries(node.mappedProps)) {
+          subProps[k] = substituteRef(v, varName, value);
+        }
+        result.mappedProps = subProps;
+      }
+      return result;
+    }
+    case "Assign":
+      return { ...node, value: substituteRef(node.value, varName, value) };
+    default:
+      return node;
+  }
+}
+function evaluateLazyBuiltin(name, args, context, schemaCtx) {
+  if (name === "Each") {
+    if (args.length < 3) return [];
+    const arr = evaluate(args[0], context, schemaCtx);
+    if (!Array.isArray(arr)) return [];
+    const varName = args[1].k === "Ref" ? args[1].n : args[1].k === "Str" ? args[1].v : null;
+    if (!varName) return [];
+    const template = args[2];
+    return arr.map((item) => {
+      const substituted = substituteRef(template, varName, item);
+      const childCtx = {
+        ...context,
+        resolveRef: (refName) => {
+          if (refName === varName) return item;
+          return context.resolveRef(refName);
+        }
+      };
+      const result = evaluate(substituted, childCtx, schemaCtx);
+      if (schemaCtx && isElementNode(result)) {
+        return evaluateElementInline(result, childCtx, schemaCtx);
+      }
+      return result;
+    });
+  }
+  return null;
+}
+
+// src/Browser/components/actions/actionDispatch.js
 init_urlPolicy();
+function normalizeActionPlan(plan, ctx = {}) {
+  if (!plan || typeof plan !== "object") return plan;
+  if (Array.isArray(plan) || Array.isArray(
+    /** @type {any} */
+    plan.steps
+  )) return plan;
+  const node = (
+    /** @type {Record<string, unknown>} */
+    plan
+  );
+  if (node.k === "Comp" && typeof node.name === "string" && ACTION_NAMES.has(node.name)) {
+    const store = ctx.state;
+    const evalCtx = {
+      getState: (n) => store && typeof store.get === "function" ? store.get(n) : void 0,
+      resolveRef: () => void 0
+    };
+    try {
+      return evaluate(
+        /** @type {any} */
+        plan,
+        evalCtx
+      );
+    } catch {
+      return plan;
+    }
+  }
+  return plan;
+}
 var FIRE = /* @__PURE__ */ new WeakMap();
 function beginFire(el2) {
   let s = FIRE.get(el2);
@@ -11440,7 +11937,7 @@ async function dispatchButtonAction(el2, props, ctx, meta = {}) {
   el2.setAttribute("data-firing", "1");
   try {
     const variant = String(props.variant || "primary");
-    const plan = props.action;
+    const plan = normalizeActionPlan(props.action, ctx);
     const fv = ctx.formValidation;
     if (fv && needsFormValidation(plan, variant)) {
       if (!fv.validateForm()) {
@@ -13913,88 +14410,101 @@ function createBindingManager(store, opts = {}) {
   };
 }
 
+// src/Browser/runtime/actionRunner.js
+init_builtins();
+function createActionRunner(deps) {
+  const {
+    store,
+    mutations,
+    host = {},
+    isProgramComplete = () => true
+  } = deps;
+  async function run(plan, opts = {}) {
+    if (!isProgramComplete()) {
+      return { ok: false, reason: "incomplete-program" };
+    }
+    const steps = Array.isArray(plan) ? plan : plan?.steps ?? [];
+    for (const step of steps) {
+      if (!step || typeof step !== "object") continue;
+      switch (step.type) {
+        case ACTION_STEPS.Set: {
+          const ctx = {
+            getState: (n) => store.get(n),
+            resolveRef: () => void 0
+          };
+          const value = evaluate(step.valueAST, ctx);
+          store.set(step.target, value);
+          break;
+        }
+        case ACTION_STEPS.Reset: {
+          store.reset(step.targets);
+          break;
+        }
+        case ACTION_STEPS.Run: {
+          if (!mutations) throw new Error("mutations-required");
+          const result = await mutations.runMutation(step.statementId);
+          if (result.status === "error") {
+            return { ok: false, reason: "mutation-failed", step, result };
+          }
+          break;
+        }
+        case ACTION_STEPS.OpenUrl: {
+          if (!opts.userGesture) {
+            return { ok: false, reason: "gesture-required" };
+          }
+          host.openUrl?.(step.url);
+          break;
+        }
+        case ACTION_STEPS.ToAssistant: {
+          if (!opts.userGesture) {
+            return { ok: false, reason: "gesture-required" };
+          }
+          host.continueConversation?.(step.message, step.context);
+          break;
+        }
+        default:
+          break;
+      }
+    }
+    return { ok: true };
+  }
+  return { run };
+}
+
+// src/Browser/runtime/evaluate-tree.js
+function evaluateElementProps(el2, evalCtx) {
+  if (el2.hasDynamicProps === false) return el2;
+  const schemaCtx = { library: evalCtx.library };
+  const def = evalCtx.library.components[el2.typeName];
+  const evaluated = {};
+  for (const [key, value] of Object.entries(el2.props)) {
+    const propSchema = def?.props?.shape?.[key];
+    try {
+      evaluated[key] = evaluatePropValue(value, evalCtx, schemaCtx, propSchema);
+    } catch (e) {
+      evaluated[key] = value;
+      const msg = e instanceof Error ? e.message : String(e);
+      evalCtx.errors?.push({
+        source: "runtime",
+        code: "runtime-error",
+        component: el2.typeName,
+        statementId: el2.statementId,
+        message: `Evaluating prop "${key}" on ${el2.typeName} failed: ${msg}`,
+        hint: `Check the expression used for prop "${key}"`
+      });
+    }
+  }
+  return { ...el2, props: evaluated };
+}
+function evaluatePropValue(value, evalCtx, schemaCtx, reactiveSchema) {
+  return evaluatePropCore(value, evalCtx.ctx, schemaCtx, reactiveSchema, {
+    recurseElement: (el2) => evaluateElementProps(el2, evalCtx),
+    recurse: (v, rs) => evaluatePropValue(v, evalCtx, schemaCtx, rs)
+  });
+}
+
 // src/Browser/host/mountCore.js
 init_urlPolicy();
-
-// src/Browser/lang/ast.js
-function isRuntimeExpr(node) {
-  switch (node.k) {
-    case "StateRef":
-    case "RuntimeRef":
-    case "BinOp":
-    case "UnaryOp":
-    case "Ternary":
-    case "Member":
-    case "Index":
-    case "Assign":
-      return true;
-    default:
-      return false;
-  }
-}
-var AST_KINDS = /* @__PURE__ */ new Set([
-  "Comp",
-  "Ref",
-  "StateRef",
-  "RuntimeRef",
-  "BinOp",
-  "UnaryOp",
-  "Ternary",
-  "Member",
-  "Index",
-  "Assign",
-  "Str",
-  "Num",
-  "Bool",
-  "Null",
-  "Arr",
-  "Obj",
-  "Ph"
-]);
-function isASTNode(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
-  return AST_KINDS.has(value.k);
-}
-function walkAST(node, visit) {
-  const walk = (current) => {
-    visit(current);
-    switch (current.k) {
-      case "Comp":
-        current.args.forEach(walk);
-        Object.values(current.mappedProps ?? {}).forEach(walk);
-        break;
-      case "Arr":
-        current.els.forEach(walk);
-        break;
-      case "Obj":
-        current.entries.forEach(([, value]) => walk(value));
-        break;
-      case "BinOp":
-        walk(current.left);
-        walk(current.right);
-        break;
-      case "UnaryOp":
-        walk(current.operand);
-        break;
-      case "Ternary":
-        walk(current.cond);
-        walk(current.then);
-        walk(current.else);
-        break;
-      case "Member":
-        walk(current.obj);
-        break;
-      case "Index":
-        walk(current.obj);
-        walk(current.index);
-        break;
-      case "Assign":
-        walk(current.value);
-        break;
-    }
-  };
-  walk(node);
-}
 
 // src/Browser/lang/parser.js
 init_builtins();
@@ -14555,13 +15065,6 @@ function tokenize(src) {
 
 // src/Browser/lang/materialize.js
 init_builtins();
-
-// src/Browser/lang/types.js
-function isElementNode(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
-  const node = value;
-  return node.type === "element" && typeof node.typeName === "string" && typeof node.props === "object" && node.props !== null && typeof node.partial === "boolean";
-}
 
 // src/Browser/lang/validation.js
 var SCALAR_TYPEOFS = ["string", "number", "boolean"];
@@ -17038,11 +17541,19 @@ async function mountWithRegistry(canvasElement, options, registerComponents) {
     };
     const onHostEvent = typeof options.onEvent === "function" ? options.onEvent : () => {
     };
+    const actions = createActionRunner({
+      store,
+      host: {
+        openUrl,
+        continueConversation
+      }
+    });
     const ctx = createRenderContext({
       document: doc,
       registry,
       urlPolicy: urlPolicy_exports,
       bindings,
+      actions,
       state: store,
       stream: { isStreaming: false },
       development: options.development === true,
@@ -17051,6 +17562,7 @@ async function mountWithRegistry(canvasElement, options, registerComponents) {
     ctx.continueConversation = continueConversation;
     ctx.openUrl = openUrl;
     ctx.dispatchAction = dispatchAction;
+    ctx.actions = actions;
     let renderGen = 0;
     async function renderFromSource(source, { streaming = false } = {}) {
       const gen = ++renderGen;
@@ -17070,7 +17582,23 @@ async function mountWithRegistry(canvasElement, options, registerComponents) {
           }
         }
         if (gen !== renderGen || disposed) return result;
-        const vnode = elementToVnode(result.root);
+        let rootNode = result.root;
+        try {
+          if (rootNode && rootNode.type === "element") {
+            rootNode = evaluateElementProps(rootNode, {
+              ctx: {
+                getState: (n) => store.get(n),
+                resolveRef: () => void 0
+              },
+              library,
+              store,
+              errors: []
+            });
+          }
+        } catch (err) {
+          reportError(err);
+        }
+        const vnode = elementToVnode(rootNode);
         if (vnode) safeRender(canvasElement, vnode, ctx);
       } else if (!streaming && !programSource.trim()) {
         clearRoot(canvasElement);

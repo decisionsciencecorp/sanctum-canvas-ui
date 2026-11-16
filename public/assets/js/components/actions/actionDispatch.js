@@ -2,8 +2,35 @@
  * A6.4 — Shared action dispatch: gesture, double-fire guard, OpenUrl via urlPolicy.
  */
 
-import { ACTION_STEPS } from "../../lang/builtins.js";
+import { ACTION_STEPS, ACTION_NAMES } from "../../lang/builtins.js";
+import { evaluate } from "../../runtime/evaluator.js";
 import { safeUrl as defaultSafeUrl } from "../../security/urlPolicy.js";
+
+/**
+ * Button.action may still be a raw OpenUI Comp AST if the host skipped
+ * evaluateElementProps — normalize to { steps } before the runner.
+ * @param {unknown} plan
+ * @param {Record<string, unknown>} ctx
+ */
+function normalizeActionPlan(plan, ctx = {}) {
+  if (!plan || typeof plan !== "object") return plan;
+  if (Array.isArray(plan) || Array.isArray(/** @type {any} */ (plan).steps)) return plan;
+  const node = /** @type {Record<string, unknown>} */ (plan);
+  if (node.k === "Comp" && typeof node.name === "string" && ACTION_NAMES.has(node.name)) {
+    const store = ctx.state;
+    const evalCtx = {
+      getState: (n) =>
+        store && typeof store.get === "function" ? store.get(n) : undefined,
+      resolveRef: () => undefined,
+    };
+    try {
+      return evaluate(/** @type {any} */ (plan), evalCtx);
+    } catch {
+      return plan;
+    }
+  }
+  return plan;
+}
 
 /** @type {WeakMap<Element, { inflight: boolean }>} */
 const FIRE = new WeakMap();
@@ -101,7 +128,7 @@ export async function dispatchButtonAction(el, props, ctx, meta = {}) {
   el.setAttribute("data-firing", "1");
   try {
     const variant = String(props.variant || "primary");
-    const plan = props.action;
+    const plan = normalizeActionPlan(props.action, ctx);
     const fv = ctx.formValidation;
 
     if (fv && needsFormValidation(plan, variant)) {

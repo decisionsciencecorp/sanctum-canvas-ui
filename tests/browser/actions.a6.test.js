@@ -201,6 +201,42 @@ describe("Button", () => {
     assert.equal(ran, 0);
   });
 
+  it("normalizes raw Action Comp AST into ToAssistant steps", async () => {
+    const msgs = [];
+    const store = createStore({});
+    const actions = createActionRunner({
+      store,
+      host: { continueConversation: (m) => msgs.push(m) },
+    });
+    const c = ctx({ actions, state: store });
+    const el = Button.create(
+      {
+        label: "Lock & Run",
+        variant: "primary",
+        action: {
+          k: "Comp",
+          name: "Action",
+          args: [
+            {
+              k: "Arr",
+              els: [
+                {
+                  k: "Comp",
+                  name: "ToAssistant",
+                  args: [{ k: "Str", v: "Lock & Run" }],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      c,
+    );
+    const result = await dispatchButtonAction(el, el._canvasProps, el._canvasCtx);
+    assert.equal(result.ok, true);
+    assert.deepEqual(msgs, ["Lock & Run"]);
+  });
+
   it("disabled while streaming", () => {
     const c = ctx({ stream: { isStreaming: true } });
     const el = Button.create({ label: "X" }, c);
